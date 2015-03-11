@@ -18,7 +18,7 @@ if userOptions.flush_Queue
     rsa.par.flushQ();
 end
 if userOptions.run_in_parallel
-    rsa.par.initialise_CBU_Queue(userOptions);
+    p = rsa.par.initialise_CBU_Queue(userOptions);
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Model RDM calculation %%
@@ -74,7 +74,8 @@ end
 %% Stopping parallel toolbox %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if userOptions.run_in_parallel;
-   matlabpool close;
+    % Close the parpool.
+    delete(p);
 end
 
 %%%%%%%%%%%%%%%%%%%%

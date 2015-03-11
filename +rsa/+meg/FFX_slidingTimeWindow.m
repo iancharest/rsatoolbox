@@ -55,8 +55,8 @@ if overwriteFlag
         error('Cannot load data RDMs file.')
     end
     
-    if matlabpool('size')==0
-        matlabpool open;
+    if isempty(gcp('nocreate')) == 0
+       p = parpool; 
     end
     
     nMasks = size(allRDMs,1);
@@ -224,7 +224,10 @@ if overwriteFlag
         disp('Done!');
         
     end
-    matlabpool close;
+    
+    % Close the parpool
+    delete(p);
+    
 else
     fprintf('Permutation already performed, skip....\n');
 end

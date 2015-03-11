@@ -236,7 +236,7 @@ if overwriteFlag
 else
     fprintf('Already done permutation, Skip...');
 end
-%matlabpool close
+
 cd(returnHere); % And go back to where you started
 
 %%  old code

@@ -49,7 +49,7 @@ if userOptions.flush_Queue
 end
 
 if userOptions.run_in_parallel
-    rsa.par.initialise_CBU_Queue(userOptions);
+    p = rsa.par.initialise_CBU_Queue(userOptions);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -116,7 +116,8 @@ toc
 %% Stopping parallel toolbox %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if userOptions.run_in_parallel
-    matlabpool close;
+    % Close the parpool
+    delete(p);
 end
 
 %%%%%%%%%%%%%%%%%%%%
