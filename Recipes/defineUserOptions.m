@@ -351,8 +351,12 @@ userOptions.dpi = 300;
 % in a manuscript or presentation.
 userOptions.tightInset = false;
 
-% TODO: this probably shouldn't be in here, as it is usually not wanted?
-%userOptions.forcePromptReply = 'r';
+% TODO: Need a better solution to this. Enum?
+% This can be used to force a reply to each propt about overwriting files.
+% It can be useful when running unsupervised, or in parallel, where the
+% prompt may not even be seen.
+% Set to 'a', 'r', 's'; or use '' to not force a reply.
+userOptions.forcePromptReply = '';
 
 % Present user with graphical feedback?
 userOptions.dialogueBox = false;

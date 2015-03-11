@@ -46,11 +46,7 @@ promptOptions.defaultResponse = 'S';
 promptOptions.checkFiles(1).address = fullfile(userOptions.rootPath, 'Maps', modelName, [MapsFilename, '-lh.stc']);
 promptOptions.checkFiles(2).address = fullfile(userOptions.rootPath, 'Maps', modelName, [MapsFilename, '-rh.stc']);
 
-% TODO: This prevents parfor toolbox from working
-% TODO: Probably, the best thing to do is for overwritePrompt to check if
-% TODO: it's running in parallel first and go with a default if it is.
-% TODO: That execution never waits for the user when running in parallel.
-overwriteFlag = true;%overwritePrompt(userOptions, promptOptions);
+overwriteFlag = overwritePrompt(userOptions, promptOptions);
 
 if overwriteFlag
     
@@ -165,3 +161,5 @@ elseif nargout > 0
 end%if:nargout
 
 cd(returnHere); % And go back to where you started
+
+end%function
