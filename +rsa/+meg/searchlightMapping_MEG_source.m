@@ -28,7 +28,7 @@ end
 if userOptions.partial_correlation
     control_for_modelRDMs = modelRDMs_utv(userOptions.partial_modelNumber{1}, :);
     for m = 2:size(userOptions.partial_modelNumber, 2)
-        control_for_modelRDMs = [control_for_modelRDMs;modelRDMs_utv(userOptions.partial_modelNumber{m}, :)];
+        control_for_modelRDMs = [control_for_modelRDMs; modelRDMs_utv(userOptions.partial_modelNumber{m}, :)];
     end
 end
 
@@ -161,19 +161,14 @@ for k = 1:length(vertices)
         
         % TODO: Refactor this into general method
         if strcmpi(userOptions.distanceMeasure, 'Kendall_taua')
-            rs = rankCorr_Kendall_taua(searchlightRDM',modelRDMs_utv');
+            rs = rankCorr_Kendall_taua(searchlightRDM', modelRDMs_utv');
             % TODO: How to get equivalent p-values?
             ps = NaN;
+        elseif userOptions.partial_correlation
+            % TODO: Consider partialcorr with kendall's tau
+            [rs, ps] = partialcorr(searchlightRDM', modelRDMs_utv', control_for_modelRDMs', 'type', userOptions.distanceMeasure, 'rows','pairwise');
         else
-            if userOptions.partial_correlation
-                [rs, ps] = partialcorr(searchlightRDM', modelRDMs_utv', control_for_modelRDMs', 'type', userOptions.distanceMeasure, 'rows','pairwise');
-            else
-                try
-                    [rs, ps] = corr(searchlightRDM', modelRDMs_utv', 'type', userOptions.distanceMeasure, 'rows', 'pairwise');
-                catch ex
-                    [rs, ps] = corr(searchlightRDM', modelRDMs_utv, 'type', userOptions.distanceMeasure, 'rows', 'pairwise');
-                end%try
-            end
+            [rs, ps] = corr(searchlightRDM', modelRDMs_utv', 'type', userOptions.distanceMeasure, 'rows', 'pairwise');
         end
         
         smm_ps(vertex, t, :) = ps;

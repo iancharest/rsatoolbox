@@ -138,22 +138,9 @@ if overwriteFlag
         prints([': [' num2str(ceil(t)) 's]']);
     end%if
     
-    %% Save relevant info
-    %     timeStamp = datestr(now);
-    %
-    %     gotoDir(userOptions.rootPath, 'Details');
-    %     cd(fullfile(userOptions.rootPath, 'Details'));
-    %     fprintf(['Saving Details to ' fullfile(pwd, DetailsFilename) '\n']);
-    %     save(DetailsFilename, 'timeStamp', 'userOptions');
-    
 else
     prints('Searchlight already applied, skip....\n');
 end
-%
-% gotoDir(userOptions.rootPath, 'ImageData');
-% cd(fullfile(userOptions.rootPath, 'ImageData'));
-% fprintf(['Saving Details to ' fullfile(pwd, MetaDataFilename) '\n']);
-% save(MetaDataFilename, 'searchlightOptions');
 
 if nargout == 1
     varargout{1} = [];
