@@ -82,9 +82,6 @@ if overwriteFlag
                 rMetadataStruct.data = rMeshes.(modelName).(chi);
                 pMetadataStruct.data = pMeshes.(modelName).(chi);
 
-        %                 ignore = evalc('gotoDir(userOptions.rootPath, ''Maps'');'); clear ignore;
-        %                 gotoDir(fullfile(userOptions.rootPath, 'Maps'), modelName); 
-
                 mne_write_stc_file(outputRFilename, rMetadataStruct);
                 mne_write_stc_file(outputPFilename, pMetadataStruct);
                 clear  pMetadataStruct rMeshes pMeshes nMeshes;     
