@@ -16,7 +16,7 @@ import rsa.util.*
         try 
             matlabpool close;
         catch
-            disp('Matlabpool initialising ...');
+            prints('Matlabpool initialising ...');
         end
         if userOptions.run_in_parallel_in_cluster
             P=cbupool;

@@ -50,13 +50,13 @@ overwriteFlag = overwritePrompt(userOptions, promptOptions);
 
 if overwriteFlag
     
-    fprintf('Shining RSA searchlights...\n');
+    prints('Shining RSA searchlights...');
     gotoDir(userOptions.rootPath, 'Maps');
     gotoDir(fullfile(userOptions.rootPath, 'Maps'), modelName);
     
     tic;%1
     
-    fprintf(['\tSearching in the source meshes of subject ' num2str(subjectNumber) ' of ' num2str(nSubjects) ':']);
+    prints(['\tSearching in the source meshes of subject ' num2str(subjectNumber) ' of ' num2str(nSubjects) ':']);
     
     % Run searchlight on both halves of the brain
     sourceMeshes = MEGDataPreparation_source(subjectNumber, tempBetas, userOptions);
@@ -115,7 +115,7 @@ if overwriteFlag
         mne_write_stc_file1([outputPFilename '-' lower(chi) 'h.stc'], pMetadataStruct);
         
         %% Saving the searchlight RDMs
-        fprintf('Saving data RDMs for combined mask: ');
+        prints('Saving data RDMs for combined mask: ');
         filepath = 'searchlightRDMs_';
         if userOptions.maskingFlag
             filepath = [filepath 'masked_'];
@@ -134,7 +134,7 @@ if overwriteFlag
         fprintf('\n\t\t\t\t\t\t\t\t');
     else
         t = toc;%1
-        fprintf([': [' num2str(ceil(t)) 's]\n']);
+        prints([': [' num2str(ceil(t)) 's]']);
     end%if
     
     %% Save relevant info
@@ -146,7 +146,7 @@ if overwriteFlag
     %     save(DetailsFilename, 'timeStamp', 'userOptions');
     
 else
-    fprintf('Searchlight already applied, skip....\n');
+    prints('Searchlight already applied, skip....\n');
 end
 %
 % gotoDir(userOptions.rootPath, 'ImageData');

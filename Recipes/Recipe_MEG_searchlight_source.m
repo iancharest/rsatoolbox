@@ -62,7 +62,7 @@ parfor subject = 1:nSubject
     % TODO: saved, or something.
     rsa.meg.MEGSearchlight_source(subject, models, userOptions);
 end
-fprintf('Stage 1 - Searchlight Brain RDM Calculation: ');
+rsa.util.prints('Stage 1 - Searchlight Brain RDM Calculation: ');
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -79,16 +79,16 @@ fprintf('Stage 1 - Searchlight Brain RDM Calculation: ');
 if strcmp(userOptions.groupStats, 'FFX')
     tic
     % fixed effect test
-    fprintf('Averaging RDMs across subjects and performing permutation tests to calculate r-values.');
+    rsa.util.prints('Averaging RDMs across subjects and performing permutation tests to calculate r-values.');
     rsa.meg.FFX_permutation(models, userOptions)
-    fprintf('Stage 2 - Fixed Effects Analysis: ');
+    rsa.util.prints('Stage 2 - Fixed Effects Analysis: ');
     toc
 else
     % random effect test
-    fprintf('Performing permutation tests over all subjects (random effect) to calculate p-values.');
+    rsa.util.prints('Performing permutation tests over all subjects (random effect) to calculate p-values.');
     tic
     rsa.meg.RFX_permutation(models,userOptions);
-    fprintf('Stage 2 - Random Effects Analysis: ');
+    rsa.util.prints('Stage 2 - Random Effects Analysis: ');
     toc 
 end
 
@@ -103,7 +103,7 @@ parfor j = 1:number_of_permutations/jobSize
     range = (j-1)*jobSize+1:j*jobSize;
     rsa.meg.MEGFindCluster_source(models, range, userOptions);
 end
-fprintf('Stage 3 - Spatiotemporal Clustering: ' );
+rsa.util.prints('Stage 3 - Spatiotemporal Clustering: ' );
 toc
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -111,7 +111,7 @@ toc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 tic
 rsa.meg.get_cluster_p_value(models,userOptions);
-fprintf('Stage 4 - Computing cluster level p values: ');
+rsa.util.prints('Stage 4 - Computing cluster level p values: ');
 toc
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
