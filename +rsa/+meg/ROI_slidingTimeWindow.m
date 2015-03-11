@@ -48,7 +48,7 @@ overwriteFlag = overwritePrompt(userOptions, promptOptions);
 
 if overwriteFlag
 
-    nSubjects = userOptions.nSubjects;
+    nSubjects = numel(userOptions.subjectNames);
     
     sourceMeshes = struct('L',[], 'R',[]);
     sourceMeshes(1,1:nSubjects)=sourceMeshes;

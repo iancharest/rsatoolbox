@@ -69,7 +69,7 @@ if overwriteFlag
         %% random effect T-distribution (one tailed). df = number of
         %% subjects - 1.
         pval = userOptions.primaryThreshold;
-        vertex_level_threshold = abs(tinv(pval,(userOptions.nSubjects-1)));
+        vertex_level_threshold = abs(tinv(pval, numel(userOptions.subjectNames) - 1));
     end
     
     %% Build a connectivity (sparse) matrix representing the adjacency

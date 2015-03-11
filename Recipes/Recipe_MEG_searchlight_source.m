@@ -38,9 +38,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Calculate adjacency matrix %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% TODO: Why is this stored in the userOptions struct separately to the list
-% TODO: of subjects?
-nSubject = userOptions.nSubjects;
+nSubject = numel(userOptions.subjectNames);
 userOptions.adjacencyMatrix = rsa.meg.calculateMeshAdjacency(userOptions.nVertices, userOptions.sourceSearchlightRadius, userOptions);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

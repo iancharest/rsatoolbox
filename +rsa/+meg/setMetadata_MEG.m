@@ -83,7 +83,6 @@ else % source level analysis
     MEGDataStcL = mne_read_stc_file1(readPathL);
     MEGDataVolL = single(MEGDataStcL.data);
     
-    userOptions.nSubjects = numel(userOptions.subjectNames);
     userOptions.monitor = false;
     userOptions.fisher = true;
     

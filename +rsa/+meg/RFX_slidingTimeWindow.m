@@ -21,6 +21,8 @@ import rsa.util.*
 
 close all;
 returnHere = pwd; % We'll come back here later
+
+% TODO: This is a strange thing to have in userOptions.
 modelNumber = userOptions.modelNumber;
 modelName = Models(modelNumber).name;
 if userOptions.partial_correlation
@@ -36,7 +38,7 @@ promptOptions.checkFiles(1).address = fullfile(output_path, [modelName '-' userO
 overwriteFlag = overwritePrompt(userOptions, promptOptions);
 
 if overwriteFlag
-    rdms_path =fullfile(userOptions.rootPath,'RDMs',[userOptions.analysisName '_' modelName '_dataRDMs_sliding_time_window']);
+    rdms_path = fullfile(userOptions.rootPath,'RDMs',[userOptions.analysisName '_' modelName '_dataRDMs_sliding_time_window']);
     
     if ~exist(output_path,'dir')
         mkdir(output_path);
@@ -52,7 +54,7 @@ if overwriteFlag
     
     nMasks = size(allRDMs,1);
     nTimePoints = size(allRDMs,2);
-    nSubjects = userOptions.nSubjects;
+    nSubjects = numel(userOptions.subjectNames);
     
     disp('Performing random effects permutation test...')
     
@@ -100,7 +102,7 @@ if overwriteFlag
             data2,fpmin,fpmax,tpmin,tpmax,perm_num,test,pval,tmapFlag);
         
         if userOptions.tmap
-            threshold = tinv(pval,(userOptions.nSubjects-1));
+            threshold = tinv(pval, (nSubjects - 1));
             thresh_map = ((base_map>= abs(threshold)) .* base_map) + ((base_map <= threshold) .* base_map);
             what_map = 't';
         else

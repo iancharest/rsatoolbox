@@ -17,7 +17,7 @@ userOptions = rsa.meg.setMetadata_MEG(models, userOptions);
 %%%%%%%%%%%%%%%%%%%%%%
 %% Data preparation %%
 %%%%%%%%%%%%%%%%%%%%%%
-nSubjects = userOptions.nSubjects;
+nSubjects = numel(userOptions.subjectNames);
 for subject = 1:nSubjects
     thisSubject = userOptions.subjectNames{subject};
     fprintf(['Reading MEG source solutions for subject number ' num2str(subject) ' of ' num2str(nSubjects) ': ' thisSubject ':']);    

@@ -23,7 +23,7 @@ tempBetas = betaCorrespondence;
 
 modelNumber = userOptions.modelNumber; 
 modelName = spacesToUnderscores(Models(modelNumber).name);
-nSubjects = userOptions.nSubjects;
+nSubjects = numel(userOptions.subjectNames);
 
 MapsFilename = [userOptions.analysisName, '_rMesh_', modelName, subject];
 promptOptions.functionCaller = 'MEGSearchlight_source';

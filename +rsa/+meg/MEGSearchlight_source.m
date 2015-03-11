@@ -26,8 +26,9 @@ returnHere = pwd; % We'll come back here later
 % TODO: recipe format.
 tempBetas = userOptions.betaCorrespondence();
 subject = userOptions.subjectNames{subjectNumber};
-nSubjects = userOptions.nSubjects;
+nSubjects = numel(userOptions.subjectNames);
 
+% TODO: this is a weird thing to have in userOptions.
 modelNumber = userOptions.modelNumber;
 modelName = spacesToUnderscores(Models(modelNumber).name);
 

@@ -16,7 +16,7 @@ import rsa.util.*
 
 returnHere = pwd; % We'll come back here later
 
-nSubjects = userOptions.nSubjects;
+nSubjects = numel(userOptions.subjectNames);
 modelNumber = userOptions.modelNumber;
 modelName = spacesToUnderscores(Models(modelNumber).name);
 
