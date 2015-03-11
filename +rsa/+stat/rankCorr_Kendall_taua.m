@@ -14,19 +14,20 @@ import rsa.stat.*
 import rsa.util.*
 
 %% preparations
-a=a(:);b=b(:);
-validEntryIs = ~isnan(a)&~isnan(b);
-a=a(validEntryIs);b=b(validEntryIs);
-n=size(a,1);
+a = a(:);
+b = b(:);
+validEntryIs = ~isnan(a) && ~isnan(b);
+a = a(validEntryIs);
+b = b(validEntryIs);
+n = numel(a);
 
-
-%% compute Kendall rank correlation coefficient tau-a
+%% compute Kendall rank correlation coefficient tau_a
 K = 0;
-for k = 1:n-1
-    pairRelations_a=sign(a(k)-a(k+1:n));
-    pairRelations_b=sign(b(k)-b(k+1:n));
-    K = K + sum(pairRelations_a.*pairRelations_b);
+for i = 1 : n-1
+    pairRelations_a = sign(a(i)-a(i+1:n));
+    pairRelations_b = sign(b(i)-b(i+1:n));
+    K = K + sum(pairRelations_a .* pairRelations_b);
 end
-taua=K/(n*(n-1)/2); % normalise by the total number of pairs 
+taua = K/(n*(n-1)/2); % normalise by the total number of pairs 
 
 end%function

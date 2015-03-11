@@ -222,7 +222,7 @@ if overwriteFlag
     
     disp('Writng results corrected for both hemispheres using permutation but without using clustering method...');
     
-    mkDir(userOptions.rootPath, 'Results');
+    gotoDir(userOptions.rootPath, 'Results');
     outputFileName_sig = fullfile(userOptions.rootPath, 'Results', [userOptions.analysisName, '_', modelName '_significant_vertex_ffx']);
     if userOptions.maskingFlag
         outputFileName_sig = [outputFileName_sig '_masked'];

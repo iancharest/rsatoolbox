@@ -119,7 +119,7 @@ if overwriteFlag
         prints('Saving data RDMs for combined mask: ');
         filepath = 'searchlightRDMs_';
         if userOptions.maskingFlag
-            filepath = [filepath 'masked_'];
+            filepath = [filepath 'masked_']; %#ok<AGROW>
         end
         gotoDir(userOptions.rootPath, 'RDMs');
         save('-v7.3', [filepath, userOptions.subjectNames{subjectNumber},'-',lower(chi),'h'], 'searchlightRDMs');

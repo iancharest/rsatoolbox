@@ -60,7 +60,6 @@ nTimePoints = floor((epochLength - (userOptions.temporalSearchlightWidth * userO
 % updated: all searchlight run as masks IZ 03/12
 vertices = userOptions.maskIndices.(userOptions.chi);
 
-
 % Preallocate looped matrices for speed
 smm_ps = zeros([nVertices, nTimePoints, nModels]);
 smm_rs = zeros([nVertices, nTimePoints, nModels]);
@@ -159,10 +158,14 @@ for k = 1:length(vertices)
             searchlightRDMs = nan(1);
         end
         
-        % TODO: Refactor this into general method
+        % TODO: Refactor this into general method so it can be used
+        % TODO: anywhere
         if strcmpi(userOptions.distanceMeasure, 'Kendall_taua')
             rs = rankCorr_Kendall_taua(searchlightRDM', modelRDMs_utv');
-            % TODO: How to get equivalent p-values?
+            % We are currently no using the p values created, though we are
+            % saving them for some reason.  Anyway, there is currently no
+            % way to get them for Kendall's tau_a, and until this becomes
+            % requiresd, I'm not going to fix it :) - C
             ps = NaN;
         elseif userOptions.partial_correlation
             % TODO: Consider partialcorr with kendall's tau
