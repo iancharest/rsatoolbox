@@ -1,35 +1,39 @@
-%FJ 10-2014
+% p = initialise_CBU_Queue(userOptions)
+%
+% Sets up use of the CBU queueing system.
+%
+% p: A parpool.
+%
+% FJ 10-2014
 % Jana updated 10-2014
 
-function initialise_CBU_Queue(userOptions)
+function p = initialise_CBU_Queue(userOptions)
 
-import rsa.*
-import rsa.fig.*
-import rsa.fmri.*
-import rsa.rdm.*
-import rsa.sim.*
-import rsa.spm.*
-import rsa.stat.*
-import rsa.util.*
-
-    if userOptions.run_in_parallel || run_in_parallel_in_cluster
-        try 
-            matlabpool close;
-        catch
-            prints('Matlabpool initialising ...');
+    if userOptions.run_in_parallel || userOptions.run_in_parallel_in_cluster
+        
+        % Close any existing pool.
+        try
+            currentPool = gcp('nocreate');
+            delete(currentPool);
+        catch ex
+            prints('parpool initialising ...');
         end
+        
+        % Can either run in cluster
         if userOptions.run_in_parallel_in_cluster
-            P=cbupool;
-            P.NumWorkers=userOptions.nWorkers;
-            P.SubmitArguments = ['-l walltime=',num2str(userOptions.wallTime), ',mem=' ,num2str(userOptions.memReq),'gb'];      
+            cp = cbupool;
+            cp.NumWorkers = userOptions.nWorkers;
+            cp.SubmitArguments = ['-l walltime=',num2str(userOptions.wallTime), ',mem=' ,num2str(userOptions.memReq),'gb'];      
             if isequal(userOptions.nodesReq , '^N^')
-                P.ResourceTemplate = ['-l nodes=',num2str(userOptions.nodesReq)];    
+                cp.ResourceTemplate = ['-l nodes=',num2str(userOptions.nodesReq)];    
             else
-                P.ResourceTemplate = ['-l nodes=',num2str(userOptions.nodesReq), ':ppn=' ,num2str(userOptions.proPNode)];    
+                cp.ResourceTemplate = ['-l nodes=',num2str(userOptions.nodesReq), ':ppn=' ,num2str(userOptions.proPNode)];    
             end
-            matlabpool(P);
+            p = parpool(cp);
+        % Or just on local machine
         else
-            matlabpool open; 
+            p = parpool;
         end  
     end
-end
+    
+end%function
