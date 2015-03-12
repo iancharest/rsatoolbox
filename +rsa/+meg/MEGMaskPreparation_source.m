@@ -2,7 +2,7 @@
 % userOptions and will save a struct of these masks coupled with the time-windows 
 % of interest also specified in userOptions.
 %
-% [indexMasks =] MEGMaskPreparation_source(userOptions)
+% indexMasks = MEGMaskPreparation_source(userOptions)
 %
 %        userOptions --- The options struct.
 %                userOptions.analysisName
@@ -24,9 +24,23 @@
 %                        interest for the corresponding mask from
 %                        userOptions.maskNames.
 %
-% Cai Wingfield 9-2010, updated by Li Su 3-2012
+%        indexMasks --- A structured array with fields:
+%                indexMasks.vertices
+%                        The vertex indices in the mask.
+%                indexMasks.timepoints
+%                        The timepoints in the mask.
+%                indexMasks.chirality
+%                        Whether the mask is on the right ('R') or left
+%                        ('L') hemisphere
+%                indexMasks.name
+%                        The name of the mask (hyphens replaced by
+%                        underscores.
+%
+% Cai Wingfield 2010-09, 2015-03
+% updated by Li Su 3-2012
+% update IZ 02/12, 03/12
 
-function [varargout] = MEGMaskPreparation_source(userOptions)
+function [indexMasks] = MEGMaskPreparation_source(userOptions)
 
 import rsa.*
 import rsa.fig.*
@@ -69,7 +83,7 @@ if overwriteFlag
     for maskNumber = 1:nMasks % For each mask...
 
 		% Figure out which mask we're looking at
-		mask = userOptions.maskNames{maskNumber};
+		maskName = userOptions.maskNames{maskNumber};
         if nMasks == nTimeWindows 
             timeWindow = userOptions.maskTimeWindows{maskNumber};
         else
@@ -77,47 +91,41 @@ if overwriteFlag
         end
 		
 		% Load the mask
-		readPath = [replaceWildcards(userOptions.maskPath, '[[maskName]]', mask) '.label'];
+		readPath = [replaceWildcards(userOptions.maskPath, '[[maskName]]', maskName) '.label'];
         label = mne_read_label_file(readPath);
-% 		vertexMaskCell = readFileToCell(readPath);
-% 		
-% 		% Remove the first two (junk) lines
-% 		vertexMaskCell = vertexMaskCell(3:end);
-% 		
-% 		% Get the first column only
-% 		for i = 1:numel(vertexMaskCell)
-% 			vertexMaskCell_split(i,:) = splitStringAtCharacter(vertexMaskCell{i}, ' ');
-% 		end%for:i
-% 		vertexMaskCell = vertexMaskCell_split(:, 1);
-%         for i = 1:numel(vertexMaskCell)
-% 			vertexMaskCell{i} = str2num(vertexMaskCell{i});
-% 		end%for:i
-% 		
-% 		% Convert to column vector
-% 		vertexMask = cell2mat(vertexMaskCell);
-% 		vertexMask = vertexMask(:);
 		
 		% Determine if it's left or right
-		suffix = mask(end-1:end);
-        mask_noDash = dashToUnderscores(mask); % updated by Li Su 2-2012
+		suffix = maskName(end-1:end);
+        maskName_noDash = dashToUnderscores(maskName); % updated by Li Su 2-2012
         
 		if strcmpi(suffix, 'lh')
 			chi = 'L';
 		elseif strcmpi(suffix, 'rh')
 			chi = 'R';
 		else
-			error('MEGMaskPreparation:notLhOrRh', ['The mask ' mask ' does not end in "lh" or "rh", and as such can''t allocated to either the left- or right-hand side of the source mesh!']);
+			error('MEGMaskPreparation:notLhOrRh', ['The mask ' maskName ' does not end in "lh" or "rh", and as such can''t allocated to either the left- or right-hand side of the source mesh!']);
 		end%if:suffix
 		
 		% Store in a struct
-		%thisFieldname = dashToUnderscores(['tw_' num2str(timeWindow(1)) '_' num2str(timeWindow(2))]);
-		indexMasks.(mask_noDash).maskIndices = label.vertices + 1; % update IZ 02/12 previously: vertexMask + 1;
-		indexMasks.(mask_noDash).timeIndices = timeWindow(1):timeWindow(2);
-		indexMasks.(mask_noDash).chirality = chi;
+		indexMasks(maskNumber).vertices   = label.vertices + 1;
+        % TODO: This is unused?
+		indexMasks(maskNumber).timepoints = timeWindow(1):timeWindow(2);
+        % It's very important that the value set in .chirality is either
+        % the single capital character 'L' or the single character 'R'.
+        % This way, we can filter the struct using:
+        %     indexMasks(find([indexMasks.chirality] == 'L'))
+        % The [] syntax in there requires that we have single characters,
+        % else horrible things will happen because strings are just arrays
+        % of chars.  We have to keep things uppercase because we must use
+        % == and not strcmpi().
+        % TODO: Use a Chi.L/Chi.R enum instead, to make this kind of thing 
+        % TODO: more foolproof.
+		indexMasks(maskNumber).chirality  = chi;
+        indexMasks(maskNumber).name       = maskName_noDash;
 		
 		fprintf('.');
 
-	end%for:maskNumber
+    end%for:maskNumber
 	
 	fprintf(':\n');
 
@@ -137,11 +145,5 @@ else
 	fprintf(['Loading previously saved masks from ' fullfile(userOptions.rootPath, 'ImageData', MasksFilename) '...\n']);
 	load(fullfile(userOptions.rootPath, 'ImageData', MasksFilename));
 end%if:overwriteFlag
-
-if nargout == 1
-	varargout{1} = indexMasks;
-elseif nargout > 0
-	error('0 or 1 arguments out, please.');
-end%if:nargout
 
 cd(returnHere); % And go back to where you started

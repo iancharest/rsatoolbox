@@ -51,6 +51,12 @@ end
 if userOptions.run_in_parallel
     rsa.par.initialise_CBU_Queue(userOptions);
 end
+    
+% Get Masks
+indexMasks = MEGMaskPreparation_source(userOptions);
+
+% For searchlight analysis, we combine all masks into one
+indexMasks = combineVertexMasks_source(indexMasks, 'combined_mask', userOptions);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Searchlight - Brain RDM calculation %%

@@ -70,32 +70,11 @@ if overwriteFlag
                 chi = 'R';
         end%switch:chirality
         
-        % Get masks
-        
-        % update IZ 03/12
-        % assuming every analysis works as a mask, overlaying masks to create a single mask
-        nMasks = numel(fieldnames(userOptions.indexMasks));
-        indexMasks = userOptions.indexMasks;
-        maskNames = fieldnames(userOptions.indexMasks);
-        maskIndices=[];
-        for mask = 1:nMasks
-            thisMaskName = maskNames{mask};
-            if strfind(thisMaskName, [lower(chi), 'h'])
-                maskIndices = union(maskIndices, indexMasks.(thisMaskName).maskIndices);
-                maskIndices = sort(maskIndices(maskIndices <= userOptions.nVertices));
-                % TODO: This should not be stored in the useOptions!
-                userOptions.maskIndices.(chi) = maskIndices;
-                userOptions.chi = chi;
-            end
-        end
-        timeIndices = userOptions.dataPointsSearchlightLimits;
-        
-        % Apply masks
-        
+        %% Mask timepoints
         if userOptions.nSessions == 1
-            maskedMesh = sourceMeshes.(chi)(:, timeIndices(1):timeIndices(2), :); % (vertices, timePointes, conditions)
+            maskedMesh = sourceMeshesThisSubject.(chi)(:, timeIndices(1):timeIndices(2), :); % (vertices, timePointes, conditions)
         else
-            maskedMesh = sourceMeshes.(chi)(:, timeIndices(1):timeIndices(2), :, :); % (vertices, timePointes, conditions, sessions)
+            maskedMesh = sourceMeshesThisSubject.(chi)(:, timeIndices(1):timeIndices(2), :, :); % (vertices, timePointes, conditions, sessions)
         end
         
         %% Apply searchlight
@@ -143,12 +122,6 @@ if overwriteFlag
 else
     prints('Searchlight already applied, skip....\n');
 end
-
-if nargout == 1
-    varargout{1} = [];
-elseif nargout > 0
-    error('0 or 1 arguments out, please.');
-end%if:nargout
 
 cd(returnHere); % And go back to where you started
 

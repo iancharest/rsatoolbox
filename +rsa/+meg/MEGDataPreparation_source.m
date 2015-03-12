@@ -12,7 +12,7 @@
 %               betas(condition, session).identifier is a string which referrs
 %               to the filename (not including path) of the SPM beta image.
 %
-%        userOptions --- The options struct.
+%       userOptions --- The options struct.
 %                userOptions.analysisName
 %                        A string which is prepended to the saved files.
 %                userOptions.rootPath
@@ -32,6 +32,12 @@
 %                                [[betaIdentifier]]
 %                                        To be replaced by filenames as provided
 %                                        by betaCorrespondence.
+%
+%       sourceMeshes
+%                sourceMeshes.L(vertices, timepoints, condition, session)
+%                sourceMeshes.R(vertices, timepoints, condition, session)
+%
+%       baselineLimit
 %
 % The following files are saved by this function:
 %        userOptions.rootPath/ImageData/
@@ -61,9 +67,9 @@
 % module to an engine function, and call it from MEGSearchlight_source.m 
 % and make it subject specific too. 
 %
-%  Cai Wingfield 5-2010, 6-2010 updated by Li Su 2-2012 
-%   updated Fawad 3-12014
-
+% Cai Wingfield 2010-05, 2010-06, 2015-03
+% updated by Li Su 2-2012 
+% updated by Fawad 3-12014
 
 function [varargout] = MEGDataPreparation_source(subject, betaCorrespondence, userOptions)
 
@@ -76,6 +82,8 @@ import rsa.spm.*
 import rsa.stat.*
 import rsa.util.*
 
+% TODO: Get this uncommented - right now it assumes we're working on all
+% TODO: subjects.
 % returnHere = pwd; % We'll return to the pwd when the function has finished
 % 
 % %% Set defaults and check options struct
@@ -96,7 +104,7 @@ import rsa.util.*
 % if overwriteFlag
 
 	%% Get Data
-	betas = userOptions.betaCorrespondence;
+	betas = betaCorrespondence;
 	[nSessions, nConditions] = size(betas);
     downsampleRate = userOptions.temporalDownsampleRate;
     
@@ -121,6 +129,7 @@ import rsa.util.*
 		for session = 1:nSessions % For each session...  UNUSED?!?!
 			for condition = 1:nConditions % and each condition...
 
+                % TODO: Do L and R separately?
 				% Then read the brain data (for this session, condition)
 				readPathL = replaceWildcards(userOptions.betaPath, '[[betaIdentifier]]', betas(session, condition).identifier, '[[subjectName]]', thisSubject, '[[LR]]', 'l');
 				readPathR = replaceWildcards(userOptions.betaPath, '[[betaIdentifier]]', betas(session, condition).identifier, '[[subjectName]]', thisSubject, '[[LR]]', 'r');

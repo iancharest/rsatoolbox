@@ -26,12 +26,7 @@ if userOptions.partial_correlation
     end
 end
 
-nVertices = userOptions.nVertices;
-nConditions = userOptions.nConditions;
-%nSessions = userOptions.nSessions;
-
-% How long is the stimulus (in data points)?
-epochLength = size(singleSubjectMesh, 2); % (vertex, TIME, condition, session)
+[nVertices, epochLength, nConditions, nSessions] = size(singleSubjectMesh);
 
 % Number of DATA points to loop with given the width and time step of
 % searchlight updated by IZ 09-12

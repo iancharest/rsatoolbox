@@ -178,6 +178,7 @@ else % source level analysis
                 end
             end
             
+            % TODO: Don't store this in the userOptions
             userOptions.maskTimetoDataPoints.(thisMask) = [startingDataPoint lastDataPoint];
         end
         
