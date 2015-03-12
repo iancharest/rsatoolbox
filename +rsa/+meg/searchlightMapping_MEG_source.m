@@ -1,4 +1,10 @@
-function [smm_rs, smm_ps, searchlightRDMs] = searchlightMapping_MEG_source(singleMesh, Models, userOptions)
+% [smm_rs, smm_ps, n, searchlightRDMs] = searchlightMapping_MEG_source(singleMesh, model, mask, userOptions, localOptions)
+%
+% Based on Li Su's script
+% CW 2010-05, 2015-03
+% updated by Li Su 3-2012
+
+function [smm_rs, smm_ps, searchlightRDMs] = searchlightMapping_MEG_source(singleSubjectMesh, model, userOptions)
 
 import rsa.*
 import rsa.fig.*
@@ -9,21 +15,9 @@ import rsa.spm.*
 import rsa.stat.*
 import rsa.util.*
 
-%  [smm_rs, smm_ps, n, searchlightRDMs] = searchlightMapping_MEG_source(singleMesh, Models, mask, userOptions, localOptions)
-%  based on Li Su's script
-% CW 5-2010, last updated by Li Su 3-2012
-
 %% Get parameters
 
-% Prepare Models
-nModels = size(Models, 2);
-
-if nModels>1
-    modelRDMs_utv = squeeze(unwrapRDMs(vectorizeRDMs(Models)))'; % note by IZ: if Models has 1 model, this is a column vector, else models are put into rows
-else
-    modelRDMs_utv = squeeze(unwrapRDMs(vectorizeRDMs(Models)));
-end
-
+modelRDMs_utv = squeeze(unwrapRDMs(vectorizeRDMs(model)));
 
 if userOptions.partial_correlation
     control_for_modelRDMs = modelRDMs_utv(userOptions.partial_modelNumber{1}, :);
@@ -32,18 +26,12 @@ if userOptions.partial_correlation
     end
 end
 
-% Picking the right model
-modelNumber = userOptions.modelNumber;
-if nModels > 1 % added by IZ 11-12 to ensure model has more than 1 models to pick from
-    modelRDMs_utv = modelRDMs_utv(modelNumber, :); % added by Li Su 11-2012 in order to test a single model at a time. not best in performance but keep thing simple.
-end
-
 nVertices = userOptions.nVertices;
 nConditions = userOptions.nConditions;
 %nSessions = userOptions.nSessions;
 
 % How long is the stimulus (in data points)?
-epochLength = size(singleMesh, 2); % (vertex, TIME, condition, session)
+epochLength = size(singleSubjectMesh, 2); % (vertex, TIME, condition, session)
 
 % Number of DATA points to loop with given the width and time step of
 % searchlight updated by IZ 09-12
@@ -95,7 +83,7 @@ for k = 1:length(vertices)
         currentTimeWindow = ceil((currentTimeStart : currentTimeStart + ...
             (userOptions.temporalSearchlightWidth * userOptions.toDataPoints) - 1));
         
-        currentData = singleMesh(verticesCurrentlyWithinRadius, currentTimeWindow, :, :); % (vertices, time, condition, session)
+        currentData = singleSubjectMesh(verticesCurrentlyWithinRadius, currentTimeWindow, :, :); % (vertices, time, condition, session)
         
         searchlightRDM = zeros(nConditions, nConditions);
         

@@ -97,7 +97,9 @@ if overwriteFlag
         else
             maskedMesh = sourceMeshes.(chi)(:, timeIndices(1):timeIndices(2), :, :); % (vertices, timePointes, conditions, sessions)
         end
-        [thisSubjectRs.(chi), thisSubjectPs.(chi), searchlightRDMs] = searchlightMapping_MEG_source(maskedMesh, Models, userOptions);
+        
+        %% Apply searchlight
+        [thisSubjectRs.(chi), thisSubjectPs.(chi), searchlightRDMs] = searchlightMapping_MEG_source(maskedMesh, Models(modelNumber), userOptions);
         
         rMetadataStruct = userOptions.STCmetaData;
         pMetadataStruct = userOptions.STCmetaData;
