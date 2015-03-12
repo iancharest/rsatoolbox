@@ -41,9 +41,6 @@ nTimePoints = floor((epochLength - (userOptions.temporalSearchlightWidth * userO
 
 %% similarity-graph-map the volume with the searchlight
 
-%n = nan(nVertices);
-%searchlightRDMs = nan([nConditions, nConditions, nVertices, nTimePoints]);
-
 % vertices change on the basis of maskng flag's value IZ 11-12
 % updated: all searchlight run as masks IZ 03/12
 vertices = userOptions.maskIndices.(userOptions.chi);
@@ -52,13 +49,7 @@ vertices = userOptions.maskIndices.(userOptions.chi);
 smm_ps = zeros([nVertices, nTimePoints, nModels]);
 smm_rs = zeros([nVertices, nTimePoints, nModels]);
 
-% if strcmp(userOptions.groupStats,'FFX')
-%     searchlightRDMs = single(zeros(nConditions,nConditions, nVertices, nTimePoints));
-% end
-
-for k = 1:length(vertices)
-    vertex = vertices(k);
-    % Determine which vertexes are within the radius of the currently-picked vertex
+for vertex = vertices
     
     verticesCurrentlyWithinRadius = userOptions.adjacencyMatrix(vertex,:);
     
