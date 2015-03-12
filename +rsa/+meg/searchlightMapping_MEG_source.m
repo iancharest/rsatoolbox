@@ -34,7 +34,7 @@ nTimePoints = floor((epochLength - (userOptions.temporalSearchlightWidth * userO
 
 %% similarity-graph-map the volume with the searchlight
 
-% vertices change on the basis of maskng flag's value IZ 11-12
+% vertices change on the basis of userOptions.maskingFlag's value IZ 11-12
 % updated: all searchlight run as masks IZ 03/12
 vertices = userOptions.maskIndices.(userOptions.chi);
 
@@ -58,6 +58,7 @@ for vertex = vertices
         verticesCurrentlyWithinRadius = intersect(verticesCurrentlyWithinRadius, vertices);
     end
     
+    % TODO: Why +1 ?
     for t = 1:nTimePoints+1
         
         % Work out the current time window
@@ -68,8 +69,6 @@ for vertex = vertices
             (userOptions.temporalSearchlightWidth * userOptions.toDataPoints) - 1));
         
         currentData = singleSubjectMesh(verticesCurrentlyWithinRadius, currentTimeWindow, :, :); % (vertices, time, condition, session)
-        
-        searchlightRDM = zeros(nConditions, nConditions);
         
         % Average across sessions
         
@@ -96,7 +95,8 @@ for vertex = vertices
                 
             end%for:sessions
             
-        else % data regularization based on algorithm by Diedrichson et al 2011 - updated 12-12 IZ
+        else
+            % data regularization based on algorithm by Diedrichson et al 2011 - updated 12-12 IZ
             tempMesh = reshape(currentData, [], size(currentData, 3), size(currentData, 4));
             currentData = zeros(size(tempMesh, 1), size(tempMesh, 2) * size(tempMesh, 3)); % (data, conditions, sessions)
             
@@ -121,14 +121,8 @@ for vertex = vertices
         
         searchlightRDM = vectorizeRDM(searchlightRDM);
         
-        % Locally store the full brain's worth of indexed RDMs. (just
-        % lower triangle) added by IZ 09-12
-        if strcmp(userOptions.groupStats, 'FFX')
-%             searchlightRDMs(:,:,vertex, t) = single(tril(squareform(searchlightRDM)));
-              searchlightRDMs.(['v_' num2str(vertex)]).(['t_' num2str(t)]).RDM = searchlightRDM;
-        else
-            searchlightRDMs = nan(1);
-        end
+        % Locally store the full brain's worth of indexed RDMs.
+        searchlightRDMs(vertex, t).RDM = searchlightRDM;
         
         % TODO: Refactor this into general method so it can be used
         % TODO: anywhere

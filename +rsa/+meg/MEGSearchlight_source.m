@@ -100,9 +100,8 @@ if overwriteFlag
         gotoDir(userOptions.rootPath, 'RDMs');
         save('-v7.3', [filepath, userOptions.subjectNames{subjectNumber},'-',lower(chi),'h'], 'searchlightRDMs');
         
-        userOptions = rmfield(userOptions, 'maskIndices');
-        userOptions = rmfield(userOptions, 'chi');
-        clear thisSubjectRs thisSubjectPs pMetadataStruct searchlightRDMs sourceMeshes.(chi) maskedMesh;
+        % Free up some memory
+        clear thisSubjectRs thisSubjectPs pMetadataStruct searchlightRDMs maskedMesh;
         
     end%for:chirality
     
