@@ -59,13 +59,20 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 rsa.util.prints('Stage 1 - Searchlight Brain RDM Calculation:');
 parfor subject_i = 1:nSubjects
+    [status, hostname] = system('hostname');
     
-    % Get subject source data
-    sourceMeshesThisSubject = MEGDataPreparation_source(subject_i, betaCorrespondence(), userOptions);
+    % Work on each hemisphere separately
+    for chi = 'LR'
+        
+        rsa.util.prints('%s: Working on subject %d, %s side', hostname, subject_i, chi);
     
-    % TODO: This should return a cell array of filenames of where data is
-    % TODO: saved, or something.
-    rsa.meg.MEGSearchlight_source(subject_i, sourceMeshesThisSubject, indexMasks, models, adjacencyMatrix, userOptions);
+        % Get subject source data
+        sourceMeshesThisSubjectThisHemi = MEGDataPreparation_source(subject_i, chi, betaCorrespondence(), userOptions);
+
+        % TODO: This should return a cell array of filenames of where data is
+        % TODO: saved, or something.
+        rsa.meg.MEGSearchlight_source(subject_i, chi, sourceMeshesThisSubjectThisHemi, indexMasks, models, adjacencyMatrix, userOptions);
+    end
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

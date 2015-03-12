@@ -4,9 +4,14 @@
 % It is based on Su Li's code
 %
 % [sourceMeshes[, baselineLimit] =] MEGDataPreparation_source(
-%                                                            subject,
+%                                                            subject_i,
+%                                                            chi,
 %                                                            betaCorrespondence,
 %                                                            userOptions)
+%
+%       subject_i --- a subject index
+%
+%       chi --- 'L' or 'R'
 %
 %       betaCorrespondence --- The array of beta filenames.
 %               betas(condition, session).identifier is a string which referrs
@@ -39,17 +44,14 @@
 %
 %       baselineLimit
 %
-% The following files are saved by this function:
+% The following files are NO LONGER saved by this function:
 %        userOptions.rootPath/ImageData/
 %                userOptions.analysisName_CorticalMeshes.mat
 %                        Contains the subject source-reconstructed mesh data in
 %                        a struct such that sourceMeshes.(subjectName).(L|R) is
 %                        a [nVertices nTimepoints nConditions nSessions]-sized
 %                        matrix.
-%        userOptions.rootPath/Details/
-%                userOptions.analysisName_MEGDataPreparation_source_Details.mat
-%                        Contains the userOptions for this execution of the
-%                        function and a timestamp.
+
 %
 % REQUIRES MATLAB VERSION 7.3 OR LATER!
 %
@@ -71,7 +73,7 @@
 % updated by Li Su 2-2012 
 % updated by Fawad 3-12014
 
-function [varargout] = MEGDataPreparation_source(subject, betaCorrespondence, userOptions)
+function [varargout] = MEGDataPreparation_source(subject_i, chi, betaCorrespondence, userOptions)
 
 import rsa.*
 import rsa.fig.*
@@ -84,6 +86,7 @@ import rsa.util.*
 
 % TODO: Get this uncommented - right now it assumes we're working on all
 % TODO: subjects.
+
 % returnHere = pwd; % We'll return to the pwd when the function has finished
 % 
 % %% Set defaults and check options struct
@@ -111,15 +114,15 @@ import rsa.util.*
     % First get just the first condition of the first subject's left data,
     % to set the correct sizes, even if a future reading fails due to
     % artifacts
-    readPathL = replaceWildcards(userOptions.betaPath, '[[betaIdentifier]]', betas(1, 1).identifier, '[[subjectName]]', userOptions.subjectNames{1}, '[[LR]]', 'l');
-    MEGDataStcL = mne_read_stc_file1(readPathL);
-    MEGDataStcL.data = MEGDataStcL.data(:,1:downsampleRate:end);
-    [nVertex_Raw, nTimepoint_Raw] = size(MEGDataStcL.data);
+    readPath = replaceWildcards(userOptions.betaPath, '[[betaIdentifier]]', betas(1, 1).identifier, '[[subjectName]]', userOptions.subjectNames{1}, '[[LR]]', lower(chi));
+    MEGDataStc = mne_read_stc_file1(readPath);
+    MEGDataStc.data = MEGDataStc.data(:,1:downsampleRate:end);
+    [nVertex_Raw, nTimepoint_Raw] = size(MEGDataStc.data);
     
 	%for subject = 1:nSubjects % For each subject
 
 		% Figure out the subject's name
-		thisSubject = userOptions.subjectNames{subject};
+		thisSubject = userOptions.subjectNames{subject_i};
         missingFilesLog = fullfile(userOptions.rootPath, 'ImageData', 'missingFilesLog.txt');
         if ~exist(fullfile(userOptions.rootPath, 'ImageData'),'dir')
             mkdir(userOptions.rootPath,'ImageData')
@@ -129,33 +132,27 @@ import rsa.util.*
 		for session = 1:nSessions % For each session...  UNUSED?!?!
 			for condition = 1:nConditions % and each condition...
 
-                % TODO: Do L and R separately?
 				% Then read the brain data (for this session, condition)
-				readPathL = replaceWildcards(userOptions.betaPath, '[[betaIdentifier]]', betas(session, condition).identifier, '[[subjectName]]', thisSubject, '[[LR]]', 'l');
-				readPathR = replaceWildcards(userOptions.betaPath, '[[betaIdentifier]]', betas(session, condition).identifier, '[[subjectName]]', thisSubject, '[[LR]]', 'r');
+				readPath = replaceWildcards(userOptions.betaPath, '[[betaIdentifier]]', betas(session, condition).identifier, '[[subjectName]]', thisSubject, '[[LR]]', lower(chi));
+				
 				try
-                    MEGDataStcL = mne_read_stc_file1(readPathL);
-                    MEGDataStcR = mne_read_stc_file1(readPathR);
+                    MEGDataStc = mne_read_stc_file1(readPath);
+                    
                     % data reordering by vertex list IZ 06/13
-                    MEGDataStcL.data = orderDatabyVertices(MEGDataStcL.data, MEGDataStcL.vertices);
-                    MEGDataStcR.data = orderDatabyVertices(MEGDataStcR.data, MEGDataStcR.vertices);
-                    MEGDataVolL = single(MEGDataStcL.data);
-                    MEGDataVolR = single(MEGDataStcR.data);
-                    MEGDataVolL = MEGDataVolL(:,1:downsampleRate:end);
-                    MEGDataVolR = MEGDataVolR(:,1:downsampleRate:end);
+                    MEGDataStc.data = orderDatabyVertices(MEGDataStc.data, MEGDataStc.vertices);
+                    MEGDataVol = single(MEGDataStc.data);
+                    MEGDataVol = MEGDataVol(:,1:downsampleRate:end);
                 catch ex
                     % when a trial is rejected due to artifact, this item
                     % is replaced by NaNs. Li Su 3-2012
-                    disp(['Warning: Failed to read data for condition ' num2str(condition) '... Writing NaNs instead.']);
-                    dlmwrite(missingFilesLog, str2mat(replaceWildcards( betas(session, condition).identifier, '[[subjectName]]', thisSubject)), 'delimiter', '', '-append');
-                    MEGDataVolL = NaN(nVertex_Raw,nTimepoint_Raw);
-                    MEGDataVolR = MEGDataVolL;
+                    prints(['Warning: Failed to read data for condition ' num2str(condition) '... Writing NaNs instead.']);
+                    dlmwrite(missingFilesLog, str2mat(replaceWildcards(betas(session, condition).identifier, '[[subjectName]]', thisSubject)), 'delimiter', '', '-append');
+                    MEGDataVol = NaN(nVertex_Raw, nTimepoint_Raw);
 				end
 				
-				baselineLimit = double(-MEGDataStcL.tmin/MEGDataStcL.tstep); % I hope these are all the same!
+				baselineLimit = double(-MEGDataStc.tmin/MEGDataStc.tstep); % I hope these are all the same!
                 
-                subjectSourceData.L(:, :, condition, session) = MEGDataVolL; % (vertices, time, condition, session)
-				subjectSourceData.R(:, :, condition, session) = MEGDataVolR;
+                subjectSourceData(:, :, condition, session) = MEGDataVol; % (vertices, time, condition, session)
                 
                 if nConditions > 10
                     if mod(condition, floor(nConditions/20)) == 0, fprintf('\b.:'); end%if
@@ -177,7 +174,7 @@ import rsa.util.*
 %  		cd(fullfile(userOptions.rootPath, 'ImageData'));
 %         fprintf(['Saving image data to ' fullfile(userOptions.rootPath, 'ImageData', ImageDataFilename) '\n']);
 %  		save(ImageDataFilename, 'sourceMeshes'); 		
-%		clear sourceMeshes subjectSourceData MEGDataStcL MEGDataStcR MEGDataVolL MEGDataVolR;
+%		clear sourceMeshes subjectSourceData MEGDataStc MEGDataVol;
 
 	%end%for:subjects
 
