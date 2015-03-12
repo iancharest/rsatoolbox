@@ -91,9 +91,6 @@ if overwriteFlag
     gotoDir(userOptions.rootPath, 'RDMs');
     save('-v7.3', [filepath, userOptions.subjectNames{subjectNumber}, '-', lower(chi), 'h'], 'searchlightRDMs');
 
-    % Free up some memory
-    clear thisSubjectRs pMetadataStruct searchlightRDMs maskedMesh;
-
     t = toc;%1
     prints('That took %s seconds.', t);
 else
