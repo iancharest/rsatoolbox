@@ -4,7 +4,7 @@
 % CW 2010-05, 2015-03
 % updated by Li Su 3-2012
 
-function [smm_rs, smm_ps, searchlightRDMs] = searchlightMapping_MEG_source(singleSubjectMesh, model, userOptions)
+function [smm_rs, smm_ps, searchlightRDMs] = searchlightMapping_MEG_source(singleSubjectMesh, modelRDM, partialModelRMDs, adjacencyMatrix, userOptions)
 
 import rsa.*
 import rsa.fig.*
@@ -46,7 +46,8 @@ smm_rs = zeros([nVertices, nTimePoints, nModels]);
 
 for vertex = vertices
     
-    verticesCurrentlyWithinRadius = userOptions.adjacencyMatrix(vertex,:);
+    % Determine which vertexes are within the radius of the currently-picked vertex
+    verticesCurrentlyWithinRadius = adjacencyMatrix(vertex,:);
     
     % remove nans
     verticesCurrentlyWithinRadius = verticesCurrentlyWithinRadius(~isnan(verticesCurrentlyWithinRadius));

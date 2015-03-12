@@ -38,8 +38,8 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Calculate adjacency matrix %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-nSubject = numel(userOptions.subjectNames);
-userOptions.adjacencyMatrix = rsa.meg.calculateMeshAdjacency(userOptions.nVertices, userOptions.sourceSearchlightRadius, userOptions);
+nSubjects = numel(userOptions.subjectNames);
+adjacencyMatrix = rsa.meg.calculateMeshAdjacency(userOptions.nVertices, userOptions.sourceSearchlightRadius, userOptions);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Starting parallel toolbox %%
