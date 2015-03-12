@@ -63,29 +63,24 @@ if overwriteFlag
     %% Apply searchlight
     if userOptions.partial_correlation
         % It says searchlightRDMs are unused, but actually they're saved.
-        [thisSubjectRs, thisSubjectPs, searchlightRDMs] = searchlightMapping_MEG_source(maskedMesh, Models(modelNumber), Models([userOptions.partial_modelNumber{:}]), adjacencyMatrix, userOptions); %#ok<ASGLU>
+        [thisSubjectRs, thisSubjectPs, searchlightRDMs] = searchlightMapping_MEG_source(maskedMesh, indexMask, Models(modelNumber), Models([userOptions.partial_modelNumber{:}]), adjacencyMatrix, userOptions); %#ok<ASGLU>
     else
-        [thisSubjectRs, thisSubjectPs, searchlightRDMs] = searchlightMapping_MEG_source(maskedMesh, Models(modelNumber), [], adjacencyMatrix, userOptions); %#ok<ASGLU>
+        [thisSubjectRs, thisSubjectPs, searchlightRDMs] = searchlightMapping_MEG_source(maskedMesh, indexMask, Models(modelNumber), [], adjacencyMatrix, userOptions); %#ok<ASGLU>
     end
 
     rMetadataStruct = userOptions.STCmetaData;
-    pMetadataStruct = userOptions.STCmetaData;
 
     rMetadataStruct.data = thisSubjectRs(:,:,modelNumber);
-    pMetadataStruct.data = thisSubjectPs(:,:,modelNumber);
 
     %% Saving r-maps and p-maps
     if userOptions.maskingFlag
         outputRFilename = [fullfile(userOptions.rootPath, 'Maps', modelName,  [userOptions.analysisName '_rMesh_' modelName '_' subject ]) '_masked' '-' lower(chi) 'h.stc'];
-        outputPFilename = [fullfile(userOptions.rootPath, 'Maps', modelName,  [userOptions.analysisName '_pMesh_' modelName '_' subject ]) '_masked' '-' lower(chi) 'h.stc'];
     else
         outputRFilename = [fullfile(userOptions.rootPath, 'Maps', modelName,  [userOptions.analysisName '_rMesh_' modelName '_' subject]) '-' lower(chi) 'h.stc'];
-        outputPFilename = [fullfile(userOptions.rootPath, 'Maps', modelName,  [userOptions.analysisName '_pMesh_' modelName '_' subject]) '-' lower(chi) 'h.stc'];
     end
     
     % Write the r and p maps
     mne_write_stc_file1(outputRFilename, rMetadataStruct);
-    mne_write_stc_file1(outputPFilename, pMetadataStruct);
 
     %% Saving the searchlight RDMs
     prints('Saving data RDMs for combined mask: ');
@@ -99,7 +94,7 @@ if overwriteFlag
     % Free up some memory
     clear thisSubjectRs thisSubjectPs pMetadataStruct searchlightRDMs maskedMesh;
 
-    t = toc;
+    t = toc;%1
     prints('That took %s seconds.', t);
 else
     prints('Searchlight already applied, skipping it.');
