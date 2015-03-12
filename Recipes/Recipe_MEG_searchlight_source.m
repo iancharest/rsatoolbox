@@ -63,7 +63,6 @@ parfor subject_i = 1:nSubjects
     
     % Work on each hemisphere separately
     for chi = 'LR'
-        
         rsa.util.prints('%s: Working on subject %d, %s side', hostname, subject_i, chi);
     
         % Get subject source data

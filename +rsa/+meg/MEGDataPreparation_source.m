@@ -111,11 +111,14 @@ import rsa.util.*
 	[nSessions, nConditions] = size(betas);
     downsampleRate = userOptions.temporalDownsampleRate;
     
-    % First get just the first condition of the first subject's left data,
+    % First get just the first condition of the first subject's data,
     % to set the correct sizes, even if a future reading fails due to
-    % artifacts
+    % artifact rejection
     readPath = replaceWildcards(userOptions.betaPath, '[[betaIdentifier]]', betas(1, 1).identifier, '[[subjectName]]', userOptions.subjectNames{1}, '[[LR]]', lower(chi));
     MEGDataStc = mne_read_stc_file1(readPath);
+    % TODO: This downsampling should be done in exactly one place, and then
+    % TODO: the resultant window sizes should be returned and reused
+    % TODO: elsewhere.  Right?
     MEGDataStc.data = MEGDataStc.data(:,1:downsampleRate:end);
     [nVertex_Raw, nTimepoint_Raw] = size(MEGDataStc.data);
     
@@ -128,8 +131,12 @@ import rsa.util.*
             mkdir(userOptions.rootPath,'ImageData')
         end
         %ImageDataFilename = [userOptions.analysisName, '_', thisSubject, '_CorticalMeshes.mat'];
+        
+        % Preallocate with nans.
+        % The nans will remain if a condition fails to be read.
+        sourceMeshes = NaN(nVertex_Raw, nTimepoint_Raw, nConditions, nSessions); % (vertices, time, condition, session)
 		
-		for session = 1:nSessions % For each session...  UNUSED?!?!
+		for session = 1:nSessions % For each session...
 			for condition = 1:nConditions % and each condition...
 
 				% Then read the brain data (for this session, condition)
@@ -141,18 +148,19 @@ import rsa.util.*
                     % data reordering by vertex list IZ 06/13
                     MEGDataStc.data = orderDatabyVertices(MEGDataStc.data, MEGDataStc.vertices);
                     MEGDataVol = single(MEGDataStc.data);
-                    MEGDataVol = MEGDataVol(:,1:downsampleRate:end);
+                    sourceMeshes(:, :, condition, session) = MEGDataVol(:,1:downsampleRate:end); % (vertices, time, condition, session)
+                    clear MEGDataVol;
                 catch ex
                     % when a trial is rejected due to artifact, this item
                     % is replaced by NaNs. Li Su 3-2012
                     prints(['Warning: Failed to read data for condition ' num2str(condition) '... Writing NaNs instead.']);
                     dlmwrite(missingFilesLog, str2mat(replaceWildcards(betas(session, condition).identifier, '[[subjectName]]', thisSubject)), 'delimiter', '', '-append');
-                    MEGDataVol = NaN(nVertex_Raw, nTimepoint_Raw);
+                    % Make sure it actually has NaNs in if there was an
+                    % error for this condition
+                    sourceMeshes(:, :, condition, session) = NaN(nVertex_Raw, nTimepoint_Raw);
 				end
 				
 				baselineLimit = double(-MEGDataStc.tmin/MEGDataStc.tstep); % I hope these are all the same!
-                
-                subjectSourceData(:, :, condition, session) = MEGDataVol; % (vertices, time, condition, session)
                 
                 if nConditions > 10
                     if mod(condition, floor(nConditions/20)) == 0, fprintf('\b.:'); end%if
@@ -170,7 +178,6 @@ import rsa.util.*
 		% For each subject, record the vectorised brain scan in a subject-name-indexed structure
 		
 		%% MEMORY DEBUG %%
-		sourceMeshes = subjectSourceData;
 %  		cd(fullfile(userOptions.rootPath, 'ImageData'));
 %         fprintf(['Saving image data to ' fullfile(userOptions.rootPath, 'ImageData', ImageDataFilename) '\n']);
 %  		save(ImageDataFilename, 'sourceMeshes'); 		
