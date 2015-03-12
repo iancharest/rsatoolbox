@@ -4,7 +4,7 @@
 % CW 2010-05, 2015-03
 % updated by Li Su 3-2012
 
-function [smm_rs, smm_ps, searchlightRDMs] = searchlightMapping_MEG_source(singleSubjectMesh, modelRDM, partialModelRMDs, adjacencyMatrix, userOptions)
+function [smm_rs, smm_ps, searchlightRDMs] = searchlightMapping_MEG_source(singleSubjectMesh, indexMask, modelRDM, partialModelRDMs, adjacencyMatrix, userOptions)
 
 import rsa.*
 import rsa.fig.*
@@ -36,22 +36,21 @@ nTimePoints = floor((epochLength - (userOptions.temporalSearchlightWidth * userO
 
 % vertices change on the basis of userOptions.maskingFlag's value IZ 11-12
 % updated: all searchlight run as masks IZ 03/12
-vertices = userOptions.maskIndices.(userOptions.chi);
 
 % Preallocate looped matrices for speed
 smm_ps = zeros([nVertices, nTimePoints, nModels]);
 smm_rs = zeros([nVertices, nTimePoints, nModels]);
 
-for vertex = vertices
+for v = indexMask.vertices
     
     % Determine which vertexes are within the radius of the currently-picked vertex
-    verticesCurrentlyWithinRadius = adjacencyMatrix(vertex,:);
+    verticesCurrentlyWithinRadius = adjacencyMatrix(v,:);
     
     % remove nans
     verticesCurrentlyWithinRadius = verticesCurrentlyWithinRadius(~isnan(verticesCurrentlyWithinRadius));
     
     % add current vertex
-    verticesCurrentlyWithinRadius = [vertex, verticesCurrentlyWithinRadius]; % add by Li Su 1-02-2010
+    verticesCurrentlyWithinRadius = [v, verticesCurrentlyWithinRadius]; % add by Li Su 1-02-2010
     
     % If masks are used, finding corresponding mask indices - update IZ 11-12
     if userOptions.maskingFlag
@@ -122,7 +121,7 @@ for vertex = vertices
         searchlightRDM = vectorizeRDM(searchlightRDM);
         
         % Locally store the full brain's worth of indexed RDMs.
-        searchlightRDMs(vertex, t).RDM = searchlightRDM;
+        searchlightRDMs(v, t).RDM = searchlightRDM;
         
         % TODO: Refactor this into general method so it can be used
         % TODO: anywhere
@@ -140,13 +139,13 @@ for vertex = vertices
             [rs, ps] = corr(searchlightRDM', modelRDM_utv', 'type', userOptions.distanceMeasure, 'rows', 'pairwise');
         end
         
-        smm_ps(vertex, t, :) = ps;
-        smm_rs(vertex, t, :) = rs;
+        smm_ps(v, t, :) = ps;
+        smm_rs(v, t, :) = rs;
         
     end%for:t
     
     % Indicate progress every once in a while...
-    if mod(vertex, floor(length(vertices) / 20)) == 0, fprintf('.'); end%if
+    if mod(v, floor(length(vertices) / 20)) == 0, fprintf('.'); end%if
     
 end%for:vertices
 
