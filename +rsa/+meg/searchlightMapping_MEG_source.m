@@ -17,7 +17,7 @@ import rsa.util.*
 
 %% Get parameters
 
-modelRDMs_utv = squeeze(unwrapRDMs(vectorizeRDMs(model)));
+modelRDM_utv = squeeze(unwrapRDMs(vectorizeRDMs(modelRDM)));
 
 if userOptions.partial_correlation
     control_for_modelRDMs = modelRDMs_utv(userOptions.partial_modelNumber{1}, :);
@@ -57,12 +57,11 @@ for vertex = vertices
     verticesCurrentlyWithinRadius = verticesCurrentlyWithinRadius(~isnan(verticesCurrentlyWithinRadius));
     
     % add current vertex
-    verticesCurrentlyWithinRadius = [vertex, verticesCurrentlyWithinRadius]; % add by Li Su 1-02-201
+    verticesCurrentlyWithinRadius = [vertex, verticesCurrentlyWithinRadius]; % add by Li Su 1-02-2010
     
     % If masks are used, finding corresponding mask indices - update IZ 11-12
     if userOptions.maskingFlag
-        location = ismember(verticesCurrentlyWithinRadius, vertices);
-        verticesCurrentlyWithinRadius= verticesCurrentlyWithinRadius(location);
+        verticesCurrentlyWithinRadius = intersect(verticesCurrentlyWithinRadius, vertices);
     end
     
     for t = 1:nTimePoints+1
@@ -140,7 +139,7 @@ for vertex = vertices
         % TODO: Refactor this into general method so it can be used
         % TODO: anywhere
         if strcmpi(userOptions.distanceMeasure, 'Kendall_taua')
-            rs = rankCorr_Kendall_taua(searchlightRDM', modelRDMs_utv');
+            rs = rankCorr_Kendall_taua(searchlightRDM', modelRDM_utv');
             % We are currently no using the p values created, though we are
             % saving them for some reason.  Anyway, there is currently no
             % way to get them for Kendall's tau_a, and until this becomes
@@ -148,9 +147,9 @@ for vertex = vertices
             ps = NaN;
         elseif userOptions.partial_correlation
             % TODO: Consider partialcorr with kendall's tau
-            [rs, ps] = partialcorr(searchlightRDM', modelRDMs_utv', control_for_modelRDMs', 'type', userOptions.distanceMeasure, 'rows','pairwise');
+            [rs, ps] = partialcorr(searchlightRDM', modelRDM_utv', control_for_modelRDMs', 'type', userOptions.distanceMeasure, 'rows','pairwise');
         else
-            [rs, ps] = corr(searchlightRDM', modelRDMs_utv', 'type', userOptions.distanceMeasure, 'rows', 'pairwise');
+            [rs, ps] = corr(searchlightRDM', modelRDM_utv', 'type', userOptions.distanceMeasure, 'rows', 'pairwise');
         end
         
         smm_ps(vertex, t, :) = ps;
