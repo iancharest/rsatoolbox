@@ -1,4 +1,4 @@
-% [smm_rs, smm_ps, n, searchlightRDMs] = searchlightMapping_MEG_source(singleMesh, model, mask, userOptions, localOptions)
+% [smm_rs, searchlightRDMs] = searchlightMapping_MEG_source(singleSubjectMesh, indexMask, modelRDM, partialModelRDMs, adjacencyMatrix, userOptions)
 %
 % Based on Li Su's script
 % CW 2010-05, 2015-03
@@ -35,8 +35,12 @@ nTimePoints = floor((epochLength - (userOptions.temporalSearchlightWidth * userO
 %% similarity-graph-map the volume with the searchlight
 
 % Preallocate looped matrices for speed
-smm_rs = zeros([nVertices, nTimePoints, nModels]);
+smm_rs = zeros([nVertices, nTimePoints]);
+searchlightRDMs(numel(indexMask.vertices), nTimePoints) = struct();
 
+nVerticesSearched = 0;
+
+% Search the vertices
 for v = indexMask.vertices
     
     % Determine which vertexes are within the radius of the currently-picked vertex
@@ -45,8 +49,9 @@ for v = indexMask.vertices
     % Restrict to verticies inside mask.
     % This also removes any nans.
     % All searchlight run as masks, including full-brain searchlights (update IZ 03/12)
-    verticesCurrentlyWithinRadius = intersect(verticesCurrentlyWithinRadius, vertices);
+    verticesCurrentlyWithinRadius = intersect(verticesCurrentlyWithinRadius, indexMask.vertices);
     
+    % Search through time
     % TODO: Why +1 ?
     for t = 1:nTimePoints+1
         
@@ -119,20 +124,21 @@ for v = indexMask.vertices
         if strcmpi(userOptions.distanceMeasure, 'Kendall_taua')
             rs = rankCorr_Kendall_taua(searchlightRDM', modelRDM_utv');
         elseif userOptions.partial_correlation
-            % TODO: Consider partialcorr with kendall's tau
+            % TODO: Consider partialcorr with Kendall's tau
             rs = partialcorr(searchlightRDM', modelRDM_utv', control_for_modelRDMs', 'type', userOptions.distanceMeasure, 'rows','pairwise');
         else
             rs = corr(searchlightRDM', modelRDM_utv', 'type', userOptions.distanceMeasure, 'rows', 'pairwise');
         end
         
-        smm_rs(v, t, :) = rs;
+        smm_rs(v, t) = rs;
         
     end%for:t
     
     % Indicate progress every once in a while...
-    if mod(v, floor(length(vertices) / 20)) == 0, fprintf('.'); end%if
+    nVerticesSearched = nVerticesSearched + 1;
+    if mod(nVerticesSearched, 500) == 0, prints('%d vertices searched', nVerticesSearched); end%if
     
-end%for:vertices
+end%for:v
 
 if userOptions.fisher
     smm_rs = fisherTransform(smm_rs);

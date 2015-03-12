@@ -32,6 +32,8 @@ if ~isfield(userOptions, 'subjectNames'), error('projectOptions:NoSubjectNames',
 tempBetas = betaCorrespondence();
 userOptions.betaCorrespondence = tempBetas;
 
+usingMasks = ~isempty(userOptions.maskNames);
+
 if userOptions.sensorLevelAnalysis
     
     % Despite warning, readPath *is* used, but it's used in an eval
@@ -132,15 +134,15 @@ else % source level analysis
     end
     
     %% MASKING TIME WINDOWS %%
-    if userOptions.maskingFlag && not(userOptions.searchlight) % sliding time window and roi analysis
+    if usingMasks && not(userOptions.searchlight) % sliding time window and roi analysis
         
         nMasks = numel(userOptions.maskNames);
-        for mask = 1:nMasks
+        for mask_i = 1:nMasks
             
             % Which mask is this?
-            thisMask = dashToUnderscores(userOptions.maskNames{mask});
+            thisMaskName = dashToUnderscores(userOptions.maskNames{mask_i});
             
-            time = cell2mat(userOptions.maskTimeWindows(mask));
+            time = cell2mat(userOptions.maskTimeWindows(mask_i));
             lowerTimeLimit = time(1);
             upperTimeLimit = time(2);
             
@@ -157,7 +159,7 @@ else % source level analysis
             
             % checks onmask timing information
             if lowerTimeLimit < MEGDataStcL.tmin*1000
-                disp(['Warning: The searchlight for mask: ', thisMask, ' is attempting to access time point not in data.'] );
+                disp(['Warning: The searchlight for mask: ', thisMaskName, ' is attempting to access time point not in data.'] );
                 disp(strcat(' >> Using minimum time point value instead... ', int2str(MEGDataStcL.tmin*1000), ' ms'));
                 startingDataPoint = 1;
                 userOptions.STCmetaData.tmin = MEGDataStcL.tmin;
@@ -165,21 +167,21 @@ else % source level analysis
             
             if userOptions.slidingTimeWindow % added by IZ 11-12
                 if timeAdjusted-userOptions.temporalSearchlightWidth <= upperTimeLimit
-                    disp(['Warning: The sliding window for mask: ', thisMask, ' over-runs the data sample. ']);
+                    disp(['Warning: The sliding window for mask: ', thisMaskName, ' over-runs the data sample. ']);
                     disp(strcat('>> Using maximum time point, with adjusted factor of source searchlight radius, from data instead... ', int2str(timeAdjusted-userOptions.sourceSearchlightRadius), ' ms'));
                     lastDataPoint = totalDataPoints - ...
                         ceil(userOptions.temporalSearchlightWidth/userOptions.temporalSearchlightResolution);
                 end
             else
                 if timeAdjusted <= upperTimeLimit
-                    disp(['Warning: The searchlight for mask: ', thisMask, ' over-runs the data sample. ']);
+                    disp(['Warning: The searchlight for mask: ', thisMaskName, ' over-runs the data sample. ']);
                     disp(strcat('>> Using maximum time point from data instead... ', int2str(timeAdjusted-userOptions.sourceSearchlightRadius), ' ms'));
                     lastDataPoint = totalDataPoints;
                 end
             end
             
             % TODO: Don't store this in the userOptions
-            userOptions.maskTimetoDataPoints.(thisMask) = [startingDataPoint lastDataPoint];
+            userOptions.maskTimetoDataPoints.(thisMaskName) = [startingDataPoint lastDataPoint];
         end
         
     elseif userOptions.searchlight % all brain searchlight
@@ -220,7 +222,6 @@ else % source level analysis
     
     % ====================================================================== %
     userOptions = setIfUnset(userOptions, 'minDist', 5);
-    userOptions = setIfUnset(userOptions, 'maskingFlag', false);
     userOptions = setIfUnset(userOptions, 'primaryThreshold', 0.05);
     userOptions = setIfUnset(userOptions, 'ModelColor', [0 1 0]);
     userOptions = setIfUnset(userOptions, 'RoIColor', [0 0 1]);

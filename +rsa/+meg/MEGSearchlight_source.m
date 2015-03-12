@@ -7,6 +7,7 @@
 % Cai Wingfield 3-2010, 9-2010 Su Li updated 3-2012
 
 % TODO: documentation
+% TODO: partial model numbers vs model number - make this coherent
 
 function MEGSearchlight_source(subjectNumber, chi, sourceMeshesThisSubjectThisHemi, indexMask, Models, adjacencyMatrix, userOptions)
 
@@ -24,6 +25,8 @@ returnHere = pwd; % We'll come back here later
 subject = userOptions.subjectNames{subjectNumber};
 nSubjects = numel(userOptions.subjectNames);
 
+usingMasks = ~isempty(userOptions.maskNames);
+
 % TODO: this is a weird thing to have in userOptions.
 modelNumber = userOptions.modelNumber;
 modelName = spacesToUnderscores(Models(modelNumber).name);
@@ -32,7 +35,7 @@ if userOptions.partial_correlation
     modelName = [modelName, '_partialCorr'];
 end
 
-if userOptions.maskingFlag
+if usingMasks
     MapsFilename = [userOptions.analysisName, '_rMesh_', modelName, '_', subject '_masked'];
 else
     MapsFilename = [userOptions.analysisName, '_rMesh_', modelName, '_', subject];
@@ -47,7 +50,10 @@ overwriteFlag = overwritePrompt(userOptions, promptOptions);
 if overwriteFlag
     
     prints('Shining RSA searchlights...');
-    gotoDir(fullfile(userOptions.rootPath, 'Maps'), modelName);
+    gotoDir(fullfile(userOptions.rootPath, 'Maps', modelName));
+    
+    % TODO: This is confusing.
+    timeIndices = userOptions.dataPointsSearchlightLimits;
     
     tic;%1
     
@@ -70,10 +76,10 @@ if overwriteFlag
 
     rMetadataStruct = userOptions.STCmetaData;
 
-    rMetadataStruct.data = thisSubjectRs(:,:,modelNumber);
+    rMetadataStruct.data = thisSubjectRs(:,:);
 
     %% Saving r-maps and p-maps
-    if userOptions.maskingFlag
+    if usingMasks
         outputRFilename = [fullfile(userOptions.rootPath, 'Maps', modelName,  [userOptions.analysisName '_rMesh_' modelName '_' subject ]) '_masked' '-' lower(chi) 'h.stc'];
     else
         outputRFilename = [fullfile(userOptions.rootPath, 'Maps', modelName,  [userOptions.analysisName '_rMesh_' modelName '_' subject]) '-' lower(chi) 'h.stc'];
@@ -85,7 +91,7 @@ if overwriteFlag
     %% Saving the searchlight RDMs
     prints('Saving data RDMs for combined mask: ');
     filepath = 'searchlightRDMs_';
-    if userOptions.maskingFlag
+    if usingMasks
         filepath = [filepath 'masked_'];
     end
     gotoDir(userOptions.rootPath, 'RDMs');

@@ -15,6 +15,8 @@ import rsa.util.*
 
 returnHere = pwd; % We'll come back here later
 
+usingMasks = ~isempty(userOptions.maskNames);
+
 % The analysisName will be used to label the files which are eventually saved.
 modelNumber = userOptions.modelNumber;
 modelName = spacesToUnderscores(Models(modelNumber).name);
@@ -22,7 +24,8 @@ if userOptions.partial_correlation
     modelName = [modelName, '_partialCorr'];
 end
 MapsFilename = ['perm-', num2str(max(range)), '_', modelName, '_t_map_cluster'];
-if userOptions.maskingFlag
+
+if usingMasks
     MapsFilename = [MapsFilename , '_masked'];
 end
 
@@ -40,7 +43,7 @@ overwriteFlag = overwritePrompt(userOptions, promptOptions);
 if overwriteFlag
         
     inputFileName = fullfile(userOptions.rootPath, 'Maps', modelName, [userOptions.analysisName '_tMesh_' modelName '_allSubjects']);
-    if userOptions.maskingFlag
+    if usingMasks
         inputFileName = [inputFileName , '_masked'];
     end
     
@@ -55,7 +58,7 @@ if overwriteFlag
         t_values_lh.data = reshape(t_values_lh.data,1,size(t_values_lh.data,1)*size(t_values_lh.data,2));
         t_values_rh.data = reshape(t_values_rh.data,1,size(t_values_rh.data,1)*size(t_values_rh.data,2));
         
-        if userOptions.maskingFlag
+        if usingMasks
             nMasks = size(userOptions.maskNames,2);
             t_values_lh.data = MEG_masking(t_values_lh.data, userOptions.indexMasks, 1:2:nMasks); % assuming oddly numbered are left hemisphere and vice versa IZ 03/12
             t_values_rh.data = MEG_masking(t_values_rh.data, userOptions.indexMasks, 2:2:nMasks);

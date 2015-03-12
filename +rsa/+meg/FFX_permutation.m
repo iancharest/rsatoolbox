@@ -25,6 +25,8 @@ end
 
 MapsFilename = ['perm-', userOptions.significanceTestPermutations, '_', modelName, '_r_map'];
 
+usingMasks = ~isempty(userOptions.maskNames);
+
 promptOptions.functionCaller = 'FFX_permutation';
 promptOptions.defaultResponse = 'S';
 promptOptions.checkFiles(1).address = fullfile(userOptions.rootPath, 'Maps', modelName, [MapsFilename, '-lh.stc']);
@@ -74,7 +76,7 @@ if overwriteFlag
         % computes nanmean
             for subjectNumber = 1:nSubjects
                 filepath = ['searchlightRDMs_'];
-                if userOptions.maskingFlag
+                if usingMasks
                     filepath = [filepath 'masked_'];
                 end
                 subjectRDMsFile = fullfile(userOptions.rootPath, 'RDMs', [filepath  userOptions.subjectNames{subjectNumber} '-' lower(chi) 'h']);
@@ -102,7 +104,7 @@ if overwriteFlag
             disp(' Done!');
         else 
             filepath = ['searchlightRDMs_'];
-            if userOptions.maskingFlag
+            if usingMasks
                 filepath = [filepath 'masked_'];
             end
             load(promptOptions.checkFiles(chirality).address);
@@ -136,7 +138,7 @@ if overwriteFlag
         
         outputFilename = fullfile(userOptions.rootPath, 'Maps', modelName, ...
             [userOptions.analysisName '_rMesh_' modelName '_allSubjects']);
-        if userOptions.maskingFlag
+        if usingMasks
             outputFilename = [outputFilename '_masked'];
         end
         mkdir(fullfile(userOptions.rootPath, 'Maps'),modelName);
@@ -224,7 +226,7 @@ if overwriteFlag
     
     gotoDir(userOptions.rootPath, 'Results');
     outputFileName_sig = fullfile(userOptions.rootPath, 'Results', [userOptions.analysisName, '_', modelName '_significant_vertex_ffx']);
-    if userOptions.maskingFlag
+    if usingMasks
         outputFileName_sig = [outputFileName_sig '_masked'];
     end
     observed_Vol.L.data(observed_Vol.L.data<vertex_level_threshold) = 0;

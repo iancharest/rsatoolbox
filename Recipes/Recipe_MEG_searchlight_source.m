@@ -1,10 +1,9 @@
-% Recipe_MEG_searchlight_source (which_model)
 %
-% which_model: the model number, in the order of they occur in the modelRDMs.m
-%
-% Cai Wingfield 5-2010, 8-2010
+% Cai Wingfield 2010-05, 2010-08, 2015-03
 % update by Li Su 3-2012, 11-2012
 % updated Fawad 12-2013, 02-2014, 10-2014
+
+% TODO: Documentation
 
 %%%%%%%%%%%%%%%%%%%%
 %% Initialisation %%
@@ -28,11 +27,11 @@ userOptions = rsa.meg.setMetadata_MEG(models, userOptions);
 %%%%%%%%%%%%%%%%%%%%%%
 %% Mask preparation %% 
 %%%%%%%%%%%%%%%%%%%%%%
-% TODO: Why is this set in the userOptions struct?
-if userOptions.maskingFlag
+usingMasks = ~isempty(userOptions.maskNames);
+if usingMasks
     indexMasks = rsa.meg.MEGMaskPreparation_source(userOptions);
-    % For searchlight analysis, we combine all masks into one
-    indexMasks = combineVertexMasks_source(indexMasks, 'combined_mask', userOptions);  
+    % For this searchlight analysis, we combine all masks into one
+    indexMasks = rsa.meg.combineVertexMasks_source(indexMasks, 'combined_mask', userOptions);  
 else
     indexMasks = rsa.meg.allBrainMask(userOptions);
 end
@@ -66,11 +65,20 @@ parfor subject_i = 1:nSubjects
         rsa.util.prints('%s: Working on subject %d, %s side', hostname, subject_i, chi);
     
         % Get subject source data
-        sourceMeshesThisSubjectThisHemi = MEGDataPreparation_source(subject_i, chi, betaCorrespondence(), userOptions);
+        sourceMeshesThisSubjectThisHemi = rsa.meg.MEGDataPreparation_source(subject_i, chi, betaCorrespondence(), userOptions);
 
         % TODO: This should return a cell array of filenames of where data is
         % TODO: saved, or something.
-        rsa.meg.MEGSearchlight_source(subject_i, chi, sourceMeshesThisSubjectThisHemi, indexMasks, models, adjacencyMatrix, userOptions);
+        rsa.meg.MEGSearchlight_source( ...
+            subject_i, ...
+            chi, ...
+            sourceMeshesThisSubjectThisHemi, ...
+            ...% Use the mask for this hemisphere only
+            indexMasks(find([indexMasks.chirality] == chi)), ...
+            models, ...
+            adjacencyMatrix, ...
+            userOptions ...
+        );
     end
 end
 

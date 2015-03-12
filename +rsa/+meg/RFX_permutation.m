@@ -16,6 +16,8 @@ import rsa.util.*
 
 returnHere = pwd; % We'll come back here later
 
+usingMasks = ~isempty(userOptions.maskNames);
+
 nSubjects = numel(userOptions.subjectNames);
 modelNumber = userOptions.modelNumber;
 modelName = spacesToUnderscores(Models(modelNumber).name);
@@ -35,11 +37,11 @@ overwriteFlag = overwritePrompt(userOptions, promptOptions);
 
 if overwriteFlag
     fprintf('Permuting (RFX) ...');
-%     if ~userOptions.maskingFlag
+%     if ~usingMasks
         for subjectNumber = 1:nSubjects
             subject = userOptions.subjectNames{subjectNumber};
             inputFilename = fullfile(userOptions.rootPath, 'Maps', modelName, [userOptions.analysisName '_rMesh_' modelName '_' subject]);
-            if userOptions.maskingFlag
+            if usingMasks
                 inputFilename = [inputFilename , '_masked'];
             end
             MEGDataStcL = mne_read_stc_file1([inputFilename, '-lh.stc']);
@@ -66,7 +68,7 @@ if overwriteFlag
         
         
         outputFilename = fullfile(userOptions.rootPath, 'Maps', modelName, [userOptions.analysisName '_tMesh_' modelName '_allSubjects']);
-        if userOptions.maskingFlag
+        if usingMasks
            outputFilename = [outputFilename , '_masked'];
         end
         mne_write_stc_file1([outputFilename, '-lh.stc'], lh_Vol);
@@ -114,7 +116,7 @@ if overwriteFlag
         
         gotoDir(userOptions.rootPath, 'Results');
         outputFileName_sig = fullfile(userOptions.rootPath, 'Results', [userOptions.analysisName, '_', modelName '_significant_vertex']);
-        if userOptions.maskingFlag
+        if usingMasks
               outputFileName_sig = [outputFileName_sig , '_masked'];
         end
         observed_Vol_L.data(observed_Vol_L.data<vertex_level_threshold) = 0;

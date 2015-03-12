@@ -6,7 +6,7 @@
 % Note: This function assumes that all ROIs you give as input are for the same
 % hemisphere. IZ
 
-function maskedBrain = masking(brain, indexMasks, RoIs)
+function maskedBrain = MEG_masking(brain, indexMasks, RoIs)
 
 import rsa.*
 import rsa.fig.*

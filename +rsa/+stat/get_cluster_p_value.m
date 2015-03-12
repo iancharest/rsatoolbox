@@ -21,6 +21,8 @@ import rsa.util.*
 modelNumber = userOptions.modelNumber;
 modelName = spacesToUnderscores(Models(modelNumber).name);
 
+usingMasks = ~isempty(userOptions.maskNames);
+
 if userOptions.partial_correlation
     modelName = [modelName, '_partialCorr'];
 end
@@ -31,7 +33,7 @@ tStep = userOptions.temporalSearchlightResolution;
 % nullDistribution_lh = [];
 % nullDistribution_rh = [];
 
-% if not(userOptions.maskingFlag)
+% if not(usingMasks)
 nullDistribution = [];
 thisTimeWindow = userOptions.temporalSearchlightLimits;
 if exist(fullfile(userOptions.rootPath, 'ImageData', [userOptions.analysisName '_' modelName '_null_distribution.csv']),'file')
@@ -50,7 +52,7 @@ end
 % nullDistribution_rh = reshape(nullDistribution_rh, 1, numel(nullDistribution_rh));
 
 observedFileName = fullfile(userOptions.rootPath, 'Maps', modelName, [userOptions.analysisName '_tMesh_' modelName '_allSubjects']);
-if userOptions.maskingFlag
+if usingMasks
     observedFileName = [observedFileName, '_masked'];
 end
 lh_Vol = mne_read_stc_file1([observedFileName,'-lh.stc']); % Pull in data, requires MNE in the search path
@@ -157,7 +159,7 @@ marginally_significant_cluster_rh = marginally_significant_cluster_rh(~ismember(
 
 outputFileName_sig = fullfile(userOptions.rootPath, 'Results', [userOptions.analysisName, '_', modelName '_significant_cluster']);
 outputFileName_mar_sig = fullfile(userOptions.rootPath, 'Results', [userOptions.analysisName, '_', modelName '_mar_significant_cluster']);
-if userOptions.maskingFlag
+if usingMasks
     outputFileName_sig = [outputFileName_sig '_masked'];
     outputFileName_mar_sig = [outputFileName_mar_sig '_masked'];
 end
