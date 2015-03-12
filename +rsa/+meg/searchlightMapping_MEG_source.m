@@ -20,10 +20,8 @@ import rsa.util.*
 modelRDM_utv = squeeze(unwrapRDMs(vectorizeRDMs(modelRDM)));
 
 if userOptions.partial_correlation
-    control_for_modelRDMs = modelRDMs_utv(userOptions.partial_modelNumber{1}, :);
-    for m = 2:size(userOptions.partial_modelNumber, 2)
-        control_for_modelRDMs = [control_for_modelRDMs; modelRDMs_utv(userOptions.partial_modelNumber{m}, :)];
-    end
+    % TODO: should be transposed?
+    control_for_modelRDMs = unwrapRDMs(vectoriseRDMs(partialModelRDMs));
 end
 
 [nVertices, epochLength, nConditions, nSessions] = size(singleSubjectMesh);
