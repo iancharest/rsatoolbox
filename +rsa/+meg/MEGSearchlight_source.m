@@ -1,12 +1,12 @@
 % MEGSearchlight_source
 %
-% MEGSearchlight_source(Models, userOptions)
+% MEGSearchlight_source(subjectNumber, sourceMeshesThisSubject, indexMasks, Models, userOptions)
 %
 % It is based on Su Li's code
 %
 % Cai Wingfield 3-2010, 9-2010 Su Li updated 3-2012
 
-function [varargout] = MEGSearchlight_source(subjectNumber, Models, userOptions)
+function MEGSearchlight_source(subjectNumber, sourceMeshesThisSubject, indexMasks, Models, adjacencyMatrix, userOptions)
 
 import rsa.*
 import rsa.fig.*
@@ -18,13 +18,7 @@ import rsa.stat.*
 import rsa.util.*
 
 returnHere = pwd; % We'll come back here later
-% TODO: This should be passed into the function, and not calculated
-% TODO: in-line.  betaCorrespondence.m is something modified by the user,
-% TODO: and as such should be called by the Recipe code (also
-% TODO: user-modifable), and not by library functions.  This will make it
-% TODO: easier in future to separate the library code from a specific
-% TODO: recipe format.
-tempBetas = userOptions.betaCorrespondence();
+
 subject = userOptions.subjectNames{subjectNumber};
 nSubjects = numel(userOptions.subjectNames);
 
@@ -59,9 +53,6 @@ if overwriteFlag
     
     prints(['\tSearching in the source meshes of subject ' num2str(subjectNumber) ' of ' num2str(nSubjects) ':']);
     
-    % Run searchlight on both halves of the brain
-    sourceMeshes = MEGDataPreparation_source(subjectNumber, tempBetas, userOptions);
-    
     for chirality = 1:2
         switch chirality
             case 1
@@ -78,7 +69,11 @@ if overwriteFlag
         end
         
         %% Apply searchlight
-        [thisSubjectRs.(chi), thisSubjectPs.(chi), searchlightRDMs] = searchlightMapping_MEG_source(maskedMesh, Models(modelNumber), userOptions);
+        if userOptions.partial_correlation
+            [thisSubjectRs.(chi), thisSubjectPs.(chi), searchlightRDMs] = searchlightMapping_MEG_source(maskedMesh, Models(modelNumber), Models([userOptions.partial_modelNumber{:}]), adjacencyMatrix, userOptions);
+        else
+            [thisSubjectRs.(chi), thisSubjectPs.(chi), searchlightRDMs] = searchlightMapping_MEG_source(maskedMesh, Models(modelNumber), [], adjacencyMatrix, userOptions);
+        end
         
         rMetadataStruct = userOptions.STCmetaData;
         pMetadataStruct = userOptions.STCmetaData;

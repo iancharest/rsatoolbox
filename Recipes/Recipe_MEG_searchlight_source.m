@@ -61,13 +61,16 @@ indexMasks = combineVertexMasks_source(indexMasks, 'combined_mask', userOptions)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Searchlight - Brain RDM calculation %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-parfor subject = 1:nSubject
+rsa.util.prints('Stage 1 - Searchlight Brain RDM Calculation:');
+parfor subject_i = 1:nSubjects
+    
+    % Get subject source data
+    sourceMeshesThisSubject = MEGDataPreparation_source(subject_i, betaCorrespondence(), userOptions);
+    
     % TODO: This should return a cell array of filenames of where data is
     % TODO: saved, or something.
-    rsa.meg.MEGSearchlight_source(subject, models, userOptions);
+    rsa.meg.MEGSearchlight_source(subject_i, sourceMeshesThisSubject, indexMasks, models, adjacencyMatrix, userOptions);
 end
-rsa.util.prints('Stage 1 - Searchlight Brain RDM Calculation: ');
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Smoothing and upsampling %%
