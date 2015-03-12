@@ -34,28 +34,18 @@ nTimePoints = floor((epochLength - (userOptions.temporalSearchlightWidth * userO
 
 %% similarity-graph-map the volume with the searchlight
 
-% vertices change on the basis of userOptions.maskingFlag's value IZ 11-12
-% updated: all searchlight run as masks IZ 03/12
-
 % Preallocate looped matrices for speed
-smm_ps = zeros([nVertices, nTimePoints, nModels]);
 smm_rs = zeros([nVertices, nTimePoints, nModels]);
 
 for v = indexMask.vertices
     
     % Determine which vertexes are within the radius of the currently-picked vertex
-    verticesCurrentlyWithinRadius = adjacencyMatrix(v,:);
+    verticesCurrentlyWithinRadius = [v, adjacencyMatrix(v,:)];
     
-    % remove nans
-    verticesCurrentlyWithinRadius = verticesCurrentlyWithinRadius(~isnan(verticesCurrentlyWithinRadius));
-    
-    % add current vertex
-    verticesCurrentlyWithinRadius = [v, verticesCurrentlyWithinRadius]; % add by Li Su 1-02-2010
-    
-    % If masks are used, finding corresponding mask indices - update IZ 11-12
-    if userOptions.maskingFlag
-        verticesCurrentlyWithinRadius = intersect(verticesCurrentlyWithinRadius, vertices);
-    end
+    % Restrict to verticies inside mask.
+    % This also removes any nans.
+    % All searchlight run as masks, including full-brain searchlights (update IZ 03/12)
+    verticesCurrentlyWithinRadius = intersect(verticesCurrentlyWithinRadius, vertices);
     
     % TODO: Why +1 ?
     for t = 1:nTimePoints+1
@@ -67,7 +57,7 @@ for v = indexMask.vertices
         currentTimeWindow = ceil((currentTimeStart : currentTimeStart + ...
             (userOptions.temporalSearchlightWidth * userOptions.toDataPoints) - 1));
         
-        currentData = singleSubjectMesh(verticesCurrentlyWithinRadius, currentTimeWindow, :, :); % (vertices, time, condition, session)
+        searchlightPatchData = singleSubjectMesh(verticesCurrentlyWithinRadius, currentTimeWindow, :, :); % (vertices, time, condition, session)
         
         % Average across sessions
         
@@ -77,38 +67,39 @@ for v = indexMask.vertices
             switch lower(userOptions.searchlightPatterns)
                 case 'spatial'
                     % Spatial patterns: median over time window
-                    currentData = median(currentData, 2); % (vertices, 1, conditions, sessions)
-                    currentData = squeeze(currentData); % (vertices, conditions, sessions);
+                    searchlightPatchData = median(searchlightPatchData, 2); % (vertices, 1, conditions, sessions)
+                    searchlightPatchData = squeeze(searchlightPatchData); % (vertices, conditions, sessions);
                 case 'temporal'
                     % Temporal patterns: mean over vertices within searchlight
-                    currentData = mean(currentData, 1); % (1, timePoints, conditions, sessions)
-                    currentData = squeeze(currentData); % (timePionts, conditions, sessions)
+                    searchlightPatchData = mean(searchlightPatchData, 1); % (1, timePoints, conditions, sessions)
+                    searchlightPatchData = squeeze(searchlightPatchData); % (timePionts, conditions, sessions)
                 case 'spatiotemporal'
                     % Spatiotemporal patterns: all the data concatenated
-                    currentData = reshape(currentData, [], size(currentData, 3), size(currentData, 4)); % (dataPoints, conditions, sessions)
+                    searchlightPatchData = reshape(searchlightPatchData, [], size(searchlightPatchData, 3), size(searchlightPatchData, 4)); % (dataPoints, conditions, sessions)
             end%switch:userOptions.sensorSearchlightPatterns
             
+            % Preallocate
+            searchlightRDM = zeros(nConditions);
+            
             for session = 1:userOptions.nSessions
-                
-                searchlightRDM = searchlightRDM + squareform(pdist(squeeze(currentData(:,:,session))',userOptions.distance));
-                
+                searchlightRDM = searchlightRDM + squareform(pdist(squeeze(searchlightPatchData(:,:,session))',userOptions.distance));
             end%for:sessions
             
         else
             % data regularization based on algorithm by Diedrichson et al 2011 - updated 12-12 IZ
-            tempMesh = reshape(currentData, [], size(currentData, 3), size(currentData, 4));
-            currentData = zeros(size(tempMesh, 1), size(tempMesh, 2) * size(tempMesh, 3)); % (data, conditions, sessions)
+            tempMesh = reshape(searchlightPatchData, [], size(searchlightPatchData, 3), size(searchlightPatchData, 4));
+            searchlightPatchData = zeros(size(tempMesh, 1), size(tempMesh, 2) * size(tempMesh, 3)); % (data, conditions, sessions)
             
             % combining session-wise trials
             kk = 1;
             for j = 1:size(tempMesh,2)
                 for i = 1:userOptions.nSessions
-                    currentData(:, kk) = (tempMesh(:, j, i));
+                    searchlightPatchData(:, kk) = (tempMesh(:, j, i));
                     kk = kk + 1;
                 end
             end
             
-            r_matrix = g_matrix(zscore(squeeze(currentData(:,:)))', userOptions.nConditions, size(currentTimeWindow,2));
+            r_matrix = g_matrix(zscore(squeeze(searchlightPatchData(:,:)))', userOptions.nConditions, size(currentTimeWindow,2));
             searchlightRDM = searchlightRDM + (1 - r_matrix);
             
             if isnan(searchlightRDM) % sessions and conditions should be optimal
