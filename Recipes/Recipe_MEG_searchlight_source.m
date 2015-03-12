@@ -30,9 +30,11 @@ userOptions = rsa.meg.setMetadata_MEG(models, userOptions);
 %%%%%%%%%%%%%%%%%%%%%%
 % TODO: Why is this set in the userOptions struct?
 if userOptions.maskingFlag
-    userOptions.indexMasks = rsa.meg.MEGMaskPreparation_source(userOptions);  
+    indexMasks = rsa.meg.MEGMaskPreparation_source(userOptions);
+    % For searchlight analysis, we combine all masks into one
+    indexMasks = combineVertexMasks_source(indexMasks, 'combined_mask', userOptions);  
 else
-    userOptions.indexMasks = rsa.meg.allBrainMask(userOptions);
+    indexMasks = rsa.meg.allBrainMask(userOptions);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -51,12 +53,6 @@ end
 if userOptions.run_in_parallel
     p = rsa.par.initialise_CBU_Queue(userOptions);
 end
-    
-% Get Masks
-indexMasks = MEGMaskPreparation_source(userOptions);
-
-% For searchlight analysis, we combine all masks into one
-indexMasks = combineVertexMasks_source(indexMasks, 'combined_mask', userOptions);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Searchlight - Brain RDM calculation %%
