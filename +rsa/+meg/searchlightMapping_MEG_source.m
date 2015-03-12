@@ -4,7 +4,7 @@
 % CW 2010-05, 2015-03
 % updated by Li Su 3-2012
 
-function [smm_rs, smm_ps, searchlightRDMs] = searchlightMapping_MEG_source(singleSubjectMesh, indexMask, modelRDM, partialModelRDMs, adjacencyMatrix, userOptions)
+function [smm_rs, searchlightRDMs] = searchlightMapping_MEG_source(singleSubjectMesh, indexMask, modelRDM, partialModelRDMs, adjacencyMatrix, userOptions)
 
 import rsa.*
 import rsa.fig.*
@@ -127,19 +127,13 @@ for v = indexMask.vertices
         % TODO: anywhere
         if strcmpi(userOptions.distanceMeasure, 'Kendall_taua')
             rs = rankCorr_Kendall_taua(searchlightRDM', modelRDM_utv');
-            % We are currently no using the p values created, though we are
-            % saving them for some reason.  Anyway, there is currently no
-            % way to get them for Kendall's tau_a, and until this becomes
-            % requiresd, I'm not going to fix it :) - C
-            ps = NaN;
         elseif userOptions.partial_correlation
             % TODO: Consider partialcorr with kendall's tau
-            [rs, ps] = partialcorr(searchlightRDM', modelRDM_utv', control_for_modelRDMs', 'type', userOptions.distanceMeasure, 'rows','pairwise');
+            rs = partialcorr(searchlightRDM', modelRDM_utv', control_for_modelRDMs', 'type', userOptions.distanceMeasure, 'rows','pairwise');
         else
-            [rs, ps] = corr(searchlightRDM', modelRDM_utv', 'type', userOptions.distanceMeasure, 'rows', 'pairwise');
+            rs = corr(searchlightRDM', modelRDM_utv', 'type', userOptions.distanceMeasure, 'rows', 'pairwise');
         end
         
-        smm_ps(v, t, :) = ps;
         smm_rs(v, t, :) = rs;
         
     end%for:t

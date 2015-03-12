@@ -63,9 +63,9 @@ if overwriteFlag
     %% Apply searchlight
     if userOptions.partial_correlation
         % It says searchlightRDMs are unused, but actually they're saved.
-        [thisSubjectRs, thisSubjectPs, searchlightRDMs] = searchlightMapping_MEG_source(maskedMesh, indexMask, Models(modelNumber), Models([userOptions.partial_modelNumber{:}]), adjacencyMatrix, userOptions); %#ok<ASGLU>
+        [thisSubjectRs, searchlightRDMs] = searchlightMapping_MEG_source(maskedMesh, indexMask, Models(modelNumber), Models([userOptions.partial_modelNumber{:}]), adjacencyMatrix, userOptions); %#ok<ASGLU>
     else
-        [thisSubjectRs, thisSubjectPs, searchlightRDMs] = searchlightMapping_MEG_source(maskedMesh, indexMask, Models(modelNumber), [], adjacencyMatrix, userOptions); %#ok<ASGLU>
+        [thisSubjectRs, searchlightRDMs] = searchlightMapping_MEG_source(maskedMesh, indexMask, Models(modelNumber), [], adjacencyMatrix, userOptions); %#ok<ASGLU>
     end
 
     rMetadataStruct = userOptions.STCmetaData;
@@ -92,7 +92,7 @@ if overwriteFlag
     save('-v7.3', [filepath, userOptions.subjectNames{subjectNumber}, '-', lower(chi), 'h'], 'searchlightRDMs');
 
     % Free up some memory
-    clear thisSubjectRs thisSubjectPs pMetadataStruct searchlightRDMs maskedMesh;
+    clear thisSubjectRs pMetadataStruct searchlightRDMs maskedMesh;
 
     t = toc;%1
     prints('That took %s seconds.', t);
