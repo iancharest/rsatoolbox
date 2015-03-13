@@ -14,7 +14,10 @@ function indexMasks_out = combineVertexMasks_source(indexMasks_in, newMaskName, 
         maskVertices = [];
         for mask_i = 1:numel(indexMasks_in)
             if strcmpi(indexMasks_in(mask_i).chirality, chi)
-                maskVertices = union(maskVertices, indexMasks_in(mask_i).vertices);
+                % They changed how union works at some point, so we use
+                % 'legacy' to ensure a row vector.
+                % Nice work.
+                maskVertices = union(maskVertices, indexMasks_in(mask_i).vertices, 'legacy');
             end
         end
         maskVertices = sort(maskVertices(maskVertices <= userOptions.nVertices));
