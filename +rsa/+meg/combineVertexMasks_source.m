@@ -11,16 +11,22 @@ function indexMasks_out = combineVertexMasks_source(indexMasks_in, newMaskName, 
     % We'll end up with two masks
     out_mask_i = 1;
     for chi = 'LR'
-        maskVertices = [];
-        for mask_i = 1:numel(indexMasks_in)
-            if strcmpi(indexMasks_in(mask_i).chirality, chi)
-                % They changed how union works at some point, so we use
-                % 'legacy' to ensure a row vector.
-                % Nice work.
-                maskVertices = union(maskVertices, indexMasks_in(mask_i).vertices, 'legacy');
-            end
-        end
+        %% We union the masks together in a vectorised method, for speed
+        % We want the unique vertices
+        maskVertices = unique( ...
+            ...% which are present in those input masks...
+            [indexMasks_in( ...
+                ...% where...
+                find( ...
+                    ...% the chirality is the same as the hemisphere we're looking at
+                    [indexMasks_in.chirality] == chi)).vertices] ...
+        );
+        
+        % Sort the vertices and cap them at the resolution set in
+        % userOptions.
         maskVertices = sort(maskVertices(maskVertices <= userOptions.nVertices));
+        
+        % Set the timeIndices also
         % TODO: this isn't coming from the individual masks... is that ok?
         timeIndices = userOptions.dataPointsSearchlightLimits;
         

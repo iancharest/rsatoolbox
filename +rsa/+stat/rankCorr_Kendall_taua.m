@@ -16,7 +16,7 @@ import rsa.util.*
 %% preparations
 a = a(:);
 b = b(:);
-validEntryIs = ~isnan(a) && ~isnan(b);
+validEntryIs = ~isnan(a) & ~isnan(b); % Use bitwise & here, not &&
 a = a(validEntryIs);
 b = b(validEntryIs);
 n = numel(a);
