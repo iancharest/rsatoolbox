@@ -198,10 +198,6 @@ userOptions.MEGSensor_maskSpec.EEGSensorSites = (1:70);
 
 % time window for RoI analysis
 userOptions.MEGSensor_maskSpec.timeWindow = [-200 100];
-
-% pattern of analysis 'spatial', 'temporal' or 'spatiotemporal'
-% TODO: need explanaiton of what each do
-userOptions.MEGSensor_maskSpec.patternType =  'spatiotemporal';
     
     % ===========================  (sensor space) ========================%
 
