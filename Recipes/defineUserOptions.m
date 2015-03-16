@@ -302,10 +302,6 @@ userOptions.fisher = true;
 % Group statistics options: random effect ('RFX') or fixed effect ('FFX')
 % TODO: requires a lot more explanation
 userOptions.groupStats = 'RFX';
-% if set true, group stats will be computed using t maps, if false then r
-% maps will be used.
-% TODO: this isn't universal
-userOptions.tmap = true;
 
 % Clustering analysis: primary cluster-forming threshold in terms of the
 % top x% for all vertexes across space and time.

@@ -3,12 +3,13 @@
 % This will print and save an uncorrected t/r-map and a corrected t/r-map
 % thresholded based on cluster statistics. Each cluster will have a mass
 % and a corresponding p-value.
-% Input:    userOptions, Models
+% Input:    userOptions, Models, which_map (which should be 't' for a t-map
+%                                           and 'r' for an r-map)
 
 % Based on scripts by Li Su
 % Written by IZ 03/13 updated FJ 03/14
 
-function RFX_slidingTimeWindow(userOptions, Models)
+function RFX_slidingTimeWindow(userOptions, Models, which_map)
 
 import rsa.*
 import rsa.fig.*
@@ -96,15 +97,14 @@ if overwriteFlag
         pval = userOptions.primaryThreshold;
         data1 = r;
         data2 = zeros(size(r));
-        tmapFlag = userOptions.tmap;
+        tmapFlag = strcmpi(which_map, 't');
         [clust_stats_pos, clust_stats_neg, base_map, null_distribution] = ...
             permutation_cluster_test_2dtfr_func(data1, ...
             data2,fpmin,fpmax,tpmin,tpmax,perm_num,test,pval,tmapFlag);
         
-        if userOptions.tmap
+        if tmapFlag
             threshold = tinv(pval, (nSubjects - 1));
             thresh_map = ((base_map>= abs(threshold)) .* base_map) + ((base_map <= threshold) .* base_map);
-            what_map = 't';
         else
             thresh_map = base_map;
             thresh_map(median(p)' > pval) = 0;
@@ -113,7 +113,6 @@ if overwriteFlag
                 disp('Warning: there is no threshold set');
                 threshold=0;
             end
-            what_map = 'r';
         end
         
         all_clusters_pos{mask} = clust_stats_pos;
@@ -138,11 +137,11 @@ if overwriteFlag
 %  
 %         
         %% saving files
-        fprintf(['Saving uncorrected ' what_map '-map... ']);
-        xlswrite(fullfile(output_path, [modelName '-' thisMask '-uncorrected_' what_map '.xls']), base_map);
+        fprintf(['Saving uncorrected ' which_map '-map... ']);
+        xlswrite(fullfile(output_path, [modelName '-' thisMask '-uncorrected_' which_map '.xls']), base_map);
         disp('Done!');
-        fprintf(['Saving corrected ' what_map '-map... ']);
-        xlswrite(fullfile(output_path, [modelName '-' thisMask '-corrected_' what_map '.xls']), thresh_map);
+        fprintf(['Saving corrected ' which_map '-map... ']);
+        xlswrite(fullfile(output_path, [modelName '-' thisMask '-corrected_' which_map '.xls']), thresh_map);
         disp('Done!');
         fprintf('Saving r values for all subjects...')
         xlswrite(fullfile(output_path, [modelName '-' thisMask '-r' '.xls']), squeeze(r));
@@ -157,7 +156,7 @@ if overwriteFlag
         if ~exist(fullfile(output_path, 'ClusterStats'),'dir')
             mkdir(fullfile(output_path, 'ClusterStats'));
         end
-        xlswrite(fullfile(output_path, 'ClusterStats', [modelName '-' thisMask '-cluster_stats-pos-' what_map '.xls']), clust_stats_pos);
+        xlswrite(fullfile(output_path, 'ClusterStats', [modelName '-' thisMask '-cluster_stats-pos-' which_map '.xls']), clust_stats_pos);
         % xlswrite([modelName '-' thisMask '-cluster_stats-neg'], clust_stats_neg);
         disp('Done!');
         
