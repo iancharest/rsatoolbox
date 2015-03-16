@@ -20,37 +20,6 @@
 %                       name
 %                       color
 %
-%        maskSpec --- The specifications of the masking.
-%               maskSpec.timeWindow
-%                       A 2-sized vector containing the beginning and end of the
-%                       time window of interest. The numbers refer to
-%                       timepoints. Defaults to the whole epoch.
-%               maskSpec.MEGSensors
-%                       maskSpec.MEGSensors.Gradiometers
-%                               Numerical. Can take the following values:
-%                                       0  ---  Don't use gradiometers.
-%                                       1  ---  Use gradiometers separately.
-%                                       2  ---  Use gradiometers RMS.
-%                               Defaults to 1.
-%               maskSpec.patternType
-%                       What kind of patterns should be kept? Can take the
-%                       following values:
-%                               'Spatial'
-%                                       A median is taken over the time window
-%                                       of interest so RDMs will be calculated
-%                                       based on sensor patterns over space.
-%                               'Temporal'
-%                                       All sensors are (mean) averaged over so
-%                                       RDMs will be calculated based on
-%                                       patterns over time.
-%                               'Spatiotemporal'
-%                                       No averaging is done, the time-courses
-%                                       for each sensor with in the time window
-%                                       of interest are concatenated. RDMs will
-%                                       be calculated based on patterns over
-%                                       both time and space.
-%                       Defaults to 'Spatial'.
-%
 %        betaCorrespondence --- The array of beta filenames.
 %               betas(condition, session).identifier is a string which referrs
 %               to the filename (not including path) of the SPM beta image. (Or,

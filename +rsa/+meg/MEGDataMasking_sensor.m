@@ -2,7 +2,6 @@
 % in sensor space and masks them according the the masks specified by the user.
 %
 % [maskedSensors =] MEGDataMasking_sensor(sensorImages, ...
-%                                         maskSpec, ...
 %                                         betaCorrespondence, ...
 %                                         userOptions ...
 %                                        )
@@ -10,56 +9,6 @@
 %        sensorImages --- The unmasked sensor topographies.
 %               sensorImages.(subjectName).(Grad1|Grad2|Mag|EEG) is a
 %               [nChannels nTimepoints nConditions nSessions]-sized matrix.
-%
-%        maskSpec --- The specifications of the masking.
-%               maskSpec.MEGSensorSites
-%                       A vector containing the numbers of the MEG sensors to
-%                       include. Defaults to all of them.
-%               maskSpec.EEGSensorSites
-%                       A vector containing the numbers of the EEG sensors to
-%                       include. Leave blank to disregard EEG (untested!).
-%                       Defaults to all of them.
-%               maskSpec.baselineWindow
-%                       A 2-sized vector containing the beginning and end of the
-%                       time window of baseline, against which each sensor is
-%                       normalised. The numbers refer to timepoints. Defaults to
-%                       the first 50 timepoints ("[1 50]") if there are 50
-%                       timepoints, otherwise the first n-1.
-%               maskSpec.timeWindow
-%                       A 2-sized vector containing the beginning and end of the
-%                       time window of interest. The numbers refer to
-%                       timepoints.Defaults to the whole epoch (not including
-%                       baseline period). Woe betide those who let this overlap
-%                       with the baselineWindow!
-%               maskSpec.MEGSensors
-%                       maskSpec.MEGSensors.Gradiometers
-%                               Numerical. Can take the following values:
-%                                       0  ---  Don't use gradiometers.
-%                                       1  ---  Use gradiometers separately.
-%                                       2  ---  Use gradiometers RMS.
-%                               Defaults to 1.
-%                       maskSpec.MEGSensors.Magnetometers
-%                               Boolean. Use magnetometers? Defaults to false.
-%                       maskSpec.MEGSensors.EEG
-%                               Boolean. Use EEG? Defaults to false.
-%               maskSpec.patternType
-%                       What kind of patterns should be kept? Can take the
-%                       following values:
-%                               'Spatial'
-%                                       A median is taken over the time window
-%                                       of interest so RDMs will be calculated
-%                                       based on sensor patterns over space.
-%                               'Temporal'
-%                                       All sensors are (mean) averaged over so
-%                                       RDMs will be calculated based on
-%                                       patterns over time.
-%                               'Spatiotemporal'
-%                                       No averaging is done, the time-courses
-%                                       for each sensor with in the time window
-%                                       of interest are concatenated. RDMs will
-%                                       be calculated based on patterns over
-%                                       both time and space.
-%                       Defaults to 'Spatial'.
 %
 %        betaCorrespondence --- The array of beta filenames.
 %                betas(condition, session).identifier is a string which referrs
@@ -147,15 +96,7 @@ else
 end%if
 
 % Set up maskSpec
-% maskSpec = setIfUnset(maskSpec, 'MEGSensorSites', 1:nMEGChannels);
-% maskSpec = setIfUnset(maskSpec, 'EEGSensorSites', 1:nEEGChannels);
 maskSpec = setIfUnset(maskSpec, 'baselineWindow', [1 min([50, size(sensorImages.(userOptions.subjectNames{1}).(exampleSensorTypeUsed)) - 1])]);
-% maskSpec = setIfUnset(maskSpec, 'timeWindow', [maskSpec.baselineWindow(2)+1 size(sensorImages.(userOptions.subjectNames{1}).(exampleSensorTypeUsed), 2)]);
-% maskSpec = setIfUnset(maskSpec, 'MEGSensors', struct());
-% maskSpec.MEGSensors = setIfUnset(maskSpec.MEGSensors, 'Gradiometers', useMEG);
-% maskSpec.MEGSensors = setIfUnset(maskSpec.MEGSensors, 'Magnetometers', useMEG);
-% maskSpec.MEGSensors = setIfUnset(maskSpec.MEGSensors, 'EEG', useEEG);
-% maskSpec = setIfUnset(maskSpec, 'patternType', 'Spatial');
 
 %% %%
 %% maskSpec done!

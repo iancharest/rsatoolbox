@@ -110,7 +110,7 @@ if overwriteFlag
 			% Figure out which subject this is
             thisSubject = userOptions.subjectNames{subject};
 
-            if ~userOptions.regularized || userOptions.sensorLevelAnalysis
+            if ~userOptions.regularized
 
                 for session = 1:nSessions % and each session...
 

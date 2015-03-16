@@ -100,6 +100,9 @@ userOptions.maskPath = 'pathToWhereYourMasksAreStored';%'/imaging/mb01/lexpro/mu
 % For MEG, names should be in pairs, such as maskName-lh,
 % maskName-rh.
 % Leave empty to do whole-brain analysis.
+%
+% For MEG sensor-level analysis, only the use of a single mask is
+% supported.
 userOptions.maskNames = { ...
     'mask-lh', 'mask-rh'...
 };
@@ -162,9 +165,6 @@ userOptions.temporalSearchlightResolution = 10; %10; % (data point equivalent = 
 % The overall window of interest (ms)
 userOptions.temporalSearchlightLimits = [-200 800];
 
-% set this true for both searchlight and fixed time window RoI analyses
-userOptions.sensorLevelAnalysis = true;
-
 % Time windows are specified for each regions.
 %
 % There should be one entry for each entry in userOptions.maskNames, and
@@ -183,9 +183,6 @@ userOptions.maskTimeWindows = {
 %% MEG SENSOR-LEVEL ANALYSIS %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% specify a name for your mask, used in saving your results
-userOptions.MEGSensor_maskSpec.maskName = {'allSensors'};
-
 % remove/add sensors in your mask by setting them true/false
 userOptions.MEGSensor_maskSpec.MEGSensors.Gradiometers = true;
 userOptions.MEGSensor_maskSpec.MEGSensors.Magnetometers = true;
@@ -195,6 +192,9 @@ userOptions.MEGSensor_maskSpec.MEGSensorSites = (1:102);
 
 userOptions.MEGSensor_maskSpec.MEGSensors.EEG = false;
 userOptions.MEGSensor_maskSpec.EEGSensorSites = (1:70);
+
+% The window to be used as baseline.
+userOptions.MEGSensor_maskSpec.baselineWindow = [-100, -50];
 
 % time window for RoI analysis
 userOptions.MEGSensor_maskSpec.timeWindow = [-200 100];

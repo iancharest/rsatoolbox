@@ -16,10 +16,10 @@ function userOptions = setMetadata_MEG(Models, userOptions)
 
 % loading one subject's STC/FIFFfile in order to find out its meta data.
 tempBetas = betaCorrespondence();
-userOptions.betaCorrespondence = tempBetas;
-
 usingMasks = ~isempty(userOptions.maskNames);
 
+% TODO: the use of sensor-level analysis is now determined simply by which
+% TODO: recipe is being used. So this should be removed.
 if userOptions.sensorLevelAnalysis
     
     readPath = replaceWildcards(userOptions.betaPath, '[[betaIdentifier]]', tempBetas(1,1).identifier, '[[subjectName]]', userOptions.subjectNames{1});
@@ -47,6 +47,9 @@ if userOptions.sensorLevelAnalysis
         userOptions.toDataPoints = [1+((userOptions.temporalSearchlightLimits(1) - tmin)/samplingRate) 1+((userOptions.temporalSearchlightLimits(2)-tmin)/samplingRate)];
         
     else
+        % TODO: maskspec.timeWindow isn't being used anymore, so this
+        % TODO: should be replaced by whether it's a sensor- or
+        % TODO: source-space recipe.
         time = userOptions.maskSpec.timeWindow;
         
         if time(1) < tmin

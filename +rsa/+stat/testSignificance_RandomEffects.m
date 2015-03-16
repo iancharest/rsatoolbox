@@ -33,21 +33,14 @@ overwriteFlag = overwritePrompt(userOptions, promptOptions);
 
 if overwriteFlag % If files may be (over)written:
     
-    fprintf('Performing random effects analysis... ');
+    prints('Performing random effects analysis... ');
     modelRDM = model.RDM;
     modelRDM_vec = vectorizeRDM(modelRDM);
     
-    if userOptions.sensorLevelAnalysis
-        nMasks = 1;
-        disp('in sensor space!');
-        maskNames = userOptions.MEGSensor_maskSpec.maskName;
-    else
-        nMasks = numel(userOptions.maskNames);
-        disp('in source space!');
-        maskNames = userOptions.maskNames;
-    end
+    nMasks = numel(userOptions.maskNames);
+    maskNames = userOptions.maskNames;
     
-    for mask=1:nMasks
+    for mask = 1:nMasks
         for subject=1:numel(userOptions.subjectNames)
             [r(subject) p_sub] = corr(vectorizeRDM(RDMs(mask,subject).RDM)',modelRDM_vec','type',userOptions.RDMCorrelationType,'rows','pairwise');
         end
@@ -55,10 +48,10 @@ if overwriteFlag % If files may be (over)written:
         disp([' | Mask: ' maskNames{mask} ' | p: ' num2str(p(1,mask))]);
     end
     
-    fprintf('Saving p values...')
+    prints('Saving p values...')
     xlswrite(fullfile(userOptions.rootPath,'Statistics',StatisticsFileName), squeeze(p));
     disp('Done!');
 else
-    disp('Permutation already performed.');    
+    prints('Permutation already performed.');    
 end
-end
+end%function
