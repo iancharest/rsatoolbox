@@ -97,7 +97,8 @@ if strcmp(userOptions.groupStats, 'FFX')
     tic
     % fixed effect test
     rsa.util.prints('Averaging RDMs across subjects and performing permutation tests to calculate r-values.');
-    rsa.meg.FFX_permutation(models, userOptions)
+    indexMasks = rsa.meg.combineVertexMasks_source(indexMasks, 'combined_mask', userOptions);  
+    rsa.meg.FFX_permutation(models, indexMasks, userOptions)
     rsa.util.prints('Stage 2 - Fixed Effects Analysis: ');
     toc
 else
@@ -118,7 +119,7 @@ number_of_permutations = userOptions.significanceTestPermutations;
 tic
 parfor j = 1:number_of_permutations/jobSize
     range = (j-1)*jobSize+1:j*jobSize;
-    rsa.meg.MEGFindCluster_source(models, range, userOptions);
+    rsa.meg.MEGFindCluster_source(models, range, indexMasks, userOptions);
 end
 rsa.util.prints('Stage 3 - Spatiotemporal Clustering: ' );
 toc

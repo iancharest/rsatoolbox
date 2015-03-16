@@ -2,7 +2,7 @@
 % Created by Li Su, last update 15-02-2012
 
 
-function MEGFindCluster_source(Models, range, userOptions)
+function MEGFindCluster_source(Models, range, indexMasks, userOptions)
 
 import rsa.*
 import rsa.fig.*
@@ -60,8 +60,8 @@ if overwriteFlag
         
         if usingMasks
             nMasks = size(userOptions.maskNames,2);
-            t_values_lh.data = MEG_masking(t_values_lh.data, userOptions.indexMasks, 1:2:nMasks); % assuming oddly numbered are left hemisphere and vice versa IZ 03/12
-            t_values_rh.data = MEG_masking(t_values_rh.data, userOptions.indexMasks, 2:2:nMasks);
+            t_values_lh.data = MEG_masking(t_values_lh.data, indexMasks, 1:2:nMasks); % assuming oddly numbered are left hemisphere and vice versa IZ 03/12
+            t_values_rh.data = MEG_masking(t_values_rh.data, indexMasks, 2:2:nMasks);
         end
         
         t_distribution = sort([t_values_lh.data,t_values_rh.data]);
@@ -96,7 +96,7 @@ if overwriteFlag
     fprintf('Performing 4D spatiotemporal clustering...\n');
     fprintf('.:');
     
-    find_4D_clusters(inputFileName,inputFileName,connectivity_matrix,userOptions.indexMasks, overwriteFlag, vertex_level_threshold);
+    find_4D_clusters(inputFileName,inputFileName,connectivity_matrix, indexMasks, overwriteFlag, vertex_level_threshold);
     
     %range = 1:userOptions.significanceTestPermutations; % in the future, the follows should be run in multiple parallel CPUs
     
@@ -108,7 +108,7 @@ if overwriteFlag
         inputFileName = fullfile(userOptions.rootPath, 'Maps', modelName, ['perm-' num2str(perm) '_' modelName '_t_map']);
         
         [max_cluster_mass(perm-min(range)+1),lh_max_cluster_mass(perm-min(range)+1),rh_max_cluster_mass(perm-min(range)+1)] ...
-            = find_4D_clusters(inputFileName,inputFileName,connectivity_matrix,userOptions.indexMasks, overwriteFlag, vertex_level_threshold);
+            = find_4D_clusters(inputFileName,inputFileName,connectivity_matrix, indexMasks, overwriteFlag, vertex_level_threshold);
         
         if ~userOptions.debug
             delete([inputFileName,'-lh.stc']);

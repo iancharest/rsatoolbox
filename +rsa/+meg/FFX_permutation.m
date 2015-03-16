@@ -4,7 +4,7 @@
 % Based on RFX script by Su Li
 % Isma Zulfiqar 11/2012 Updated IZ 04/13 updated FJ 03/14
 
-function FFX_permutation (Models, userOptions)
+function FFX_permutation (Models, combinedMasks, userOptions)
 
 import rsa.*
 import rsa.fig.*
@@ -46,22 +46,11 @@ if overwriteFlag
                 chi = 'R';
         end % switch: chilarity
         
-        % computing combined mask
-        nMasks = numel(fieldnames(userOptions.indexMasks));
-        indexMasks = userOptions.indexMasks;
-        masks = fieldnames(userOptions.indexMasks);
-        maskIndices.(chi)=[];
-        for mask = 1:nMasks
-            thisMask = masks{mask};
-            if strfind(thisMask,[lower(chi),'h'])
-                maskIndices.(chi) = union(maskIndices.(chi),indexMasks.(thisMask).maskIndices);
-                maskIndices.(chi) = sort(maskIndices.(chi)(maskIndices.(chi) <= userOptions.nVertices));
-            end
-        end
-        nVertices = length(maskIndices.(chi));
+        % Get combined mask for this side
+        maskThisHemi = combinedMasks([combinedMasks.chirality] == chi);
+        nVertices = length(maskThisHemi.vertices);
         
         fprintf(['Computing Average Subject RDMs for ' (chi) ' hemisphere...']);
-        
         
         MapsFilename = 'averaged_searchlightRDMs_masked_';
 
@@ -83,17 +72,17 @@ if overwriteFlag
                 subjectRDMs = load(subjectRDMsFile);
 
                 for v=1:nVertices % vertices
-                    nTimePoints = length(fieldnames(subjectRDMs.searchlightRDMs.(['v_' num2str(maskIndices.(chi)(v))])));
+                    nTimePoints = length(fieldnames(subjectRDMs.searchlightRDMs.(['v_' num2str(masksThisHemi.vertices(v))])));
                     for t=1:nTimePoints % time points
-                        averageSubjectRDMs.(chi).(['v_' num2str(maskIndices.(chi)(v))]).([...
+                        averageSubjectRDMs.(chi).(['v_' num2str(masksThisHemi.vertices(v))]).([...
                             't_' num2str(t)]).RDM(subjectNumber,:) = single(vectorizeRDM...
-                            (subjectRDMs.searchlightRDMs.(['v_' num2str(maskIndices.(chi)(v))]).([...
+                            (subjectRDMs.searchlightRDMs.(['v_' num2str(masksThisHemi.vertices(v))]).([...
                             't_' num2str(t)]).RDM));
 
                         if subjectNumber == nSubjects
-                            averageSubjectRDMs.(chi).(['v_' num2str(maskIndices.(chi)(v))]).([...
+                            averageSubjectRDMs.(chi).(['v_' num2str(masksThisHemi.vertices(v))]).([...
                                 't_' num2str(t)]).RDM = single(nanmean(averageSubjectRDMs.(chi).([...
-                                'v_' num2str(maskIndices.(chi)(v))]).(['t_' num2str(t)]).RDM,1));
+                                'v_' num2str(masksThisHemi.vertices(v))]).(['t_' num2str(t)]).RDM,1));
                         end
                     end % timepoints
                 end % vertices
@@ -108,7 +97,7 @@ if overwriteFlag
                 filepath = [filepath 'masked_'];
             end
             load(promptOptions.checkFiles(chirality).address);
-            nTimePoints = length(fieldnames(averageSubjectRDMs.(chi).(['v_' num2str(maskIndices.(chi)(1))])));
+            nTimePoints = length(fieldnames(averageSubjectRDMs.(chi).(['v_' num2str(masksThisHemi.vertices(1))])));
         end
         
         % preparing models
@@ -120,7 +109,7 @@ if overwriteFlag
         temp = zeros(userOptions.targetResolution, nTimePoints);
         fprintf('Computing observed correlation...');
         for i = 1:nVertices
-            vertex = maskIndices.(chi)(i);
+            vertex = masksThisHemi.vertices(i);
             rdms = averageSubjectRDMs.(chi).(['v_' num2str(vertex)]);
             parfor t = 1:nTimePoints
                 rdm = rdms.(['t_' num2str(t)]).RDM;
@@ -182,8 +171,8 @@ if overwriteFlag
             load(fullfile(userOptions.rootPath,'RDMs',['averaged_' filepath  lower(chi) 'h']));
             
             simulated_r = zeros(userOptions.targetResolution*2, nTimePoints);
-            for i = 1:length(maskIndices.(chi))
-                vertex = maskIndices.(chi)(i);
+            for i = 1:length(masksThisHemi.vertices)
+                vertex = masksThisHemi.vertices(i);
                 temp = zeros(1,nTimePoints);
                 rdms = averageSubjectRDMs.(chi).(['v_' num2str(vertex)]);
                 parfor t = 1:nTimePoints
