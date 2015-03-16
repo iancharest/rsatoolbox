@@ -23,40 +23,41 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Model RDM calculation %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
-userOptions.modelNumber = which_model;
-Models = rsa.constructModelRDMs(userOptions);
+models = rsa.constructModelRDMs(userOptions);
+partialModels = models(userOptions.partial_modelNumber{:});
+model = models(which_model);
 
 %%%%%%%%%%%%%%%%%%%
 %% Set meta data %%
 %%%%%%%%%%%%%%%%%%%
-userOptions = rsa.meg.setMetadata_MEG(Models, userOptions);
+userOptions = rsa.meg.setMetadata_MEG(model, userOptions);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Sliding time window RoI analysis %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+    
 map_type = 'r';
 
-%%%%%%%%%%%%%%%%%%%%%%%
-%% Compute Data RDMs %%
-%%%%%%%%%%%%%%%%%%%%%%%
-tic
-rsa.meg.ROI_slidingTimeWindow(userOptions, Models);
-toc
-%%%%%%%%%%%%%%%%%
-%% Permutation %%
-%%%%%%%%%%%%%%%%%
-tic
-if strcmp(userOptions.groupStats,'FFX')
-    rsa.meg.FFX_slidingTimeWindow(userOptions,Models);
-elseif strcmp(userOptions.groupStats,'RFX')
-    rsa.meg.RFX_slidingTimeWindow(userOptions,Models, map_type);
-end
-toc
-%%%%%%%%%%%%%%%%%%%%%
-%% Display Results %%
-%%%%%%%%%%%%%%%%%%%%%
-rsa.meg.showResults_slidingTimeWindow(userOptions, Models, map_type);
+    %%%%%%%%%%%%%%%%%%%%%%%
+    %% Compute Data RDMs %%
+    %%%%%%%%%%%%%%%%%%%%%%%
+    tic
+    rsa.meg.ROI_slidingTimeWindow(userOptions, model);
+    toc
+    %%%%%%%%%%%%%%%%%
+    %% Permutation %%
+    %%%%%%%%%%%%%%%%%
+    tic
+    if strcmp(userOptions.groupStats,'FFX')
+        rsa.meg.FFX_slidingTimeWindow(userOptions,model, partialModels);
+    elseif strcmp(userOptions.groupStats,'RFX')
+    rsa.meg.RFX_slidingTimeWindow(userOptions, model, partialModels, map_type);
+    end
+    toc
+    %%%%%%%%%%%%%%%%%%%%%
+    %% Display Results %%
+    %%%%%%%%%%%%%%%%%%%%%
+    rsa.meg.showResults_slidingTimeWindow(userOptions, model, map_type);
 
 %%%%%%%%%%%%%%%%%%%%
 %% Sending an email %%
@@ -80,7 +81,7 @@ end
 %%%%%%%%%%%%%%%%%%%%
 
 if (userOptions.deleteTMaps_Dir || userOptions.deleteImageData_Dir || userOptions.deletePerm)
-    rsa.util.deleteDir(userOptions, Models);
+    rsa.util.deleteDir(userOptions, model);
 end
 
 

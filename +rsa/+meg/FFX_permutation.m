@@ -4,7 +4,7 @@
 % Based on RFX script by Su Li
 % Isma Zulfiqar 11/2012 Updated IZ 04/13 updated FJ 03/14
 
-function FFX_permutation (Models, combinedMasks, userOptions)
+function FFX_permutation (model, combinedMasks, userOptions)
 
 import rsa.*
 import rsa.fig.*
@@ -17,8 +17,7 @@ import rsa.util.*
 
 returnHere = pwd; % We'll come back here later
 nSubjects = numel(userOptions.subjectNames);
-modelNumber = userOptions.modelNumber;
-modelName = spacesToUnderscores(Models(modelNumber).name);
+modelName = spacesToUnderscores(model.name);
 if userOptions.partial_correlation
     modelName = [modelName, '_partialCorr'];
 end
@@ -101,8 +100,7 @@ if overwriteFlag
         end
         
         % preparing models
-        modelNumber = userOptions.modelNumber;
-        modelRDMs_utv = vectorizeRDMs(Models(1,modelNumber));
+        modelRDMs_utv = vectorizeRDMs(model);
         modelRDMs_utv = modelRDMs_utv.RDM;
                 
         % observed correlation
@@ -154,7 +152,7 @@ if overwriteFlag
         %disp(['perm' num2str(perm)]);
         
         % preparing models
-        modelRDMs = randomizeSimMat(Models(1,modelNumber).RDM);
+        modelRDMs = randomizeSimMat(model.RDM);
         modelRDMs_utv = squeeze(unwrapRDMs(vectorizeRDMs(modelRDMs)));
         
         offset = 0;

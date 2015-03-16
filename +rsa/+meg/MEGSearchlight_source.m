@@ -9,7 +9,7 @@
 % TODO: documentation
 % TODO: partial model numbers vs model number - make this coherent
 
-function MEGSearchlight_source(subjectNumber, chi, sourceMeshesThisSubjectThisHemi, indexMask, Models, adjacencyMatrix, userOptions)
+function MEGSearchlight_source(subjectNumber, chi, sourceMeshesThisSubjectThisHemi, indexMask, model, partialModels, adjacencyMatrix, userOptions)
 
 import rsa.*
 import rsa.fig.*
@@ -27,9 +27,7 @@ nSubjects = numel(userOptions.subjectNames);
 
 usingMasks = ~isempty(userOptions.maskNames);
 
-% TODO: this is a weird thing to have in userOptions.
-modelNumber = userOptions.modelNumber;
-modelName = spacesToUnderscores(Models(modelNumber).name);
+modelName = spacesToUnderscores(model.name);
 
 if userOptions.partial_correlation
     modelName = [modelName, '_partialCorr'];
@@ -71,9 +69,9 @@ if overwriteFlag
     %% Apply searchlight
     if userOptions.partial_correlation
         % It says searchlightRDMs are unused, but actually they're saved.
-        [thisSubjectRs, searchlightRDMs] = searchlightMapping_MEG_source(maskedMesh, indexMask, Models(modelNumber), Models([userOptions.partial_modelNumber{:}]), adjacencyMatrix, userOptions); %#ok<ASGLU>
+        [thisSubjectRs, searchlightRDMs] = searchlightMapping_MEG_source(maskedMesh, indexMask, model, partialModels, adjacencyMatrix, userOptions); %#ok<ASGLU>
     else
-        [thisSubjectRs, searchlightRDMs] = searchlightMapping_MEG_source(maskedMesh, indexMask, Models(modelNumber), [], adjacencyMatrix, userOptions); %#ok<ASGLU>
+        [thisSubjectRs, searchlightRDMs] = searchlightMapping_MEG_source(maskedMesh, indexMask, model, [], adjacencyMatrix, userOptions); %#ok<ASGLU>
     end
 
     rMetadataStruct = userOptions.STCmetaData;

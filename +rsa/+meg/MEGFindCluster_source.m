@@ -2,7 +2,7 @@
 % Created by Li Su, last update 15-02-2012
 
 
-function MEGFindCluster_source(Models, range, indexMasks, userOptions)
+function MEGFindCluster_source(model, range, indexMasks, userOptions)
 
 import rsa.*
 import rsa.fig.*
@@ -18,8 +18,7 @@ returnHere = pwd; % We'll come back here later
 usingMasks = ~isempty(userOptions.maskNames);
 
 % The analysisName will be used to label the files which are eventually saved.
-modelNumber = userOptions.modelNumber;
-modelName = spacesToUnderscores(Models(modelNumber).name);
+modelName = spacesToUnderscores(model.name);
 if userOptions.partial_correlation
     modelName = [modelName, '_partialCorr'];
 end

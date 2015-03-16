@@ -261,8 +261,6 @@ userOptions.distance = 'Correlation';
 % variable Models, which is specified in ModelRDMs.m)
 % TODO: This should be in the recipe, not here.
 
-% this is default value overwritten by which_model variable when Recipe is used
-userOptions.modelNumber = 1; 
 userOptions.partial_correlation = false;
 % all models listed here will be partialed out from the original model
 userOptions.partial_modelNumber = {5,7};

@@ -1,7 +1,7 @@
 % This function computes random effects statistics for RoI RDMs in fixed time window
 
 % IZ 11-12
-function testSignificance_RandomEffects(RDMs, Models, userOptions)
+function testSignificance_RandomEffects(RDMs, model, userOptions)
 
 import rsa.*
 import rsa.fig.*
@@ -34,8 +34,7 @@ overwriteFlag = overwritePrompt(userOptions, promptOptions);
 if overwriteFlag % If files may be (over)written:
     
     fprintf('Performing random effects analysis... ');
-    modelNumber=userOptions.modelNumber;
-    modelRDM = Models(modelNumber).RDM;
+    modelRDM = model.RDM;
     modelRDM_vec = vectorizeRDM(modelRDM);
     
     if userOptions.sensorLevelAnalysis

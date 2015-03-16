@@ -10,7 +10,7 @@
 % Note: May take long time per RoI if RDMs are large
 % Written by IZ 05/13
 
-function FFX_slidingTimeWindow(userOptions, Models)
+function FFX_slidingTimeWindow(userOptions, model)
 
 import rsa.*
 import rsa.fig.*
@@ -23,8 +23,7 @@ import rsa.util.*
 
 close all;
 returnHere = pwd; % We'll come back here later
-modelNumber = userOptions.modelNumber;
-modelName = Models(modelNumber).name;
+modelName = model.name;
 if userOptions.partial_correlation
     modelName = [modelName, '_partialCorr'];
 end
@@ -61,12 +60,12 @@ if overwriteFlag
     
     nMasks = size(allRDMs,1);
     nTimePoints = size(allRDMs,2);
-    modelRDM = Models(modelNumber).RDM;
+    modelRDM = model.RDM;
     modelRDM_vec = vectorizeRDM(modelRDM);
     if userOptions.partial_correlation
         control_for_modelRDMs = [];
         for m = 1:size(userOptions.partial_modelNumber,2)
-            control_for_modelRDMs = [control_for_modelRDMs;vectorizeRDM(Models(userOptions.partial_modelNumber{m}).RDM)];
+            control_for_modelRDMs = [control_for_modelRDMs;vectorizeRDM(model(userOptions.partial_modelNumber{m}).RDM)];
         end
     end
     for mask=1:nMasks

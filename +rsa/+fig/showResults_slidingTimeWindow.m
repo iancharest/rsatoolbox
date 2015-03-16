@@ -4,7 +4,7 @@
 % which_map should be 't' for t-maps and 'r' for r-maps
 
 % Written by IZ 03/13
-function showResults_slidingTimeWindow(userOptions, Models, which_map)
+function showResults_slidingTimeWindow(userOptions, model, which_map)
 
 import rsa.*
 import rsa.fig.*
@@ -16,8 +16,7 @@ import rsa.stat.*
 import rsa.util.*
 
 nMasks = numel(userOptions.maskNames);
-modelNumber = userOptions.modelNumber;
-modelName = Models(modelNumber).name;
+modelName = model.name;
 if userOptions.partial_correlation
     modelName = [modelName, '_partialCorr'];
 end

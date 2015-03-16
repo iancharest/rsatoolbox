@@ -7,7 +7,7 @@
 %
 % created by Li Su, last update 11-2012
 
-function get_cluster_p_value(Models,userOptions)
+function get_cluster_p_value(model, userOptions)
 
 import rsa.*
 import rsa.fig.*
@@ -18,8 +18,7 @@ import rsa.spm.*
 import rsa.stat.*
 import rsa.util.*
 
-modelNumber = userOptions.modelNumber;
-modelName = spacesToUnderscores(Models(modelNumber).name);
+modelName = spacesToUnderscores(model.name);
 
 usingMasks = ~isempty(userOptions.maskNames);
 

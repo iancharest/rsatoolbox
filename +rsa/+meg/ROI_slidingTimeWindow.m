@@ -17,7 +17,7 @@
 % updated by FJ 05/12/13 fixing cases senitive issues
 % Updated by FJ 03/14
 
-function ROI_slidingTimeWindow(userOptions, Models)
+function ROI_slidingTimeWindow(userOptions, model)
 
 import rsa.*
 import rsa.fig.*
@@ -30,8 +30,7 @@ import rsa.util.*
 import rsa.par.*
 
 returnHere = pwd; % We'll come back here later
-modelNumber = userOptions.modelNumber;
-modelName = Models(modelNumber).name;
+modelName = model.name;
 if userOptions.partial_correlation
     modelName = [modelName, '_partialCorr'];
 end

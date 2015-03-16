@@ -1,4 +1,4 @@
-function interpolate_MEG_source (Models, userOptions)
+function interpolate_MEG_source (model, userOptions)
 
 import rsa.*
 import rsa.fig.*
@@ -11,8 +11,7 @@ import rsa.util.*
 
 targetResolution = userOptions.targetResolution;
 smoothingWidth = userOptions.smoothingWidth;
-modelNumber = userOptions.modelNumber; 
-modelName = spacesToUnderscores(Models(modelNumber).name);
+modelName = spacesToUnderscores(model.name);
 nSubjects = numel(userOptions.subjectNames);
 adjacencyMatrix = calculateMeshAdjacency(targetResolution, smoothingWidth, userOptions);
 

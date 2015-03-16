@@ -9,7 +9,7 @@
 % Based on scripts by Li Su
 % Written by IZ 03/13 updated FJ 03/14
 
-function RFX_slidingTimeWindow(userOptions, Models, which_map)
+function RFX_slidingTimeWindow(userOptions, model, partialModels, which_map)
 
 import rsa.*
 import rsa.fig.*
@@ -23,9 +23,7 @@ import rsa.util.*
 close all;
 returnHere = pwd; % We'll come back here later
 
-% TODO: This is a strange thing to have in userOptions.
-modelNumber = userOptions.modelNumber;
-modelName = Models(modelNumber).name;
+modelName = model.name;
 if userOptions.partial_correlation
     modelName = [modelName, '_partialCorr'];
 end
@@ -70,19 +68,19 @@ if overwriteFlag
             RDMs = squeeze(allRDMs(mask,timeWindow,:))'; % changing format of RDMs to mask, subject,session
             RDMs = averageRDMs_subjectSession(RDMs, 'session');
             
-            modelRDM = Models(modelNumber).RDM;
+            modelRDM = model.RDM;
             modelRDM_vec = vectorizeRDM(modelRDM);
             if userOptions.partial_correlation
                 control_for_modelRDMs = [];
-                for m = 1:size(userOptions.partial_modelNumber,2)
-                    control_for_modelRDMs = [control_for_modelRDMs;vectorizeRDM(Models(userOptions.partial_modelNumber{m}).RDM)];
+                for m = 1:numel(partialModels)
+                    control_for_modelRDMs = [control_for_modelRDMs;vectorizeRDM(partialModels(m).RDM)];
                 end
             end
             for subject=1:nSubjects
                 if userOptions.partial_correlation
-                    [r(subject,1,timeWindow) p(subject,timeWindow)] = partialcorr(vectorizeRDM(RDMs(1,subject).RDM)',modelRDM_vec',control_for_modelRDMs','type',userOptions.RDMCorrelationType,'rows','pairwise');
+                    [r(subject,1,timeWindow), p(subject,timeWindow)] = partialcorr(vectorizeRDM(RDMs(1,subject).RDM)',modelRDM_vec',control_for_modelRDMs','type',userOptions.RDMCorrelationType,'rows','pairwise');
                 else
-                    [r(subject,1,timeWindow) p(subject,timeWindow)] = corr(vectorizeRDM(RDMs(1,subject).RDM)',modelRDM_vec','type',userOptions.RDMCorrelationType,'rows','pairwise');
+                    [r(subject,1,timeWindow), p(subject,timeWindow)] = corr(vectorizeRDM(RDMs(1,subject).RDM)',modelRDM_vec','type',userOptions.RDMCorrelationType,'rows','pairwise');
                 end
             end
         end

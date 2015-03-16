@@ -3,7 +3,7 @@
 %
 % Li Su 10-02-2012
 
-function RFX_permutation(Models, userOptions)
+function RFX_permutation(Model, userOptions)
 
 import rsa.*
 import rsa.fig.*
@@ -19,8 +19,7 @@ returnHere = pwd; % We'll come back here later
 usingMasks = ~isempty(userOptions.maskNames);
 
 nSubjects = numel(userOptions.subjectNames);
-modelNumber = userOptions.modelNumber;
-modelName = spacesToUnderscores(Models(modelNumber).name);
+modelName = spacesToUnderscores(Model.name);
 
 if userOptions.partial_correlation
     modelName = [modelName, '_partialCorr'];

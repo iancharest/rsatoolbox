@@ -13,13 +13,13 @@ userOptions = projectOptions();
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Model RDM calculation %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
-userOptions.modelNumber = which_model;
-Models = rsa.constructModelRDMs(userOptions);
+model = rsa.constructModelRDMs(userOptions);
+model = model(which_model);
 
 %%%%%%%%%%%%%%%%%%%%
 %% Set Meta-data %%
 %%%%%%%%%%%%%%%%%%%%
-userOptions = rsa.meg.setMetadata_MEG(Models, userOptions);
+userOptions = rsa.meg.setMetadata_MEG(model, userOptions);
 
 %%%%%%%%%%%%%%%%%%%%%%
 %% Data preparation %%
@@ -29,6 +29,6 @@ sensorImages = rsa.meg.MEGDataPreparation_sensor(userOptions);
 %%%%%%%%%%%%%%%%%
 %% Searchlight %%
 %%%%%%%%%%%%%%%%%
-rsa.meg.MEGSearchlight_sensor(sensorImages, Models, userOptions);
+rsa.meg.MEGSearchlight_sensor(sensorImages, model, userOptions);
 
 end

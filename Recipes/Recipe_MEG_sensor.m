@@ -15,13 +15,13 @@ userOptions = projectOptions();
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Model RDM calculation %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
-userOptions.modelNumber = which_model;
-Models = rsa.constructModelRDMs(userOptions);
+models = rsa.constructModelRDMs(userOptions);
+model = models(which_model);
 
 %%%%%%%%%%%%%%%%%%%%
 %% Set Meta-data %%
 %%%%%%%%%%%%%%%%%%%%
-userOptions = rsa.meg.setMetadata_MEG(Models, userOptions);
+userOptions = rsa.meg.setMetadata_MEG(model, userOptions);
 
 %%%%%%%%%%%%%%%%%%%%%%
 %% Data preparation %%
@@ -44,7 +44,7 @@ aRDMs = rsa.rdm.averageRDMs_subjectSession(RDMs, 'subject');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 rsa.figureRDMs(aRDMs, userOptions, struct('fileName', 'RoIRDMs', 'figureNumber', 1)); % Display the calculated RDMs
-rsa.figureRDMs(Models, userOptions, struct('fileName', 'ModelRDMs', 'figureNumber', 2)); % Display the models
+rsa.figureRDMs(model, userOptions, struct('fileName', 'ModelRDMs', 'figureNumber', 2)); % Display the models
 
 rsa.MDSConditions(aRDMs, userOptions);
 rsa.dendrogramConditions(aRDMs, userOptions);
@@ -53,11 +53,11 @@ rsa.dendrogramConditions(aRDMs, userOptions);
 %% Second-order analysis %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-rsa.pairwiseCorrelateRDMs({aRDMs, Models}, userOptions);
-rsa.MDSRDMs({aRDMs, Models}, userOptions);
-rsa.compareRefRDM2candRDMs(RDMs(1), Models, userOptions);
+rsa.pairwiseCorrelateRDMs({aRDMs, model}, userOptions);
+rsa.MDSRDMs({aRDMs, model}, userOptions);
+rsa.compareRefRDM2candRDMs(RDMs(1), model, userOptions);
 
-rsa.stat.testSignificance({aRDMs}, {Models}, userOptions); % fixed effects analysis
-rsa.stat.testSignificance_RandomEffects(RDMs, Models, userOptions); % random effects analysis
+rsa.stat.testSignificance({aRDMs}, {model}, userOptions); % fixed effects analysis
+rsa.stat.testSignificance_RandomEffects(RDMs, model, userOptions); % random effects analysis
 
 end

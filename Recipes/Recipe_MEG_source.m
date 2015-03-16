@@ -11,8 +11,9 @@ toolboxRoot = '/imaging/ls02/toolbox/devel/toolbox'; addpath(genpath(toolboxRoot
 userOptions = defineUserOptions();
 
 models = rsa.constructModelRDMs(userOptions);
+model = models(1);
 
-userOptions = rsa.meg.setMetadata_MEG(models, userOptions);
+userOptions = rsa.meg.setMetadata_MEG(model, userOptions);
 
 %%%%%%%%%%%%%%%%%%%%%%
 %% Data preparation %%
@@ -39,7 +40,7 @@ aRDMs = rsa.rdm.averageRDMs_subjectSession(RDMs, 'subject');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 rsa.figureRDMs(aRDMs, userOptions, struct('fileName', 'RoIRDMs', 'figureNumber', 1)); % Display the calculated RDMs
-rsa.figureRDMs(models, userOptions, struct('fileName', 'ModelRDMs', 'figureNumber', 2)); % Display the models
+rsa.figureRDMs(model, userOptions, struct('fileName', 'ModelRDMs', 'figureNumber', 2)); % Display the models
 
 rsa.MDSConditions(aRDMs, userOptions);
 rsa.dendrogramConditions(aRDMs, userOptions);
@@ -48,8 +49,8 @@ rsa.dendrogramConditions(aRDMs, userOptions);
 %% Second-order analysis %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-rsa.pairwiseCorrelateRDMs({aRDMs, models}, userOptions);
-rsa.MDSRDMs({aRDMs, models}, userOptions);
+rsa.pairwiseCorrelateRDMs({aRDMs, model}, userOptions);
+rsa.MDSRDMs({aRDMs, model}, userOptions);
 
 % Compute distance bar graph comparisons with noise ceiling estimates
 userOptions.RDMCorrelationType = 'Kendall_taua';
@@ -61,10 +62,10 @@ userOptions.candRDMdifferencesTest = 'subjectRFXsignedRank';
 userOptions.candRDMdifferencesThreshold = 0.05;
 userOptions.candRDMdifferencesMultipleTesting = 'none';
 
-rsa.compareRefRDM2candRDMs(RDMs(1), models, userOptions);
+rsa.compareRefRDM2candRDMs(RDMs(1), model, userOptions);
 
 % fixed effects analysis
-rsa.stat.testSignificance({aRDMs}, {models}, userOptions);
+rsa.stat.testSignificance({aRDMs}, {model}, userOptions);
 
 % random effects analysis
-rsa.stat.testSignificance_RandomEffects(RDMs, models, userOptions)
+rsa.stat.testSignificance_RandomEffects(RDMs, model, userOptions)

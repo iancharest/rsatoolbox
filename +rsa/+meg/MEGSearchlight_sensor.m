@@ -118,7 +118,7 @@
 % Cai Wingfield 3-2010 7-2010
 % Edited by IZ 07/13 
 
-function [varargout] = MEGSearchlight_sensor(sensorImages, Models, userOptions)
+function [varargout] = MEGSearchlight_sensor(sensorImages, model, userOptions)
 
 import rsa.*
 import rsa.fig.*
@@ -236,7 +236,7 @@ import rsa.util.*
 			end%for:sensorType
 
 			% Do the searchlight!
-			[rs, ps, ns, searchlightRDMs.(subject)] = searchlightMapping_MEG_sensor(singleSubjectTopography, Models, userOptions, searchlightOptions); % ps are from linear correlation p-values, and so aren't too useful here.
+			[rs, ps, ns, searchlightRDMs.(subject)] = searchlightMapping_MEG_sensor(singleSubjectTopography, model, userOptions, searchlightOptions); % ps are from linear correlation p-values, and so aren't too useful here.
 
 			nTopographies.(subject) = ns; % How many sensors contributed to the searchlight centred at each point. (Those with n==1 are excluded because the results aren't multivariate.)
 
@@ -244,7 +244,7 @@ import rsa.util.*
 			readFile = replaceWildcards(userOptions.betaPath, '[[betaIdentifier]]', tempBetas(1,1).identifier, '[[subjectName]]', subject); %1,1 should be fine
 			[ignore, subjectMetadataStruct] = evalc('fiff_read_evoked(readFile)');
 
-            modelName = spacesToUnderscores(Models(userOptions.modelNumber).name);
+            modelName = spacesToUnderscores(model.name);
             
             % Store results in indexed volumes
             rTopographies.(subject) = rs(:,:); % r-values for correlation with each model

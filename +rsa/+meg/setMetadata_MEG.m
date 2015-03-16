@@ -70,9 +70,6 @@ else % source level analysis
     MEGDataStcL = mne_read_stc_file1(readPathL);
     MEGDataVolL = single(MEGDataStcL.data);
     
-    % TODO: this is bad
-    modelNumber = userOptions.modelNumber;
-    
     % Todo: this is bad
     userOptions.nConditions = size(squareRDM(Models(modelNumber).RDM), 1);
     
