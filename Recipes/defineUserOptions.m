@@ -13,14 +13,16 @@ function userOptions = defineUserOptions()
 %  For a guide to how to fill out the fields in this file, consult
 %  the documentation folder (particularly the userOptions_guide.m)
 %
-%  Cai Wingfield 11-2009
+%  Cai Wingfield 2009-11, 2015-03
 %  Li Su updated 2-2012
 %  Fawad updated 12-2013, 10-2014
 %  Jana updated 10-2014
 %__________________________________________________________________________
 % Copyright (C) 2009 Medical Research Council
 
-%% Project details
+%%%%%%%%%%%%%%%%%%%%%
+%% Project details %%
+%%%%%%%%%%%%%%%%%%%%%
 
 % This name identifies a collection of files which all belong to the same run of a project.
 userOptions.analysisName = 'yourProjectName';
@@ -43,6 +45,7 @@ userOptions.regularized = false;
 %%%%%%%%%%%%%%%%%%%
 %% Email Options %%
 %%%%%%%%%%%%%%%%%%%
+
 % Set to true to be informed when a script finishes.
 userOptions.recieveEmail = true;
 % Put your address to make 
@@ -51,6 +54,7 @@ userOptions.mailto = 'cw417@cam.ac.uk';
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Parallel Computing toolbox %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % To run parallel locally set run_in_parallel *and*
 % run_in_parallel_in_cluster to false. 
 % To run on CBU adaptive queue set run_in_parallel_in_cluster to true. 
@@ -65,6 +69,7 @@ userOptions.jobSize = 1;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Adaptive Computing Cluster Queueing OPTIONS %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % Set true to delete jobs from the queue otherwise set to false.
 % If you do not want to delete all jobs but only sepecific one do not set
 % this variable to true.
@@ -82,65 +87,47 @@ userOptions.nWorkers = 8;
 % In gigabytes, to be distributed amongst all nodes.
 userOptions.memReq = 400;
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% MEG SENSOR-LEVEL ANALYSIS %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Modality-agnostic analysis options %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% set this true for both searchlight and fixed time window RoI analyses
-userOptions.sensorLevelAnalysis = true;
+% The path to a stereotypical mask data file is stored (not including subject-specific identifiers).
+% "[[subjectName]]" should be used as a placeholder to denote an entry in userOptions.subjectNames
+% "[[maskName]]" should be used as a placeholder to denote an entry in userOptions.maskNames
+userOptions.maskPath = 'pathToWhereYourMasksAreStored';%'/imaging/mb01/lexpro/multivariate/ffx_simple/[[subjectName]]/[[maskName]].img';
 
-% ===== use searchlight settings for doing sensor level searchlight ==== %
+% The list of mask filenames (minus .hdr extension) to be used.
+% For MEG, names should be in pairs, such as maskName-lh,
+% maskName-rh.
+% Leave empty to do whole-brain analysis.
+userOptions.maskNames = { ...
+    'mask-lh', 'mask-rh'...
+};
 
-% == use following settings for sensor level RoI analysis only========== %
+%%%%%%%%%%%%%%%%%%%%%%%%
+%% EXPERIMENTAL SETUP %%
+%%%%%%%%%%%%%%%%%%%%%%%%
 
-% specify a name for your mask, used in saving your results
-userOptions.maskSpec.maskName = {'allSensors'};
+% The list of subjects to be included in the study.
+userOptions.subjectNames = { ...
+	'subject1','subject2',...
+};% eg CBUXXXXX
 
-% remove/add sensors in your mask by setting them true/false
-userOptions.maskSpec.MEGSensors.Gradiometers = true;
-userOptions.maskSpec.MEGSensors.Magnetometers = true;
-userOptions.maskSpec.MEGSensorSites = (1:102); % for each mag and grad: create above mentioned 
-            % mask by putting sensor numbers in arrays put any values as [90 98 100 1 4];
+% The default colour label for RDMs corresponding to RoI masks (as opposed to models).
+userOptions.RoIColor = [0 0 1];
+userOptions.ModelColor = [0 1 0];
 
-userOptions.maskSpec.MEGSensors.EEG = false;
-userOptions.maskSpec.EEGSensorSites = (1:70); % eeg
-
-% time window for RoI analysis
-userOptions.maskSpec.timeWindow = [-200 100];
-
-% pattern of analysis 'spatial', 'temporal' or 'spatiotemporal'
-% TODO: need explanaiton of what each do
-userOptions.maskSpec.patternType =  'spatiotemporal';
+% Should information about the experimental design be automatically
+% acquired from SPM metadata?
+% If this option is set to true, the entries in userOptions.conditionLabels
+% MUST correspond to the names of the conditions as specified in SPM.
+userOptions.getSPMData = false;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% FEATUERS OF INTEREST SELECTION OPTIONS %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-userOptions.slidingTimeWindow = true; % will use temporalSearchlightWidth & resolution
 
-	%% %% %% %% %%
-    %% fMRI/MEG %% Use these next three options if you're working in fMRI native space or MEG source space:
-	%% %% %% %% %%
-	
-	% The path to a stereotypical mask data file is stored (not including subject-specific identifiers).
-	% "[[subjectName]]" should be used as a placeholder to denote an entry in userOptions.subjectNames
-	% "[[maskName]]" should be used as a placeholder to denote an entry in userOptions.maskNames
-	userOptions.maskPath = 'pathToWhereYourMasksAreStored';%'/imaging/mb01/lexpro/multivariate/ffx_simple/[[subjectName]]/[[maskName]].img';
-		
-		% The list of mask filenames (minus .hdr extension) to be used.
-        % For MEG, names should be in pairs, such as maskName-lh,
-        % maskName-rh.
-        % Leave empty to do whole-brain analysis.
-		userOptions.maskNames = { ...
-			'mask-lh', 'mask-rh'...
-			};
-			
-		% time windows are specified for each regions. For ROI analysis, different 
-		% time windows can be set for different ROIs, but it can also be used for 
-		% searchlight analysis to reduce the search space, in searchlight analysis,
-		% time window should be same for all ROIs.
-		userOptions.maskTimeWindows = {
-		    [0 500], [0 500] ...
-		    };
+userOptions.slidingTimeWindow = true; % will use temporalSearchlightWidth & resolution
 
 %%%%%%%%%%%%%%%%%%%%%%%%%
 %% SEARCHLIGHT OPTIONS %%
@@ -154,29 +141,29 @@ userOptions.searchlight = true;
 % temporalsearchlightLimits rather than maskTimeWindows for searchlight== %
 % == No masking available for sensor level searchlight. Works only on GRADIOMETERS == %
 
-	%% %% %% %% %%
-	%% fMRI  %% Use these next three options if you're working in fMRI native space:
-	%% %% %% %% %%
+%% %% %% %% %%
+%% fMRI  %% Use these next three options if you're working in fMRI native space:
+%% %% %% %% %%
 
-		% What is the path to the anatomical (structural) fMRI scans for each subject?
-		% "[[subjectName]]" should be used to denote an entry in userOptions.subjectNames
-		userOptions.structuralsPath = 'paathToWhereYourSubject''s structuralImagesAreStored ';% e.g. /imaging/mb01/lexpro/[[subjectName]]/structurals/
-	
-		% What are the dimensions (in mm) of the voxels in the scans?
-		userOptions.voxelSize = [3 3 3.75];
-	
-		% What radius of searchlight should be used (mm)?
-		userOptions.searchlightRadius = 15;
-		
-		% Correlate over space ('spatial') or regularized ('regularized')
-		userOptions.searchlightPatterns = 'spatial';
+% What is the path to the anatomical (structural) fMRI scans for each subject?
+% "[[subjectName]]" should be used to denote an entry in userOptions.subjectNames
+userOptions.structuralsPath = 'paathToWhereYourSubject''s structuralImagesAreStored ';% e.g. /imaging/mb01/lexpro/[[subjectName]]/structurals/
+
+% What are the dimensions (in mm) of the voxels in the scans?
+userOptions.voxelSize = [3 3 3.75];
+
+% What radius of searchlight should be used (mm)?
+userOptions.searchlightRadius = 15;
+
+% Correlate over space ('spatial') or regularized ('regularized')
+userOptions.searchlightPatterns = 'spatial';
 
 %% %% %% %% %%
 %%  MEG  %% Use these next four options if you're working in MEG:
 %% %% %% %% %%
 
-% ================ common options for sensor and source ==================%
-% all time values in ms
+% The average surface files
+userOptions.averageSurfaceFile = '/imaging/cw03/decom2/subjects/average/surf/lh.inflated';
 
 % The width of the sliding window (ms)
 userOptions.temporalSearchlightWidth = 20; %20;
@@ -192,6 +179,47 @@ userOptions.temporalSearchlightResolution = 10; %10; % (data point equivalent = 
 
 % The overall window of interest (ms)
 userOptions.temporalSearchlightLimits = [-200 800];
+
+% set this true for both searchlight and fixed time window RoI analyses
+userOptions.sensorLevelAnalysis = true;
+
+% Time windows are specified for each regions.
+%
+% There should be one entry for each entry in userOptions.maskNames, and
+% they will be treated as corresponding pairs.
+% For example, if there are entries 'mask-a' and 'mask-b' in
+% userOptions.maskNames, and there are entries [0 100] and [-100 200] in
+% userOptions.maskTimeWindows, then [0 100] will go with 'mask-a', and
+% [-100 200] will go with 'mask-b'.
+%
+% For searchlight analysis, all time windows should be the same.
+userOptions.maskTimeWindows = {
+    [0 500], [0 500] ...
+};
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% MEG SENSOR-LEVEL ANALYSIS %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% specify a name for your mask, used in saving your results
+userOptions.maskSpec.maskName = {'allSensors'};
+
+% remove/add sensors in your mask by setting them true/false
+userOptions.maskSpec.MEGSensors.Gradiometers = true;
+userOptions.maskSpec.MEGSensors.Magnetometers = true;
+% for each mag and grad: create above mentioned mask by putting sensor
+% numbers in arrays put any values, such as [90 98 100 1 4];
+userOptions.maskSpec.MEGSensorSites = (1:102);
+
+userOptions.maskSpec.MEGSensors.EEG = false;
+userOptions.maskSpec.EEGSensorSites = (1:70);
+
+% time window for RoI analysis
+userOptions.maskSpec.timeWindow = [-200 100];
+
+% pattern of analysis 'spatial', 'temporal' or 'spatiotemporal'
+% TODO: need explanaiton of what each do
+userOptions.maskSpec.patternType =  'spatiotemporal';
     
     % ===========================  (sensor space) ========================%
 
@@ -203,28 +231,13 @@ userOptions.sensorSearchlightRadius = 1;
 % The radius of the source-space searchlight (in mm)
 userOptions.sourceSearchlightRadius = 20;
 
-% The average surface files
-userOptions.averageSurfaceFile = '/imaging/cw03/decom2/subjects/average/surf/lh.inflated';
+% spatial smoothing and upsampling parameters
+userOptions.targetResolution = 10242;
+% 5mm is the smallest distance between two adjacent vertex in 10242 resolution.
+% 10mm is the smallest distance between two adjacent vertex in 2562 resolution.
+userOptions.minDist = 5; %mm
+userOptions.smoothingWidth = 10; %mm
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%
-%% EXPERIMENTAL SETUP %%
-%%%%%%%%%%%%%%%%%%%%%%%%
-
-% The list of subjects to be included in the study.
-userOptions.subjectNames = { ...
-	'subject1','subject2',...
-	};% eg CBUXXXXX
-
-% The default colour label for RDMs corresponding to RoI masks (as opposed to models).
-userOptions.RoIColor = [0 0 1];
-userOptions.ModelColor = [0 1 0];
-
-% Should information about the experimental design be automatically
-% acquired from SPM metadata?
-% If this option is set to true, the entries in userOptions.conditionLabels
-% MUST correspond to the names of the conditions as specified in SPM.
-userOptions.getSPMData = false;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%
 %% ANALYSIS PREFERENCES %%
@@ -258,7 +271,9 @@ userOptions.conditionColours = [repmat([1 0 0], 48,1); repmat([0 0 1], 44,1)];
 % Which distance measure to use when calculating first-order RDMs.
 userOptions.distance = 'Correlation';
 
-%% Second-order analysis
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Second-order analysis %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Which model RDM to test? (This number corresponds to the order in
 % variable Models, which is specified in ModelRDMs.m)
@@ -302,15 +317,12 @@ userOptions.tmap = true;
 % DoF does not help compute threshold for that case.
 userOptions.primaryThreshold = 0.05;
 
-% spatial smoothing and upsampling parameters
-userOptions.targetResolution = 10242;
-% 5mm is the smallest distance between two adjacent vertex in 10242 resolution.
-% 10mm is the smallest distance between two adjacent vertex in 2562 resolution.
-userOptions.minDist = 5; %mm
-userOptions.smoothingWidth = 10; %mm
-
 % Should RDMs' entries be rank transformed into [0,1] before they're displayed?
 userOptions.rankTransform = true;
+
+%%%%%%%%%%%%%%%%%%%%
+%% Figure options %%
+%%%%%%%%%%%%%%%%%%%%
 
 % Should rubber bands be shown on the MDS plot?
 userOptions.rubberbands = true;
@@ -339,6 +351,10 @@ userOptions.dpi = 300;
 % no longer be A4 size, good if you want to put the figure
 % in a manuscript or presentation.
 userOptions.tightInset = false;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Interaction options %%
+%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % TODO: Need a better solution to this. Enum?
 % This can be used to force a reply to each propt about overwriting files.

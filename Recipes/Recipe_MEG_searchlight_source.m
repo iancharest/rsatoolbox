@@ -10,6 +10,7 @@
 %%%%%%%%%%%%%%%%%%%%
 toolboxRoot = 'C:\Users\cai\code\rsagroup-rsatoolbox\'; 
 addpath(genpath(toolboxRoot));
+
 userOptions = defineUserOptions();
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
