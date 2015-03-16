@@ -121,13 +121,13 @@ for v = indexMask.vertices
         
         % TODO: Refactor this into general method so it can be used
         % TODO: anywhere
-        if strcmpi(userOptions.distanceMeasure, 'Kendall_taua')
+        if strcmpi(userOptions.RDMCorrelationType, 'Kendall_taua')
             rs = rankCorr_Kendall_taua(searchlightRDM', modelRDM_utv');
         elseif userOptions.partial_correlation
             % TODO: Consider partialcorr with Kendall's tau
-            rs = partialcorr(searchlightRDM', modelRDM_utv', control_for_modelRDMs', 'type', userOptions.distanceMeasure, 'rows','pairwise');
+            rs = partialcorr(searchlightRDM', modelRDM_utv', control_for_modelRDMs', 'type', userOptions.RDMCorrelationType, 'rows','pairwise');
         else
-            rs = corr(searchlightRDM', modelRDM_utv', 'type', userOptions.distanceMeasure, 'rows', 'pairwise');
+            rs = corr(searchlightRDM', modelRDM_utv', 'type', userOptions.RDMCorrelationType, 'rows', 'pairwise');
         end
         
         smm_rs(v, t) = rs;

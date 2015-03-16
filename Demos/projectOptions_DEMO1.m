@@ -66,7 +66,7 @@ userOptions.dotSize = 8;
 %% Second-order analysis
 
 % Which similarity-measure is used for the second-order comparison.
-userOptions.distanceMeasure = 'Spearman';
+userOptions.RDMCorrelationType = 'Spearman';
 
 % How many permutations should be used to test the significance of the fits?  (10,000 highly recommended.)
 userOptions.significanceTestPermutations = 10000;

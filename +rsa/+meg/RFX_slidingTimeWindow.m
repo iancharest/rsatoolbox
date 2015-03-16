@@ -79,9 +79,9 @@ if overwriteFlag
             end
             for subject=1:nSubjects
                 if userOptions.partial_correlation
-                    [r(subject,1,timeWindow) p(subject,timeWindow)] = partialcorr(vectorizeRDM(RDMs(1,subject).RDM)',modelRDM_vec',control_for_modelRDMs','type',userOptions.distanceMeasure,'rows','pairwise');
+                    [r(subject,1,timeWindow) p(subject,timeWindow)] = partialcorr(vectorizeRDM(RDMs(1,subject).RDM)',modelRDM_vec',control_for_modelRDMs','type',userOptions.RDMCorrelationType,'rows','pairwise');
                 else
-                    [r(subject,1,timeWindow) p(subject,timeWindow)] = corr(vectorizeRDM(RDMs(1,subject).RDM)',modelRDM_vec','type',userOptions.distanceMeasure,'rows','pairwise');
+                    [r(subject,1,timeWindow) p(subject,timeWindow)] = corr(vectorizeRDM(RDMs(1,subject).RDM)',modelRDM_vec','type',userOptions.RDMCorrelationType,'rows','pairwise');
                 end
             end
         end

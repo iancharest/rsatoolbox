@@ -124,7 +124,7 @@ else
 	
 	cd(fullfile(userOptions.rootPath));
 	
-	distanceMatrix.RDM = 1-RDMCorrMat(RDMs,[],userOptions.distanceMeasure);
+	distanceMatrix.RDM = 1 - RDMCorrMat(RDMs,[],userOptions.RDMCorrelationType);
 	distanceMatrix.name = 'Pairwise RDM correlations.';
 
 	if isfield(localOptions, 'titleString')

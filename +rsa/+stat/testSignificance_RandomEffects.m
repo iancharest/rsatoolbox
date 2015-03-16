@@ -50,7 +50,7 @@ if overwriteFlag % If files may be (over)written:
     
     for mask=1:nMasks
         for subject=1:numel(userOptions.subjectNames)
-            [r(subject) p_sub] = corr(vectorizeRDM(RDMs(mask,subject).RDM)',modelRDM_vec','type',userOptions.distanceMeasure,'rows','pairwise');
+            [r(subject) p_sub] = corr(vectorizeRDM(RDMs(mask,subject).RDM)',modelRDM_vec','type',userOptions.RDMCorrelationType,'rows','pairwise');
         end
         [h,p(1,mask),ci,stats] = ttest(r,0);
         disp([' | Mask: ' maskNames{mask} ' | p: ' num2str(p(1,mask))]);

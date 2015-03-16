@@ -55,7 +55,7 @@ function stats_p_r=compareRefRDM2candRDMs(refRDM, candRDMs, userOptions)
 % but using a leave-one-out approach, where each subject's RDM is
 % correlated with the average RDM of the other subjects' RDMs. When Pearson
 % correlation is chosen for comparing RDMs
-% (userOptions.RDMcorrelationType), the RDMs are first z-transformed. When
+% (userOptions.RDMCorrelationType), the RDMs are first z-transformed. When
 % Spearman correlation is chosen, the RDMs are first rank-transformed. When
 % Kendall's tau a is chosen, an iterative procedure is used. See Nili et
 % al. (2013) for a full motivation for the ceiling estimate and for an
@@ -91,7 +91,7 @@ function stats_p_r=compareRefRDM2candRDMs(refRDM, candRDMs, userOptions)
 %       treated as a missing value. This ensures that comparisons between
 %       candidate RDMs are based on the same set of dissimilarities.
 %
-% userOptions.RDMcorrelationType
+% userOptions.RDMCorrelationType
 %       The correlation coefficient used to compare RDMs. This is
 %       'Spearman' by default, because we prefer not to assume a linear
 %       relationship between the distances (e.g. when a brain RDM from fMRI
@@ -449,15 +449,15 @@ nSubjects = size(refRDM_stack,3);
 %     avgRefRDM = mean(refrdms,3);
 %     refrdms(:,:,subj) = [];
 %     avgRefRDM_LOO = mean(refrdms,3);
-%     if isequal(userOptions.RDMcorrelationType,'Kendall_taua')
+%     if isequal(userOptions.RDMCorrelationType,'Kendall_taua')
 %         rs_ceilUpper(subj)=rankCorr_Kendall_taua(vectorizeRDMs(subjectRDM)',vectorizeRDMs(avgRefRDM)');
 %         rs_ceilLower_LOO(subj)=rankCorr_Kendall_taua(vectorizeRDMs(subjectRDM)',vectorizeRDMs(avgRefRDM_LOO)');
-%     elseif isequal(userOptions.RDMcorrelationType,'raeSpearman')
+%     elseif isequal(userOptions.RDMCorrelationType,'raeSpearman')
 %         rs_ceilUpper(subj)=raeSpearmanCorr(vectorizeRDMs(subjectRDM)',vectorizeRDMs(avgRefRDM)');
 %         rs_ceilLower_LOO(subj)=raeSpearmanCorr(vectorizeRDMs(subjectRDM)',vectorizeRDMs(avgRefRDM_LOO)');
 %     else
-%         rs_ceilUpper(subj)=corr(vectorizeRDMs(subjectRDM)',vectorizeRDMs(avgRefRDM)','type',userOptions.RDMcorrelationType,'rows','pairwise');
-%         rs_ceilLower_LOO(subj)=corr(vectorizeRDMs(subjectRDM)',vectorizeRDMs(avgRefRDM_LOO)','type',userOptions.RDMcorrelationType,'rows','pairwise');
+%         rs_ceilUpper(subj)=corr(vectorizeRDMs(subjectRDM)',vectorizeRDMs(avgRefRDM)','type',userOptions.RDMCorrelationType,'rows','pairwise');
+%         rs_ceilLower_LOO(subj)=corr(vectorizeRDMs(subjectRDM)',vectorizeRDMs(avgRefRDM_LOO)','type',userOptions.RDMCorrelationType,'rows','pairwise');
 %     end
 % end
 % ceilingUpperBound=mean(rs_ceilUpper);
@@ -465,7 +465,7 @@ nSubjects = size(refRDM_stack,3);
 % 
 % stats_p_r.ceiling = [ceilingLowerBound,ceilingUpperBound];
 % 
-[ceilingUpperBound, ceilingLowerBound, bestFitRDM]=ceilingAvgRDMcorr(refRDM_stack,userOptions.RDMcorrelationType,false);
+[ceilingUpperBound, ceilingLowerBound, bestFitRDM]=ceilingAvgRDMcorr(refRDM_stack,userOptions.RDMCorrelationType,false);
 stats_p_r.ceiling = [ceilingLowerBound,ceilingUpperBound];
 
 
@@ -474,12 +474,12 @@ stats_p_r.ceiling = [ceilingLowerBound,ceilingUpperBound];
 % cand2refSims: nRefRDMinstances x nCand
 for candI = 1:numel(candRDMs)
     for subI = 1:nSubjects
-        if isequal(userOptions.RDMcorrelationType,'Kendall_taua')
+        if isequal(userOptions.RDMCorrelationType,'Kendall_taua')
             cand2refSims(subI,candI)=rankCorr_Kendall_taua(vectorizeRDMs(meanCandRDMs(:,:,candI))',vectorizeRDMs(refRDM_stack(:,:,subI))');
-        elseif isequal(userOptions.RDMcorrelationType,'raeSpearman')
+        elseif isequal(userOptions.RDMCorrelationType,'raeSpearman')
             cand2refSims(subI,candI)=raeSpearmanCorr(vectorizeRDMs(meanCandRDMs(:,:,candI))',vectorizeRDMs(refRDM_stack(:,:,subI))');
         else
-            cand2refSims(subI,candI)=corr(vectorizeRDMs(meanCandRDMs(:,:,candI))',vectorizeRDMs(refRDM_stack(:,:,subI))','type',userOptions.RDMcorrelationType,'rows','pairwise');
+            cand2refSims(subI,candI)=corr(vectorizeRDMs(meanCandRDMs(:,:,candI))',vectorizeRDMs(refRDM_stack(:,:,subI))','type',userOptions.RDMCorrelationType,'rows','pairwise');
         end
     end
 end
@@ -512,7 +512,7 @@ for barI = 1:numel(candRDMs)
     hold on
 end
 
-ylabel({'\bf RDM correlation ',['\rm[',deunderscore(userOptions.RDMcorrelationType),', averaged across ',num2str(nRefRDMinstances),' subjects]']});
+ylabel({'\bf RDM correlation ',['\rm[',deunderscore(userOptions.RDMCorrelationType),', averaged across ',num2str(nRefRDMinstances),' subjects]']});
 
 stats_p_r.candRelatedness_r = cand2refSims(:,sortedIs);
 
@@ -627,7 +627,7 @@ switch userOptions.RDMrelatednessTest,
         % index method would require on the order of n^2*nRandomisations
         % memory, so i'll go slowly for now...
         %tic
-        if isequal(userOptions.RDMcorrelationType,'Kendall_taua')
+        if isequal(userOptions.RDMCorrelationType,'Kendall_taua')
             for randomisationI=1:userOptions.nRandomisations
                 if exhaustPermutations
                     randomIndexSeq = allPermutations(randomisationI, :);
@@ -645,7 +645,7 @@ switch userOptions.RDMrelatednessTest,
                 end
             end % randomisationI
             fprintf('\n');
-        elseif isequal(userOptions.RDMcorrelationType,'raeSpearman')
+        elseif isequal(userOptions.RDMCorrelationType,'raeSpearman')
             for randomisationI=1:userOptions.nRandomisations
                 if exhaustPermutations
                     randomIndexSeq = allPermutations(randomisationI, :);
@@ -672,7 +672,7 @@ switch userOptions.RDMrelatednessTest,
                 end%if
                 
                 rdmA_rand_vec=vectorizeRDM(meanRefRDM(randomIndexSeq,randomIndexSeq));
-                rs_null(randomisationI,:)=corr(rdmA_rand_vec',rdms','type',userOptions.RDMcorrelationType,'rows','pairwise');
+                rs_null(randomisationI,:)=corr(rdmA_rand_vec',rdms','type',userOptions.RDMCorrelationType,'rows','pairwise');
                 if mod(randomisationI,floor(userOptions.nRandomisations/100))==0
                     fprintf('%d%% ',floor(100*randomisationI/userOptions.nRandomisations))
                     if mod(randomisationI,floor(userOptions.nRandomisations/10))==0, fprintf('\n'); end;
@@ -913,7 +913,7 @@ for YTickI=0:maxYTickI
     text(0,double(YTickI/10),num2str(YTickI/10,1),'HorizontalAlignment','right');
 end
 plot([0.1 0.1],[0 YTickI]./10,'k','LineWidth',lw);
-text(-1.2,double(maxYTickI/10/2),{'\bf RDM correlation ',['\rm[',deunderscore(userOptions.RDMcorrelationType),', averaged across ',num2str(nRefRDMinstances),' subjects]']},'HorizontalAlignment','center','Rotation',90);
+text(-1.2,double(maxYTickI/10/2),{'\bf RDM correlation ',['\rm[',deunderscore(userOptions.RDMCorrelationType),', averaged across ',num2str(nRefRDMinstances),' subjects]']},'HorizontalAlignment','center','Rotation',90);
 
 if ~exist('yy','var')
     ylim([Ymin max(y_sorted)+max(es)+.05]);

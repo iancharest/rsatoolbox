@@ -72,7 +72,7 @@
 %                userOptions.distance
 %                        A string indicating the distance measure with which to
 %                        calculate the RDMs. Defaults to 'Correlation'.
-%                userOptions.distanceMeasure
+%                userOptions.RDMCorrelationType
 %                        A string descriptive of the distance measure to be used
 %                        to compare two RDMs. Defaults to 'Spearman'.
 %                userOptions.temporalSearchlightResolution

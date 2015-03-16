@@ -106,9 +106,9 @@ import rsa.util.*
 			searchlightRDMs(:,:,sensorSite, t) = squareform(searchlightRDM);
 		
 			try
-				[rs, ps] = corr(searchlightRDM', modelRDMs_utv', 'type', userOptions.distanceMeasure, 'rows', 'pairwise');
+				[rs, ps] = corr(searchlightRDM', modelRDMs_utv', 'type', userOptions.RDMCorrelationType, 'rows', 'pairwise');
 			catch
-				[rs, ps] = corr(searchlightRDM', modelRDMs_utv, 'type', userOptions.distanceMeasure, 'rows', 'pairwise');
+				[rs, ps] = corr(searchlightRDM', modelRDMs_utv, 'type', userOptions.RDMCorrelationType, 'rows', 'pairwise');
 			end%try
 		
 			if localOptions.fisher

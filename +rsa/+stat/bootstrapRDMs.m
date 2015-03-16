@@ -123,11 +123,11 @@ for candRDMI = 1:nCandRDMs
         
         averageBootstrappedRDM = mean(localReferenceRDMs, 3);
         
-        if isequal(userOptions.RDMcorrelationType,'Kendall_taua')
+        if isequal(userOptions.RDMCorrelationType,'Kendall_taua')
             %             tic
             bootstrapRs(candRDMI, b)=rankCorr_Kendall_taua(vectorizeRDMs(averageBootstrappedRDM)',vectorizeRDMs(localTestRDM)');
             %             toc
-        elseif isequal(userOptions.RDMcorrelationType,'raeSpearman')
+        elseif isequal(userOptions.RDMCorrelationType,'raeSpearman')
             %             tic
             %             bootstrapRs(candRDMI, b)=raeSpearmanCorr(vectorizeRDMs(averageBootstrappedRDM)',vectorizeRDMs(localTestRDM)');
             %             toc
@@ -136,7 +136,7 @@ for candRDMI = 1:nCandRDMs
             %             toc
         else
             %             tic
-            bootstrapRs(candRDMI, b) = corr(vectorizeRDMs(averageBootstrappedRDM)',vectorizeRDMs(localTestRDM)','type',userOptions.distanceMeasure,'rows','pairwise');
+            bootstrapRs(candRDMI, b) = corr(vectorizeRDMs(averageBootstrappedRDM)',vectorizeRDMs(localTestRDM)','type',userOptions.RDMCorrelationType,'rows','pairwise');
             %             toc
         end
         
@@ -151,10 +151,10 @@ fprintf('\n');
 bootstrapEs = std(bootstrapRs, 0, 2);
 k=0;
 for candRDMI = 1:nCandRDMs
-%     if isequal(userOptions.RDMcorrelationType,'Kendall_taua')
+%     if isequal(userOptions.RDMCorrelationType,'Kendall_taua')
 %         realRs(candRDMI)=rankCorr_Kendall_taua(vectorizeRDMs(averageReferenceRDM)',vectorizeRDMs(candRDMs(:,:,candRDMI))');
 %     else
-%         realRs(candRDMI) = corr(vectorizeRDMs(averageReferenceRDM)',vectorizeRDMs(candRDMs(:,:,candRDMI))','type',userOptions.distanceMeasure,'rows','pairwise');
+%         realRs(candRDMI) = corr(vectorizeRDMs(averageReferenceRDM)',vectorizeRDMs(candRDMs(:,:,candRDMI))','type',userOptions.RDMCorrelationType,'rows','pairwise');
 %     end
     for candRDMJ = 1:nCandRDMs
         if candRDMI == candRDMJ

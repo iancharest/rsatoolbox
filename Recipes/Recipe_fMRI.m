@@ -55,8 +55,8 @@ for i=1:numel(Models)
     models{i} = Models(i);
 end
 
-% TODO: Why is this different to userOptions.distanceMeasure?
-userOptions.RDMcorrelationType = 'Kendall_taua';
+% TODO: Why is this different to userOptions.RDMCorrelationType?
+userOptions.RDMCorrelationType = 'Kendall_taua';
 userOptions.RDMrelatednessTest = 'subjectRFXsignedRank';
 userOptions.RDMrelatednessThreshold = 0.05;
 userOptions.figureIndex = [10 11];

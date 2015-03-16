@@ -114,7 +114,7 @@ if overwriteFlag
             parfor t = 1:nTimePoints
                 rdm = rdms.(['t_' num2str(t)]).RDM;
                 r = corr(vectorizeRDM(rdm)', modelRDMs_utv', 'type', ...
-                    userOptions.distanceMeasure, 'rows', 'pairwise');
+                    userOptions.RDMCorrelationType, 'rows', 'pairwise');
                 temp(vertex, t) = r;
             end
         end
@@ -178,7 +178,7 @@ if overwriteFlag
                 parfor t = 1:nTimePoints
                     rdm = rdms.(['t_' num2str(t)]).RDM;
                     r = corr(vectorizeRDM(rdm)', modelRDMs_utv', 'type', ...
-                        userOptions.distanceMeasure, 'rows', 'pairwise');
+                        userOptions.RDMCorrelationType, 'rows', 'pairwise');
                     temp(t) = r;
                 end % for t
                 simulated_r(vertex + offset,:) = temp;

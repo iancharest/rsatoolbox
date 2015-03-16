@@ -286,7 +286,7 @@ userOptions.partial_correlation = false;
 userOptions.partial_modelNumber = {5,7};
 
 % Which similarity-measure is used for the second-order comparison.
-userOptions.distanceMeasure = 'Spearman';
+userOptions.RDMCorrelationType = 'Kendall_taua';
 
 % How many permutations should be used to test the significance of the
 % fits?  (10,000 highly recommended.)

@@ -52,7 +52,7 @@ rsa.pairwiseCorrelateRDMs({aRDMs, models}, userOptions);
 rsa.MDSRDMs({aRDMs, models}, userOptions);
 
 % Compute distance bar graph comparisons with noise ceiling estimates
-userOptions.RDMcorrelationType = 'Kendall_taua';
+userOptions.RDMCorrelationType = 'Kendall_taua';
 userOptions.RDMrelatednessTest = 'subjectRFXsignedRank';
 userOptions.RDMrelatednessThreshold = 0.05;
 userOptions.figureIndex = [10 11];

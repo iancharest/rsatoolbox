@@ -117,7 +117,7 @@ models{end+1} = averageRDMs_true;
 % test the relatedness and compare the candidate RDMs
 
 userOptions = userOptions_noisy;
-userOptions.RDMcorrelationType='Kendall_taua';
+userOptions.RDMCorrelationType='Kendall_taua';
 userOptions.RDMrelatednessTest = 'subjectRFXsignedRank';
 userOptions.RDMrelatednessThreshold = 0.05;
 userOptions.figureIndex = [10 11];

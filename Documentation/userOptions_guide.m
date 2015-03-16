@@ -41,7 +41,7 @@
 %                                [[subjectName]]
 %                                        To be replaced with the name of each
 %                                        subject where appropriate.
-%                userOptions.distanceMeasure
+%                userOptions.RDMCorrelationType
 %                        A string descriptive of the distance measure to be used
 %                        to compare two RDMs. Defaults to 'Spearman'.
 %                userOptions.saveFigurePDF
@@ -118,6 +118,6 @@
 %                        conditions. If unset, convex hulls will not be drawn.
 %                userOptions.colourScheme
 %                        A colour scheme for the RDMs. Defualts to jet(64).
-%                userOptions.distanceMeasure
+%                userOptions.RDMCorrelationType
 %                        A string descriptive of the distance measure to be used
 %                        to compare two RDMs. Defaults to 'Spearman'.

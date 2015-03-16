@@ -14,7 +14,7 @@ function pairwiseCorrelateRDMs(varargin)
 %                userOptions.rootPath
 %                        A string describing the root path where files will be
 %                        saved (inside created directories).
-%                userOptions.distanceMeasure
+%                userOptions.RDMCorrelationType
 %                        A string descriptive of the distance measure to be used
 %                        to compare two RDMs. Defaults to 'Spearman'.
 %                userOptions.saveFigurePDF
@@ -84,7 +84,7 @@ nRDMStructs = numel(RDMCell);
 RDMs = concatenateRDMs(RDMCell{:});
 nRDMs = numel(RDMs);
 
-corrMat = RDMCorrMat(RDMs, localOptions.figureNumber, userOptions.RDMcorrelationType);
+corrMat = RDMCorrMat(RDMs, localOptions.figureNumber, userOptions.RDMCorrelationType);
 
 % if isfield(userOptions, 'colourScheme')
 % 	set(gcf,'Colormap', userOptions.colourScheme);

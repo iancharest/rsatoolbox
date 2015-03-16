@@ -88,9 +88,9 @@ if overwriteFlag
             
             % step 1: compute r and p values %
             if userOptions.partial_correlation
-                [r(timeWindow) p(timeWindow)] = partialcorr(vectorizeRDM(aRDMs.RDM)',modelRDM_vec',control_for_modelRDMs','type',userOptions.distanceMeasure,'rows','pairwise');
+                [r(timeWindow) p(timeWindow)] = partialcorr(vectorizeRDM(aRDMs.RDM)',modelRDM_vec',control_for_modelRDMs','type',userOptions.RDMCorrelationType,'rows','pairwise');
             else
-                [r(timeWindow) p(timeWindow)] = corr(vectorizeRDM(aRDMs.RDM)',modelRDM_vec','type',userOptions.distanceMeasure,'rows','pairwise');
+                [r(timeWindow) p(timeWindow)] = corr(vectorizeRDM(aRDMs.RDM)',modelRDM_vec','type',userOptions.RDMCorrelationType,'rows','pairwise');
             end
             disp([ts2 ' ' num2str(time) ' ms r: ' num2str(r(timeWindow),6) ' p: ' num2str(p(timeWindow),6)])
             time = time + userOptions.temporalSearchlightResolution;
@@ -140,7 +140,7 @@ if overwriteFlag
                 aRDMs = averageRDMs_subjectSession(RDMs, 'subject');
                 
                 % step 1
-                [r_sim(timeWindow) p_sim(timeWindow)] = corr(vectorizeRDM(aRDMs.RDM)',modelRDM_vec_new','type',userOptions.distanceMeasure,'rows','pairwise');
+                [r_sim(timeWindow) p_sim(timeWindow)] = corr(vectorizeRDM(aRDMs.RDM)',modelRDM_vec_new','type',userOptions.RDMCorrelationType,'rows','pairwise');
                 
                 % step 2
                 if p_sim(timeWindow) <= 0.05 && r_sim(timeWindow) >= 0

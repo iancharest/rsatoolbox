@@ -1,6 +1,6 @@
-function corrMat=RDMCorrMat(RDMs,figPlotSpec,type)
+function corrMat = RDMCorrMat(RDMs,figPlotSpec,type)
 % USAGE
-% corrMat=RDMCorrMat(RDMs[,figPlotSpec])
+% corrMat = RDMCorrMat(RDMs[,figPlotSpec])
 %
 % FUNCTION
 % returns and optionally displays the correlation matrix (spearman) of a set
@@ -19,13 +19,13 @@ import rsa.spm.*
 import rsa.stat.*
 import rsa.util.*
 
-if ~exist('type','var'),type='Spearman'; end; % Spearman rank should be default?
+if ~exist('type','var'), type = 'Spearman'; end; % Spearman rank should be default?
 
-RDMs_bareVecs=unwrapRDMs(vectorizeRDMs(RDMs)); % This is of size [1 utv nRDMs]
+RDMs_bareVecs = unwrapRDMs(vectorizeRDMs(RDMs)); % This is of size [1 utv nRDMs]
 
-[one,nRDMParams,nRDMs]=size(RDMs_bareVecs);
+[one,nRDMParams,nRDMs] = size(RDMs_bareVecs);
 
-RDMs_cols=permute(RDMs_bareVecs,[2 3 1]); % This is of size [utv nRDMs (1)]
+RDMs_cols = permute(RDMs_bareVecs, [2 3 1]); % This is of size [utv nRDMs (1)]
 
 % For each pair of RDMs, ignore missing data only for this pair of RDMs
 % (unlike just using corr, which would ignore it if ANY RDM had missing
@@ -34,13 +34,13 @@ RDMs_cols=permute(RDMs_bareVecs,[2 3 1]); % This is of size [utv nRDMs (1)]
 if isequal(type,'Kendall_taua')
     for RDMI1 = 1:nRDMs
         for RDMI2 = 1 : nRDMs
-            corrMat(RDMI1,RDMI2)=rankCorr_Kendall_taua(RDMs_cols(:,RDMI1), RDMs_cols(:,RDMI2));
+            corrMat(RDMI1,RDMI2) = rankCorr_Kendall_taua(RDMs_cols(:,RDMI1), RDMs_cols(:,RDMI2));
         end
     end
 else
     for RDMI1 = 1:nRDMs
         for RDMI2 = 1 : nRDMs
-            corrMat(RDMI1,RDMI2)=corr(RDMs_cols(:,RDMI1), RDMs_cols(:,RDMI2), 'type', type, 'rows', 'complete');
+            corrMat(RDMI1,RDMI2) = corr(RDMs_cols(:,RDMI1), RDMs_cols(:,RDMI2), 'type', type, 'rows', 'complete');
         end
     end
 end

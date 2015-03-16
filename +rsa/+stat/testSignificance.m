@@ -32,7 +32,7 @@
 %                        An integer which describes the number of random
 %                        permutations to be used to calculate significance.
 %                        Defaults to 10,000.
-%                userOptions.distanceMeasure
+%                userOptions.RDMCorrelationType
 %                        A string descriptive of the distance measure to be used
 %                        to compare two RDMs. Defaults to 'Spearman'.
 %
@@ -143,7 +143,7 @@ if overwriteFlag % If files may be (over)written:
 		fprintf(['\t' referenceRDMs(referenceRDMi).name]);
 		tic % [Start measuring the time]
 		for comparedRDMi = 1:nComparedRDMs % ...and each RoI...
-			[r, p, p_conv] = testRDMrelatedness_randomization(referenceRDMs(referenceRDMi).RDM, comparedRDMs(comparedRDMi).RDM, struct('nSignificanceTestPermutations', nPerms, 'corrType', userOptions.distanceMeasure)); % ...compute the pairwise statistics...
+			[r, p, p_conv] = testRDMrelatedness_randomization(referenceRDMs(referenceRDMi).RDM, comparedRDMs(comparedRDMi).RDM, struct('nSignificanceTestPermutations', nPerms, 'corrType', userOptions.RDMCorrelationType)); % ...compute the pairwise statistics...
 			fprintf(fileID, '%s%s%s%s%s%s%s%s%s', [referenceRDMs(referenceRDMi).name ',' comparedRDMs(comparedRDMi).name ',' num2str(r) ',' num2str(p) ',' num2str(p_conv)]); % ...and write the results to the stats file.
 			fprintf(fileID, '\n');
 			clear p r p_conv;

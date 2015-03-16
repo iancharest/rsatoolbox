@@ -164,7 +164,7 @@ struct('titleString', 'Dendrogram of a single-subject RDM', 'useAlternativeCondi
 
 %% RDM correlation matrix and MDS
 % 2nd order correlation matrix
-userOptions.RDMcorrelationType='Kendall_taua';
+userOptions.RDMCorrelationType='Kendall_taua';
 
 rsa.pairwiseCorrelateRDMs({avgRDM, modelRDMs}, userOptions, struct('figureNumber', 12,'fileName','RDMcorrelationMatrix'));
 
@@ -173,7 +173,7 @@ rsa.MDSRDMs({avgRDM, modelRDMs}, userOptions, struct('titleString', 'MDS of diff
 
 
 %% statistical inference
-userOptions.RDMcorrelationType='Kendall_taua';
+userOptions.RDMCorrelationType='Kendall_taua';
 userOptions.RDMrelatednessTest = 'subjectRFXsignedRank';
 userOptions.RDMrelatednessThreshold = 0.05;
 userOptions.RDMrelatednessMultipleTesting = 'FDR';
@@ -191,8 +191,8 @@ stats_p_r=rsa.compareRefRDM2candRDMs(subjectRDMs, modelRDMs_cell, userOptions);
 
 
 %% Finally: real fMRI data (human IT RDM from Kriegeskorte et al. (Neuron 2008) as the reference RDM
-% userOptions.RDMcorrelationType='Kendall_taua';
-userOptions.RDMcorrelationType='Spearman';
+% userOptions.RDMCorrelationType='Kendall_taua';
+userOptions.RDMCorrelationType='Spearman';
 
 userOptions.RDMrelatednessTest = 'randomisation';
 userOptions.RDMrelatednessThreshold = 0.05;
