@@ -14,20 +14,6 @@
 
 function userOptions = setMetadata_MEG(Models, userOptions)
 
-import rsa.*
-import rsa.fig.*
-import rsa.meg.*
-import rsa.rdm.*
-import rsa.sim.*
-import rsa.spm.*
-import rsa.stat.*
-import rsa.util.*
-
-if ~isfield(userOptions, 'analysisName'), error('projectOptions:NoAnalysisName', 'analysisName must be set. See help'); end%if
-if ~isfield(userOptions, 'rootPath'), error('projectOptions:NoRootPath', 'rootPath must be set. See help'); end%if
-if ~isfield(userOptions, 'betaPath'), error('projectOptions:NoBetaPath', 'betaPath must be set. See help'); end%if
-if ~isfield(userOptions, 'subjectNames'), error('projectOptions:NoSubjectNames', 'betaPath must be set. See help'); end%if
-
 % loading one subject's STC/FIFFfile in order to find out its meta data.
 tempBetas = betaCorrespondence();
 userOptions.betaCorrespondence = tempBetas;
@@ -36,12 +22,9 @@ usingMasks = ~isempty(userOptions.maskNames);
 
 if userOptions.sensorLevelAnalysis
     
-    % Despite warning, readPath *is* used, but it's used in an eval
     readPath = replaceWildcards(userOptions.betaPath, '[[betaIdentifier]]', tempBetas(1,1).identifier, '[[subjectName]]', userOptions.subjectNames{1});
     
-    %
-    % Using evalc supresses output!
-    [ignore, allMEGData] = evalc('fiff_read_evoked(readPath)');
+    [ignore, allMEGData] = fiff_read_evoked(readPath);
     
     samplingRate = allMEGData.info.sfreq/1000; % ms
     
@@ -87,8 +70,6 @@ else % source level analysis
     MEGDataStcL = mne_read_stc_file1(readPathL);
     MEGDataVolL = single(MEGDataStcL.data);
     
-    userOptions.monitor = false;
-    userOptions.fisher = true;
     % TODO: this is bad
     userOptions.nSessions = size(tempBetas, 1);
     modelNumber = userOptions.modelNumber;
@@ -226,23 +207,4 @@ else % source level analysis
     % ========================== new fields ================================ %
     userOptions.toDataPoints = totalDataPoints/(userOptions.temporalDownsampleRate*totalTimeInMs);
     
-    % ====================================================================== %
-    userOptions = setIfUnset(userOptions, 'minDist', 5);
-    userOptions = setIfUnset(userOptions, 'primaryThreshold', 0.05);
-    userOptions = setIfUnset(userOptions, 'ModelColor', [0 1 0]);
-    userOptions = setIfUnset(userOptions, 'RoIColor', [0 0 1]);
-    userOptions = setIfUnset(userOptions, 'temporalDownsampleRate', 1);
-    userOptions = setIfUnset(userOptions, 'temporalSearchlightResolution', 1);
-    userOptions = setIfUnset(userOptions, 'temporalSearchlightWidth', 1);
-    userOptions = setIfUnset(userOptions, 'distanceMeasure', 'Spearman');
-    userOptions = setIfUnset(userOptions, 'distance', 'Correlation');
-    userOptions = setIfUnset(userOptions, 'sensorSearchlightRadius', 1);
-    userOptions = setIfUnset(userOptions, 'sourceSearchlightRadius', userOptions.minDist);
-    userOptions = setIfUnset(userOptions, 'temporalSearchlightLimits', [1 size(MEGDataVolL, 2)]);
-    userOptions = setIfUnset(userOptions, 'searchlightPatterns', 'spatiotemporal');
-    userOptions = setIfUnset(userOptions, 'significanceTestPermutations', 1000);
-    userOptions = setIfUnset(userOptions, 'nResamplings', 1000);
-    userOptions = setIfUnset(userOptions, 'groupStats', 'RFX');
-    userOptions = setIfUnset(userOptions, 'targetResolution', 10242);
-    userOptions = setIfUnset(userOptions, 'smoothingWidth', 10);
 end

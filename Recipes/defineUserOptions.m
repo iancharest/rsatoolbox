@@ -344,4 +344,7 @@ userOptions.forcePromptReply = '';
 % Present user with graphical feedback?
 userOptions.dialogueBox = false;
 
+% TODO: what is this?
+userOptions.monitor = false;
+
 end%function
