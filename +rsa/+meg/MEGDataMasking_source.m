@@ -78,7 +78,7 @@ import rsa.util.*
 
 returnHere = pwd; % We'll come back here later
 
-maximumVertexIndex = userOptions.nVertices;
+maximumVertexIndex = userOptions.targetResolution;
 
 %% Set defaults and check options struct
 if ~isfield(userOptions, 'analysisName'), error('MEGDataMasking_source:NoAnalysisName', 'analysisName must be set. See help'); end%if

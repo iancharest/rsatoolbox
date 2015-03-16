@@ -24,7 +24,7 @@ function indexMasks_out = combineVertexMasks_source(indexMasks_in, newMaskName, 
         
         % Sort the vertices and cap them at the resolution set in
         % userOptions.
-        maskVertices = sort(maskVertices(maskVertices <= userOptions.nVertices));
+        maskVertices = sort(maskVertices(maskVertices <= userOptions.targetResolution));
         
         % Set the timeIndices also
         % TODO: this isn't coming from the individual masks... is that ok?

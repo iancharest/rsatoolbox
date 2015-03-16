@@ -89,10 +89,6 @@ else % source level analysis
     
     userOptions.monitor = false;
     userOptions.fisher = true;
-    
-    % TODO: This is bad
-    userOptions.nVertices = userOptions.targetResolution; % Same for all subjects and both hemispheres, hopefully...
-    
     % TODO: this is bad
     userOptions.nSessions = size(tempBetas, 1);
     modelNumber = userOptions.modelNumber;
@@ -103,7 +99,7 @@ else % source level analysis
     % ============= setting time parameters for output file ================= %
     userOptions.STCmetaData.tmin = MEGDataStcL.tmin; % - ...
     % (MEGDataStcL.tmin - (userOptions.temporalSearchlightLimits(1) /1000)); % in seconds
-    userOptions.STCmetaData.vertices = 1:userOptions.nVertices;
+    userOptions.STCmetaData.vertices = 1:userOptions.targetResolution;
     userOptions.STCmetaData.tstep = MEGDataStcL.tstep;
     
     % time values are converted to their data point equivalents here.

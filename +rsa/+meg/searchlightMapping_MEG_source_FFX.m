@@ -15,7 +15,7 @@ import rsa.util.*
     
 	RDM_vector_size = max(size(unwrapRDMs(vectorizeRDMs(Models))));
     
-	nVertices = userOptions.nVertices;
+	nVertices = userOptions.targetResolution;
 	nConditions = userOptions.nConditions;
 	%nSessions = userOptions.nSessions;
 
@@ -27,7 +27,7 @@ import rsa.util.*
 
 	searchlightRDMs = nan([RDM_vector_size, nVertices, nTimePoints]);
     
-    adjacencyMatrix = calculateMeshAdjacency(userOptions.nVertices, userOptions.sourceSearchlightRadius, userOptions);
+    adjacencyMatrix = calculateMeshAdjacency(nVertices, userOptions.sourceSearchlightRadius, userOptions);
     
 	for vertex = 1:nVertices
 
