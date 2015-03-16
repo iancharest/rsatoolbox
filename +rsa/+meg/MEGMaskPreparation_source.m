@@ -62,8 +62,7 @@ promptOptions.defaultResponse = 'S';
 promptOptions.checkFiles(1).address = fullfile(userOptions.rootPath, 'ImageData', MasksFilename);
 promptOptions.checkFiles(2).address = fullfile(userOptions.rootPath, 'Details', DetailsFilename);
 
-if userOptions.slidingTimeWindow, overwriteFlag = 1;
-else overwriteFlag = overwritePrompt(userOptions, promptOptions); end
+overwriteFlag = overwritePrompt(userOptions, promptOptions);
 
 if overwriteFlag
 

@@ -165,6 +165,8 @@ else % source level analysis
                 userOptions.STCmetaData.tmin = MEGDataStcL.tmin;
             end
             
+            % TODO: slidingTimeWindow isn't used anymore.  This adjustment
+            % TODO: should be done in the relevant recipes.
             if userOptions.slidingTimeWindow % added by IZ 11-12
                 if timeAdjusted-userOptions.temporalSearchlightWidth <= upperTimeLimit
                     disp(['Warning: The sliding window for mask: ', thisMaskName, ' over-runs the data sample. ']);

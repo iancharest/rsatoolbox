@@ -123,12 +123,6 @@ userOptions.ModelColor = [0 1 0];
 % MUST correspond to the names of the conditions as specified in SPM.
 userOptions.getSPMData = false;
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% FEATUERS OF INTEREST SELECTION OPTIONS %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-userOptions.slidingTimeWindow = true; % will use temporalSearchlightWidth & resolution
-
 %%%%%%%%%%%%%%%%%%%%%%%%%
 %% SEARCHLIGHT OPTIONS %%
 %%%%%%%%%%%%%%%%%%%%%%%%%

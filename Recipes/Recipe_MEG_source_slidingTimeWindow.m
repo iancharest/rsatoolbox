@@ -34,34 +34,29 @@ userOptions = rsa.meg.setMetadata_MEG(Models, userOptions);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Sliding time window RoI analysis %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if userOptions.slidingTimeWindow
-    
-    map_type = 'r';
-    
-    %%%%%%%%%%%%%%%%%%%%%%%
-    %% Compute Data RDMs %%
-    %%%%%%%%%%%%%%%%%%%%%%%
-    tic
-    rsa.meg.ROI_slidingTimeWindow(userOptions, Models);
-    toc
-    %%%%%%%%%%%%%%%%%
-    %% Permutation %%
-    %%%%%%%%%%%%%%%%%
-    tic
-    if strcmp(userOptions.groupStats,'FFX')
-        rsa.meg.FFX_slidingTimeWindow(userOptions,Models);
-    elseif strcmp(userOptions.groupStats,'RFX')
-        rsa.meg.RFX_slidingTimeWindow(userOptions,Models, map_type);
-    end
-    toc
-    %%%%%%%%%%%%%%%%%%%%%
-    %% Display Results %%
-    %%%%%%%%%%%%%%%%%%%%%
-    rsa.meg.showResults_slidingTimeWindow(userOptions, Models, map_type);
 
-else
-    disp('Set userOptions.slidingTimeWindow=true in projectOptions.m to run the sliding time window analysis.');
+map_type = 'r';
+
+%%%%%%%%%%%%%%%%%%%%%%%
+%% Compute Data RDMs %%
+%%%%%%%%%%%%%%%%%%%%%%%
+tic
+rsa.meg.ROI_slidingTimeWindow(userOptions, Models);
+toc
+%%%%%%%%%%%%%%%%%
+%% Permutation %%
+%%%%%%%%%%%%%%%%%
+tic
+if strcmp(userOptions.groupStats,'FFX')
+    rsa.meg.FFX_slidingTimeWindow(userOptions,Models);
+elseif strcmp(userOptions.groupStats,'RFX')
+    rsa.meg.RFX_slidingTimeWindow(userOptions,Models, map_type);
 end
+toc
+%%%%%%%%%%%%%%%%%%%%%
+%% Display Results %%
+%%%%%%%%%%%%%%%%%%%%%
+rsa.meg.showResults_slidingTimeWindow(userOptions, Models, map_type);
 
 %%%%%%%%%%%%%%%%%%%%
 %% Sending an email %%
