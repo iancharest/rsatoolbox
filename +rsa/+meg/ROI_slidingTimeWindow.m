@@ -27,6 +27,7 @@ import rsa.sim.*
 import rsa.spm.*
 import rsa.stat.*
 import rsa.util.*
+import rsa.par.*
 
 returnHere = pwd; % We'll come back here later
 modelNumber = userOptions.modelNumber;
@@ -39,6 +40,8 @@ readPathL = replaceWildcards(userOptions.betaPath, '[[betaIdentifier]]', userOpt
 MEGDataStcL = mne_read_stc_file1(readPathL);
 
 output_path = fullfile(userOptions.rootPath, 'RDMs');
+output_path_Meshes= fullfile(userOptions.rootPath, 'RDMs','Mesh');
+mkdir(output_path,'Mesh');
 RDMs_filename = [userOptions.analysisName '_' modelName '_dataRDMs_sliding_time_window.mat'];
 promptOptions.functionCaller = 'ROI_slidingTimeWindow';
 promptOptions.defaultResponse = 'S';
@@ -50,13 +53,15 @@ if overwriteFlag
 
     nSubjects = numel(userOptions.subjectNames);
     
-    sourceMeshes = struct('L',[], 'R',[]);
-    sourceMeshes(1,1:nSubjects)=sourceMeshes;
+    sourceMesh_load = struct('L',[], 'R',[]);
  
     parfor subject =1:nSubjects
        disp(['Reading source meshes for ' num2str(subject) '... ']);
-       sourceMeshes(subject) = MEGDataPreparation_source (subject,betaCorrespondence, userOptions);
+       sourceMesh_load = MEGDataPreparation_source (subject,betaCorrespondence, userOptions);
+       parsave(fullfile(output_path_Meshes, userOptions.subjectNames{subject}), sourceMesh_load);
     end
+    
+    prints('Done with Reading Source Meshes ');
         
     for subject =1:nSubjects
 
@@ -68,6 +73,8 @@ if overwriteFlag
         localOptions = userOptions;
         localOptions.subjectNames = {thisSubject};
         localOptions.nSubjects = 1;
+        
+        sourceMesh_load = load (fullfile(output_path_Meshes, userOptions.subjectNames{subject}));
         
         for mask=1:nMasks
             thisMask = userOptions.maskNames{mask};
@@ -103,7 +110,7 @@ if overwriteFlag
                     
                     indexMasks = MEGMaskPreparation_source(localOptions);
                     
-                    maskedMeshes = MEGDataMasking_source(sourceMeshes(subject), indexMasks, localOptions.betaCorrespondence, localOptions);
+                    maskedMeshes = MEGDataMasking_source(sourceMesh_load, indexMasks, localOptions.betaCorrespondence, localOptions);
                     
                     %% RDM calculation %%
                     
@@ -128,7 +135,7 @@ if overwriteFlag
     fprintf('Saving all data RDMs... ');
     save ('-v7.3',fullfile(output_path, RDMs_filename), 'allRDMs');
     disp('Done!');
-    
+    rmdir(output_path_Meshes, 's');
 else
     fprintf('Data RDMs have already been computed, skip....\n');
     
