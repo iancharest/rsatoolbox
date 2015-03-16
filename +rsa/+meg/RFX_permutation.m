@@ -28,7 +28,7 @@ end
 
 MapsFilename = ['perm-', num2str(userOptions.significanceTestPermutations), '_', modelName, '_t_map']; %Li Su edited 11/2012
 
-promptOptions.functionCaller = 'MEGFindCluster_source';
+promptOptions.functionCaller = 'RFX_permutation';
 promptOptions.defaultResponse = 'S';
 promptOptions.checkFiles(1).address = fullfile(userOptions.rootPath, 'Maps', modelName, [MapsFilename, '-lh.stc']);
 promptOptions.checkFiles(2).address = fullfile(userOptions.rootPath, 'Maps', modelName, [MapsFilename, '-rh.stc']);

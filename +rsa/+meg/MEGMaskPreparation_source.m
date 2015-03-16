@@ -113,7 +113,7 @@ if overwriteFlag
         % It's very important that the value set in .chirality is either
         % the single capital character 'L' or the single character 'R'.
         % This way, we can filter the struct using:
-        %     indexMasks(find([indexMasks.chirality] == 'L'))
+        %     indexMasks([indexMasks.chirality] == 'L')
         % The [] syntax in there requires that we have single characters,
         % else horrible things will happen because strings are just arrays
         % of chars.  We have to keep things uppercase because we must use
