@@ -127,7 +127,7 @@ if overwriteFlag
             thisMesh = sourceMeshes(subject_i).(chi);
 
             % Mask the data
-            if userOptions.nSessions == 1
+            if nSessions == 1
                 maskedMesh = thisMesh(maskIndices, timeIndices(1):timeIndices(2), :); % (vertices, timePointes, conditions) % updated IZ 11-12
             else
                 maskedMesh = thisMesh(maskIndices, timeIndices(1):timeIndices(2), :, :); % (vertices, timePointes, conditions, sessions) % updated IZ 11-12

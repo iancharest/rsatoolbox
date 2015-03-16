@@ -71,7 +71,6 @@ else % source level analysis
     MEGDataVolL = single(MEGDataStcL.data);
     
     % TODO: this is bad
-    userOptions.nSessions = size(tempBetas, 1);
     modelNumber = userOptions.modelNumber;
     
     % Todo: this is bad

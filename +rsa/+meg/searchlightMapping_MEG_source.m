@@ -86,7 +86,7 @@ for v = indexMask.vertices
             % Preallocate
             searchlightRDM = zeros(nConditions);
             
-            for session = 1:userOptions.nSessions
+            for session = 1:nSessions
                 searchlightRDM = searchlightRDM + squareform(pdist(squeeze(searchlightPatchData(:,:,session))',userOptions.distance));
             end%for:sessions
             
@@ -98,7 +98,7 @@ for v = indexMask.vertices
             % combining session-wise trials
             kk = 1;
             for j = 1:size(tempMesh,2)
-                for i = 1:userOptions.nSessions
+                for i = 1:nSessions
                     searchlightPatchData(:, kk) = (tempMesh(:, j, i));
                     kk = kk + 1;
                 end
@@ -112,7 +112,7 @@ for v = indexMask.vertices
             end
         end
         
-        searchlightRDM = searchlightRDM / userOptions.nSessions;
+        searchlightRDM = searchlightRDM / nSessions;
         
         searchlightRDM = vectorizeRDM(searchlightRDM);
         

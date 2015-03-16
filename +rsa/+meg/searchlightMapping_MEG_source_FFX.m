@@ -15,9 +15,10 @@ import rsa.util.*
     
 	RDM_vector_size = max(size(unwrapRDMs(vectorizeRDMs(Models))));
     
+    [nVertices, nTimepoints, nConditions, nSessions] = size(singleMesh);
+    
 	nVertices = userOptions.targetResolution;
 	nConditions = userOptions.nConditions;
-	%nSessions = userOptions.nSessions;
 
 	% How long is the stimulus (in time points)?
 	epochLength = size(singleMesh, 2); % (vertex, time, condition, session)
@@ -67,13 +68,13 @@ import rsa.util.*
 
 			% Average across sessions
 			
-			for session = 1:userOptions.nSessions
+			for session = 1:nSessions
 
 				searchlightRDM = searchlightRDM + squareform(pdist(squeeze(currentData(:,:,:,session))',userOptions.distance));
 			
 			end%for:sessions
 			
-			searchlightRDM = searchlightRDM / userOptions.nSessions;
+			searchlightRDM = searchlightRDM / nSessions;
 		
 			searchlightRDM = vectorizeRDM(searchlightRDM);
 			

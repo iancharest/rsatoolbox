@@ -59,8 +59,10 @@ if overwriteFlag
     
     prints(['\tSearching in the source meshes of subject ' num2str(subjectNumber) ' of ' num2str(nSubjects) ':']);
     
+    [nVertices, nTimepoints, nConditions, nSessions] = size(sourceMeshesThisSubjectThisHemi);
+    
     %% Mask timepoints
-    if userOptions.nSessions == 1
+    if nSessions == 1
         maskedMesh = sourceMeshesThisSubjectThisHemi(:, timeIndices(1):timeIndices(2), :); % (vertices, timePointes, conditions)
     else
         maskedMesh = sourceMeshesThisSubjectThisHemi(:, timeIndices(1):timeIndices(2), :, :); % (vertices, timePointes, conditions, sessions)
