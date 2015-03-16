@@ -123,18 +123,6 @@ userOptions.ModelColor = [0 1 0];
 % MUST correspond to the names of the conditions as specified in SPM.
 userOptions.getSPMData = false;
 
-%%%%%%%%%%%%%%%%%%%%%%%%%
-%% SEARCHLIGHT OPTIONS %%
-%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% set this true for sensor and source level searchlight
-% TODO: why is this an option and not just whether or not the function is
-% TODO: in the recipe?
-userOptions.searchlight = true; 
-% == Source Level Note: if mask set to true, will use 
-% temporalsearchlightLimits rather than maskTimeWindows for searchlight== %
-% == No masking available for sensor level searchlight. Works only on GRADIOMETERS == %
-
 %% %% %% %% %%
 %% fMRI  %% Use these next three options if you're working in fMRI native space:
 %% %% %% %% %%

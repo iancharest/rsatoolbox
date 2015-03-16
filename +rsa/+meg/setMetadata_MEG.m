@@ -47,6 +47,8 @@ if userOptions.sensorLevelAnalysis
     
     tmin = double(allMEGData.evoked.first); tmax = double(allMEGData.evoked.last);
     
+    % TODO: userOptions.searchlight isn't in use any more. This adjustment
+    % TODO: should be done once, depending on the recipe being used.
     if userOptions.searchlight
         time = userOptions.temporalSearchlightLimits;
         
@@ -116,6 +118,8 @@ else % source level analysis
     %============================= input checks ============================= %
     % ====== comparing search light resolution to the time step of data ===== %
     
+    % TODO: userOptions.searchlight isn't in use any more. This adjustment
+    % TODO: should be done once, depending on the recipe being used.
     % time step
     if userOptions.searchlight % added 03/12 IZ
         if MEGDataStcL.tstep * 1000 * userOptions.temporalDownsampleRate > userOptions.temporalSearchlightResolution
@@ -134,6 +138,8 @@ else % source level analysis
     end
     
     %% MASKING TIME WINDOWS %%
+    % TODO: userOptions.searchlight isn't in use any more. This adjustment
+    % TODO: should be done once, depending on the recipe being used.
     if usingMasks && not(userOptions.searchlight) % sliding time window and roi analysis
         
         nMasks = numel(userOptions.maskNames);
@@ -186,6 +192,8 @@ else % source level analysis
             userOptions.maskTimetoDataPoints.(thisMaskName) = [startingDataPoint lastDataPoint];
         end
         
+    % TODO: userOptions.searchlight isn't in use any more. This adjustment
+    % TODO: should be done once, depending on the recipe being used.
     elseif userOptions.searchlight % all brain searchlight
         
         userOptions.STCmetaData.tmin = userOptions.temporalSearchlightLimits(1)/1000;
