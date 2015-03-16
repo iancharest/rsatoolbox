@@ -104,7 +104,7 @@ for v = indexMask.vertices
                 end
             end
             
-            r_matrix = g_matrix(zscore(squeeze(searchlightPatchData(:,:)))', userOptions.nConditions, size(currentTimeWindow,2));
+            r_matrix = g_matrix(zscore(squeeze(searchlightPatchData(:,:)))', nConditions, size(currentTimeWindow,2));
             searchlightRDM = searchlightRDM + (1 - r_matrix);
             
             if isnan(searchlightRDM) % sessions and conditions should be optimal

@@ -22,7 +22,6 @@ import rsa.util.*
     [nVertices, nTimepoints, nConditions, nSessions] = size(singleMesh);
 
 	nVertices = userOptions.targetResolution;
-	nConditions = userOptions.nConditions;
 
 	% How long is the stimulus (in time points)?
 	epochLength = size(singleMesh, 2); % (vertex, time, condition, session)
@@ -35,8 +34,7 @@ import rsa.util.*
 	% Preallocate looped matrices for speed
 	smm_ps = nan([nVertices, nTimePoints, nModels]);
 	smm_rs = nan([nVertices, nTimePoints, nModels]);
-	%n = nan(nVertices);
-	%searchlightRDMs = nan([nConditions, nConditions, nVertices, nTimePoints]);
+    
     adjacencyMatrix = calculateMeshAdjacency(nVertices, userOptions.sourceSearchlightRadius, userOptions);
     
 	for vertex = 1:nVertices
@@ -73,7 +71,7 @@ import rsa.util.*
 					currentData = reshape(currentData, [], size(currentData, 3), size(currentData, 4)); % (dataPoints, conditions, sessions)
 			end%switch:userOptions.sensorSearchlightPatterns
 
-			searchlightRDM = zeros(nConditions, nConditions);
+			searchlightRDM = zeros(nConditions);
 
 			% Average across sessions
 			

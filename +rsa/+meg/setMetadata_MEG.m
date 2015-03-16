@@ -68,10 +68,6 @@ else % source level analysis
     % and we assume both hemispheres will be the same
     readPathL = replaceWildcards(userOptions.betaPath, '[[betaIdentifier]]', tempBetas(1, 1).identifier, '[[subjectName]]', userOptions.subjectNames{1}, '[[LR]]', 'l');
     MEGDataStcL = mne_read_stc_file1(readPathL);
-    MEGDataVolL = single(MEGDataStcL.data);
-    
-    % Todo: this is bad
-    userOptions.nConditions = size(squareRDM(Models(modelNumber).RDM), 1);
     
     % ============= setting time parameters for output file ================= %
     userOptions.STCmetaData.tmin = MEGDataStcL.tmin; % - ...
