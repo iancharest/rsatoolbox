@@ -184,24 +184,24 @@ userOptions.maskTimeWindows = {
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % specify a name for your mask, used in saving your results
-userOptions.maskSpec.maskName = {'allSensors'};
+userOptions.MEGSensor_maskSpec.maskName = {'allSensors'};
 
 % remove/add sensors in your mask by setting them true/false
-userOptions.maskSpec.MEGSensors.Gradiometers = true;
-userOptions.maskSpec.MEGSensors.Magnetometers = true;
+userOptions.MEGSensor_maskSpec.MEGSensors.Gradiometers = true;
+userOptions.MEGSensor_maskSpec.MEGSensors.Magnetometers = true;
 % for each mag and grad: create above mentioned mask by putting sensor
 % numbers in arrays put any values, such as [90 98 100 1 4];
-userOptions.maskSpec.MEGSensorSites = (1:102);
+userOptions.MEGSensor_maskSpec.MEGSensorSites = (1:102);
 
-userOptions.maskSpec.MEGSensors.EEG = false;
-userOptions.maskSpec.EEGSensorSites = (1:70);
+userOptions.MEGSensor_maskSpec.MEGSensors.EEG = false;
+userOptions.MEGSensor_maskSpec.EEGSensorSites = (1:70);
 
 % time window for RoI analysis
-userOptions.maskSpec.timeWindow = [-200 100];
+userOptions.MEGSensor_maskSpec.timeWindow = [-200 100];
 
 % pattern of analysis 'spatial', 'temporal' or 'spatiotemporal'
 % TODO: need explanaiton of what each do
-userOptions.maskSpec.patternType =  'spatiotemporal';
+userOptions.MEGSensor_maskSpec.patternType =  'spatiotemporal';
     
     % ===========================  (sensor space) ========================%
 

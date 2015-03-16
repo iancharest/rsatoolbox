@@ -109,7 +109,7 @@ if ~isfield(userOptions, 'analysisName'), error('MEGDataMasking_sensor:NoAnalysi
 if ~isfield(userOptions, 'rootPath'), error('MEGDataMasking_sensor:NoRootPath', 'rootPath must be set. See help'); end%if
 userOptions = setIfUnset(userOptions, 'subjectNames', fieldnames(sensorImages));
 
-maskSpec = userOptions.maskSpec;
+maskSpec = userOptions.MEGSensor_maskSpec;
 betaCorrespondence = userOptions.betaCorrespondence;
 %% %%
 %% Set defaults for maskSpec
@@ -183,7 +183,7 @@ if overwriteFlag
 	
 	% Make the intervals in maskSpec into actual time-index lists
 	baselineWindow = maskSpec.baselineWindow(1):maskSpec.baselineWindow(2);
-	timeWindow = userOptions.maskSpec.toDataPoints(1):userOptions.maskSpec.toDataPoints(2);
+	timeWindow = userOptions.MEGSensor_maskSpec.toDataPoints(1):userOptions.MEGSensor_maskSpec.toDataPoints(2);
     
     thisMask = maskSpec.maskName{1};
 

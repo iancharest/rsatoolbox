@@ -41,7 +41,7 @@ if overwriteFlag % If files may be (over)written:
     if userOptions.sensorLevelAnalysis
         nMasks = 1;
         disp('in sensor space!');
-        maskNames = userOptions.maskSpec.maskName;
+        maskNames = userOptions.MEGSensor_maskSpec.maskName;
     else
         nMasks = numel(userOptions.maskNames);
         disp('in source space!');
