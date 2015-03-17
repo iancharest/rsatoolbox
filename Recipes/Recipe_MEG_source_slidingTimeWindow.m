@@ -11,7 +11,7 @@ toolboxRoot = '/imaging/fj01/latest_toolbox'; addpath(genpath(toolboxRoot)); % C
 
 userOptions = projectOptions();
 
-%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Starting parallel toolbox %%
 %%%%%%%%%%%%%%%%%%%%
 if userOptions.flush_Queue

@@ -109,11 +109,6 @@ if overwriteFlag
         [max_cluster_mass(perm-min(range)+1),lh_max_cluster_mass(perm-min(range)+1),rh_max_cluster_mass(perm-min(range)+1)] ...
             = find_4D_clusters(inputFileName,inputFileName,connectivity_matrix, indexMasks, overwriteFlag, vertex_level_threshold);
         
-        if ~userOptions.debug
-            delete([inputFileName,'-lh.stc']);
-            delete([inputFileName,'-rh.stc']);
-        end
-        
     end
     
     csvwrite(fullfile(userOptions.rootPath, 'ImageData', [userOptions.analysisName '_' modelName '_null_distribution' num2str(min(range)) '.csv']),max_cluster_mass);

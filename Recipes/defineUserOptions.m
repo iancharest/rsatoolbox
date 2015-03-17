@@ -35,9 +35,6 @@ userOptions.rootPath = 'pathToRootDirectoryOfProject';
 % "[[betaIdentifier]]" should be used as a placeholder to denote an output of betaCorrespondence.m if SPM is not being used; or an arbitrary filename if SPM is being used.
 userOptions.betaPath = 'pathToYourSingleConditionResponses';% e.g. /imaging/mb01/lexpro/multivariate/ffx_simple/[[subjectName]]/[[betaIdentifier]]
 
-% if set true, intermediate files will be saved
-userOptions.debug = false;
-
 % Regularization based on paper by Diedrichson et al. 2011.
 % TODO: this needs a lot of explanation
 userOptions.regularized = false;

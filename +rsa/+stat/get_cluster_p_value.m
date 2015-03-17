@@ -43,7 +43,6 @@ else
     for i = 1:userOptions.jobSize:userOptions.significanceTestPermutations
         csvFileName = fullfile(userOptions.rootPath, 'ImageData', [userOptions.analysisName '_' modelName '_null_distribution' num2str(i) '.csv']);
         nullDistribution = [nullDistribution,csvread(csvFileName)];
-        if not(userOptions.debug), delete(csvFileName); end
     end
     nullDistribution = reshape(nullDistribution, 1, numel(nullDistribution));
     csvwrite(fullfile(userOptions.rootPath, 'ImageData', [userOptions.analysisName '_' modelName '_null_distribution.csv']), nullDistribution);

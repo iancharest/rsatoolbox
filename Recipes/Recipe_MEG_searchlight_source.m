@@ -15,9 +15,9 @@ userOptions = defineUserOptions();
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Model RDM calculation %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
-model = rsa.constructModelRDMs(userOptions);
+models = rsa.constructModelRDMs(userOptions);
 % Only using one model at a time for searchlight analysis.
-model = model(1);
+model = models(1);
 
 %%%%%%%%%%%%%%%%%%%%%%
 %% Mask preparation %% 
