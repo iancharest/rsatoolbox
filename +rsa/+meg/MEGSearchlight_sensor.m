@@ -231,7 +231,7 @@ import rsa.util.*
                 fifRs(sensorSite * 3, :) = squeeze(rs(sensorSite,:));
             end%for:sensorSites
             
-            % TODO: user getSearchlightSpec output in here - this is
+            % TODO: get user getSearchlightSpec output in here - this is
             % TODO: probably already calculated
             
             % sfreq is in samples per second

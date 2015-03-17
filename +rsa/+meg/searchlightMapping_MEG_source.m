@@ -4,7 +4,7 @@
 % CW 2010-05, 2015-03
 % updated by Li Su 3-2012
 
-function [smm_rs, searchlightRDMs] = searchlightMapping_MEG_source(singleSubjectMesh, indexMask, modelRDM, partialModelRDMs, adjacencyMatrix, slSpec, userOptions)
+function [smm_rs, searchlightRDMs] = searchlightMapping_MEG_source(singleSubjectHemiMesh, indexMask, modelRDM, partialModelRDMs, adjacencyMatrix, slSpec, userOptions)
 
 import rsa.*
 import rsa.fig.*
@@ -15,8 +15,6 @@ import rsa.spm.*
 import rsa.stat.*
 import rsa.util.*
 
-%% Get parameters
-
 modelRDM_utv = squeeze(unwrapRDMs(vectorizeRDMs(modelRDM)));
 
 if userOptions.partial_correlation
@@ -24,18 +22,19 @@ if userOptions.partial_correlation
     control_for_modelRDMs = unwrapRDMs(vectoriseRDMs(partialModelRDMs));
 end
 
-[nVertices, nTimePoints_data, nConditions, nSessions] = size(singleSubjectMesh);
+[nVertices, nTimePoints_data, nConditions, nSessions] = size(singleSubjectHemiMesh);
 
 % The number of positions the sliding window will take.
-nWindowPositions = size(slSpec.windowPositions, 2);
+nWindowPositions = size(slSpec.windowPositions, 1);
 
-%% similarity-graph-map the volume with the searchlight
+%% map the volume with the searchlight
 
 % Preallocate looped matrices for speed
 smm_rs = zeros([nVertices, nWindowPositions]);
 searchlightRDMs(numel(indexMask.vertices), nWindowPositions) = struct();
 
-nVerticesSearched = 0;
+% For display purposes
+nVertsSearched = 0;
 
 % Search the vertices
 for v = indexMask.vertices
@@ -55,13 +54,10 @@ for v = indexMask.vertices
         thisWindow = window(1):window(2);
         window_i = window_i + 1;
         
-        searchlightPatchData = singleSubjectMesh(verticesCurrentlyWithinRadius, thisWindow, :, :); % (vertices, time, condition, session)
+        searchlightPatchData = singleSubjectHemiMesh(verticesCurrentlyWithinRadius, thisWindow, :, :); % (vertices, time, condition, session)
         
-        % Average across sessions
-        
-        if not(userOptions.regularized)
+        if ~userOptions.regularized
             
-            % Median over the time window
             switch lower(userOptions.searchlightPatterns)
                 case 'spatial'
                     % Spatial patterns: median over time window
@@ -76,14 +72,16 @@ for v = indexMask.vertices
                     searchlightPatchData = reshape(searchlightPatchData, [], size(searchlightPatchData, 3), size(searchlightPatchData, 4)); % (dataPoints, conditions, sessions)
             end%switch:userOptions.sensorSearchlightPatterns
             
-            % Preallocate
+            % Average RDMs over sessions
             searchlightRDM = zeros(nConditions);
-            
             for session = 1:nSessions
-                searchlightRDM = searchlightRDM + squareform(pdist(squeeze(searchlightPatchData(:,:,session))',userOptions.distance));
+                sessionRDM = squareform(pdist(squeeze(searchlightPatchData(:,:,session))',userOptions.distance));
+                searchlightRDM = searchlightRDM + sessionRDM;
             end%for:sessions
+            searchlightRDM = searchlightRDM / nSessions;
             
         else
+            % TODO: Look into this closer
             % data regularization based on algorithm by Diedrichson et al 2011 - updated 12-12 IZ
             tempMesh = reshape(searchlightPatchData, [], size(searchlightPatchData, 3), size(searchlightPatchData, 4));
             searchlightPatchData = zeros(size(tempMesh, 1), size(tempMesh, 2) * size(tempMesh, 3)); % (data, conditions, sessions)
@@ -98,22 +96,17 @@ for v = indexMask.vertices
             end
             
             r_matrix = g_matrix(zscore(squeeze(searchlightPatchData(:,:)))', nConditions, size(currentTimeWindow,2));
-            searchlightRDM = searchlightRDM + (1 - r_matrix);
+            searchlightRDM = (1 - r_matrix);
             
             if isnan(searchlightRDM) % sessions and conditions should be optimal
                 error('Cannot calculate covariance matrix. Try reducing number of conditions');
             end
         end
         
-        searchlightRDM = searchlightRDM / nSessions;
-        
         searchlightRDM = vectorizeRDM(searchlightRDM);
         
-        % Locally store the full brain's worth of indexed RDMs.
-        searchlightRDMs(v, window_i).RDM = searchlightRDM;
-        
         % TODO: Refactor this into general method so it can be used
-        % TODO: anywhere
+        % TODO: anywhere (this is being done on another branch)
         if strcmpi(userOptions.RDMCorrelationType, 'Kendall_taua')
             rs = rankCorr_Kendall_taua(searchlightRDM', modelRDM_utv');
         elseif userOptions.partial_correlation
@@ -123,13 +116,17 @@ for v = indexMask.vertices
             rs = corr(searchlightRDM', modelRDM_utv', 'type', userOptions.RDMCorrelationType, 'rows', 'pairwise');
         end
         
+        % Store results to be retured.
+        searchlightRDMs(v, window_i).RDM = searchlightRDM;
         smm_rs(v, window_i) = rs;
         
     end%for:window
     
     % Indicate progress every once in a while...
-    nVerticesSearched = nVerticesSearched + 1;
-    if mod(nVerticesSearched, 500) == 0, prints('%d vertices searched', nVerticesSearched); end%if
+    nVertsSearched = nVertsSearched + 1;
+    if mod(nVertsSearched, 500) == 0
+        prints('%d vertices searched', nVertsSearched);
+    end%if
     
 end%for:v
 

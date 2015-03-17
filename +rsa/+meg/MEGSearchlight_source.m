@@ -7,7 +7,7 @@
 % TODO: Documentation
 % TODO: Partial model numbers vs model number - make this coherent
 
-function MEGSearchlight_source(subject_i, chi, sourceMeshesThisSubjectThisHemi, indexMask, model, partialModels, adjacencyMatrix, slSpec, userOptions)
+function MEGSearchlight_source(subject_i, chi, sourceMeshes, indexMask, model, partialModels, adjacencyMatrix, STCMetadata, userOptions)
 
 import rsa.*
 import rsa.fig.*
@@ -20,7 +20,7 @@ import rsa.util.*
 
 returnHere = pwd; % We'll come back here later
 
-subject = userOptions.subjectNames{subject_i};
+subjectName = userOptions.subjectNames{subject_i};
 nSubjects = numel(userOptions.subjectNames);
 
 usingMasks = ~isempty(userOptions.maskNames);
@@ -32,9 +32,9 @@ if userOptions.partial_correlation
 end
 
 if usingMasks
-    MapsFilename = [userOptions.analysisName, '_rMesh_', modelName, '_', subject '_masked'];
+    MapsFilename = [userOptions.analysisName, '_rMesh_', modelName, '_', subjectName '_masked'];
 else
-    MapsFilename = [userOptions.analysisName, '_rMesh_', modelName, '_', subject];
+    MapsFilename = [userOptions.analysisName, '_rMesh_', modelName, '_', subjectName];
 end
 
 promptOptions.functionCaller = 'MEGSearchlight_source';
@@ -45,55 +45,48 @@ overwriteFlag = overwritePrompt(userOptions, promptOptions);
 
 if overwriteFlag
     
+    prints('Shining RSA searchlight in the source mesh of subject %d of %d...', subject_i, nSubjects);
+    
     prints('Shining RSA searchlights...');
     gotoDir(fullfile(userOptions.rootPath, 'Maps', modelName));
     
-    % TODO: This is confusing.
-    timeIndices = userOptions.dataPointsSearchlightLimits;
-    
     tic;%1
     
-    prints(['\tSearching in the source meshes of subject ' num2str(subject_i) ' of ' num2str(nSubjects) ':']);
+    [slSpec, slSTCMetadata] = getSearchlightSpec(STCMetadata, userOptions);
     
-    [nVertices, nTimepoints, nConditions, nSessions] = size(sourceMeshesThisSubjectThisHemi);
-    
-    %% Mask timepoints
-    if nSessions == 1
-        maskedMesh = sourceMeshesThisSubjectThisHemi(:, timeIndices(1):timeIndices(2), :); % (vertices, timePointes, conditions)
-    else
-        maskedMesh = sourceMeshesThisSubjectThisHemi(:, timeIndices(1):timeIndices(2), :, :); % (vertices, timePointes, conditions, sessions)
-    end
-
     %% Apply searchlight
     if userOptions.partial_correlation
-        % It says searchlightRDMs are unused, but actually they're saved.
-        [thisSubjectRs, searchlightRDMs] = searchlightMapping_MEG_source(maskedMesh, indexMask, model, partialModels, adjacencyMatrix, slSpec, userOptions); %#ok<ASGLU>
+        [thisSubjectRs, searchlightRDMs] = searchlightMapping_MEG_source(sourceMeshes, indexMask, model, partialModels, adjacencyMatrix, slSpec, userOptions); %#ok<ASGLU>
     else
-        [thisSubjectRs, searchlightRDMs] = searchlightMapping_MEG_source(maskedMesh, indexMask, model, [], adjacencyMatrix, slSpec, userOptions); %#ok<ASGLU>
+        [thisSubjectRs, searchlightRDMs] = searchlightMapping_MEG_source(sourceMeshes, indexMask, model, [], adjacencyMatrix, slSpec, userOptions); %#ok<ASGLU>
     end
+    clear sourceMeshesThisSubjectThisHemi;
 
-    rMetadataStruct = userOptions.STCmetaData;
+    rSTCStruct = slSTCMetadata;
+    rSTCStruct.data = thisSubjectRs(:,:);
 
-    rMetadataStruct.data = thisSubjectRs(:,:);
-
-    %% Saving r-maps and p-maps
+    %% Saving r-maps
     if usingMasks
-        outputRFilename = [fullfile(userOptions.rootPath, 'Maps', modelName,  [userOptions.analysisName '_rMesh_' modelName '_' subject ]) '_masked' '-' lower(chi) 'h.stc'];
+        outputRFilename = [fullfile(userOptions.rootPath, 'Maps', modelName,  [userOptions.analysisName '_rMesh_' modelName '_' subjectName ]) '_masked' '-' lower(chi) 'h.stc'];
     else
-        outputRFilename = [fullfile(userOptions.rootPath, 'Maps', modelName,  [userOptions.analysisName '_rMesh_' modelName '_' subject]) '-' lower(chi) 'h.stc'];
+        outputRFilename = [fullfile(userOptions.rootPath, 'Maps', modelName,  [userOptions.analysisName '_rMesh_' modelName '_' subjectName]) '-' lower(chi) 'h.stc'];
     end
     
-    % Write the r and p maps
-    mne_write_stc_file1(outputRFilename, rMetadataStruct);
+    % Write the r-maps
+    prints('Writing r-map %s.', outputRFilename);
+    mne_write_stc_file1(outputRFilename, rSTCStruct);
 
     %% Saving the searchlight RDMs
-    prints('Saving data RDMs for combined mask: ');
-    filepath = 'searchlightRDMs_';
+    
     if usingMasks
-        filepath = [filepath 'masked_'];
+        filepath = 'searchlightRDMs_masked_';
+    else
+        filepath = 'searchlightRDMs_';
     end
     gotoDir(userOptions.rootPath, 'RDMs');
-    save('-v7.3', [filepath, userOptions.subjectNames{subject_i}, '-', lower(chi), 'h'], 'searchlightRDMs');
+    saveLocation = [filepath, userOptions.subjectNames{subject_i}, '-', lower(chi), 'h'];
+    prints('Saving data RDMs for combined mask to %s.', saveLocation);
+    save('-v7.3', saveLocation, 'searchlightRDMs');
 
     t = toc;%1
     prints('That took %s seconds.', t);

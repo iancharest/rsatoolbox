@@ -1,9 +1,11 @@
-% slSpec = getSearchlightSpec(STCMetadata, userOptions)
+% [slSpec, slSTCMetadata] = getSearchlightSpec(STCMetadata, userOptions)
 %
 % Given STCMetadata providing a picture of the data to be searched, and
 % given the specification of the searchlight in miliseconds as set in
 % userOptions, this function returns a struct which describes the
-% specifications of the searchlight in datapoints.
+% specifications of the searchlight in datapoints.  Also returned will be
+% slSTCMetadata, which is a new STC metadata struct, formatted for the
+% searchlight specifications.
 %
 % STCMetadata must contain at least:
 %     STCMetadata.tstep
@@ -12,6 +14,15 @@
 %         The time of the first datapoint in seconds.
 %     STCMetadata.tmax
 %         The time of the last datapoint in seconds.
+%
+% slSTCMetadata will contain
+%     slSTCMetadata.tstep
+%         The timestep of the searchlight in seconds.
+%     slSTCMetadata.tmin
+%         The time of the first searchlight datapoint in seconds.
+%     slSTCMetadata.tmax
+%         The time of the last searchlight datapoint in seconds.
+% ... and any other fields which STCMetadata had will also be copied.
 %
 % slSpec will contain:
 %    slSpec.width
@@ -28,19 +39,23 @@
 %
 % Based on code by IZ 2012
 % Cai Wingfield 2015-03
-function slSpec = getSearchlightSpec(STCMetadata, userOptions)
+function [slSpec, slSTCMetadata] = getSearchlightSpec(STCMetadata, userOptions)
 
-    % TODO: this should also accept sensor-space data in place of
+    % TODO: this should also accept & return sensor-space data in place of
     % TODO: sensor-space data
+    
+    %% Common values
 
     % The timestep of the data in ms
-    dataTimestep_ms = STCMetadata.tstep * 1000;
+    dataTimestep_data_ms = STCMetadata.tstep * 1000;
     
     % The time index of the first datapoint in ms
-    firstPoint_ms = STCMetadata.tmin * 1000;
+    firstPoint_data_ms = STCMetadata.tmin * 1000;
     
     % The number of timepoints in the data
-    nTimepoints = (STCMetadata.tmax - STCMetadata.tmin) / STCMetadata.tstep;
+    nTimepoints_data = (STCMetadata.tmax - STCMetadata.tmin) / STCMetadata.tstep;
+    
+    %% slSpec
 
     slSpec = struct();
     
@@ -49,14 +64,14 @@ function slSpec = getSearchlightSpec(STCMetadata, userOptions)
         ...% the width in ms...
         userOptions.temporalSearchlightWidth ...
         ...% divided by the timestep of the data in ms...
-        / dataTimestep_ms;
+        / dataTimestep_data_ms;
     
     % The step in timepoints is...
     slSpec.step = ...
         ...% the timestep in ms...
         userOptions.temporalSearchlightTimestep ...
         ...% divided by the timestep of the data in ms...
-        / dataTimestep_ms;
+        / dataTimestep_data_ms;
     
     slSpec.limits = [NaN, NaN];
     
@@ -64,17 +79,17 @@ function slSpec = getSearchlightSpec(STCMetadata, userOptions)
     % is ...
     slSpec.limits(1) = ...
         ...% the distance of the lower bound in ms from the start of the data...
-        userOptions.temporalSearchlightLimits(1) - firstPoint_ms ...
+        userOptions.temporalSearchlightLimits(1) - firstPoint_data_ms ...
         ...% divided by the timestep of the data in ms...
-        / dataTimestep_ms;
+        / dataTimestep_data_ms;
     
     % The upper bound of the searchlight window of interest in timepoints
     % is...
     slSpec.limits(2) = ...
         ...% the distance of the upper bound in ms from the start of the data...
-        userOptions.temporalSearchlightLimits(2) - firstPoint_ms ...
+        userOptions.temporalSearchlightLimits(2) - firstPoint_data_ms ...
         ...% divided by the timestep of the data in ms...
-        / dataTimestep_ms;
+        / dataTimestep_data_ms;
     
     % The width of the searchlight window is...
     slSpec.windowWidth = ...
@@ -96,8 +111,19 @@ function slSpec = getSearchlightSpec(STCMetadata, userOptions)
     end%while
     
     % Sanity check
-    if slSpec.limits(1) < 1 || slSpec.limits(2) > nTimepoints
+    if slSpec.limits(1) < 1 || slSpec.limits(2) > nTimepoints_data
         error('getSearchlightSpec:InvalidSpec', 'Can''t produce a valid searchlight specification for this data.');
     end
+    
+    %% slSTCMetadata
+    
+    % Copy all existing fields from the input metadata struct
+    slSTCMetadata = STCMetadata;
+    
+    % Need to convert from miliseconds as defined in the userOptions struct
+    % to the seconds required by the STC metadata format.
+    slSTCMetadata.tstep = userOptions.temporalSearchlightTimestep  / 1000;
+    slSTCMetadata.tmin  = userOptions.temporalSearchlightLimits(1) / 1000;
+    slSTCMetadata.tmax  = userOptions.temporalSearchlightLimits(2) / 1000;
         
 end%function

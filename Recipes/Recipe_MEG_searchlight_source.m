@@ -24,11 +24,11 @@ model = models(1);
 %%%%%%%%%%%%%%%%%%%%%%
 usingMasks = ~isempty(userOptions.maskNames);
 if usingMasks
-    indexMasks = rsa.meg.MEGMaskPreparation_source(userOptions);
+    slMasks = rsa.meg.MEGMaskPreparation_source(userOptions);
     % For this searchlight analysis, we combine all masks into one
-    indexMasks = rsa.meg.combineVertexMasks_source(indexMasks, 'combined_mask', userOptions);  
+    slMasks = rsa.meg.combineVertexMasks_source(slMasks, 'combined_mask', userOptions);  
 else
-    indexMasks = rsa.meg.allBrainMask(userOptions);
+    slMasks = rsa.meg.allBrainMask(userOptions);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -61,24 +61,20 @@ parfor subject_i = 1:nSubjects
     
         % Get subject source data
         [sourceMeshesThisSubjectThisHemi, STCMetadata] = MEGDataPreparation_source( ...
-                                         betaCorrespondence(), ...
-                                         userOptions, ...
-                                        'subject_i', subject_i, ...
-                                        'chi', chi);
-                                    
-        slSpec = ras.meg.getSearchlightSpec(STCMetadata, userOptions);
+            betaCorrespondence(), ...
+            userOptions, ...
+            'subject_i', subject_i, ...
+            'chi', chi);
 
-        % TODO: This should return a cell array of filenames of where data is
-        % TODO: saved, or something.
         rsa.meg.MEGSearchlight_source( ...
             subject_i, ...
             chi, ...
             sourceMeshesThisSubjectThisHemi.(userOptions.subjectNames{subject_i}).(chi), ...
             ...% Use the mask for this hemisphere only
-            indexMasks([indexMasks.chirality] == chi), ...
+            slMasks([slMasks.chirality] == chi), ...
             model, ...
             adjacencyMatrix, ...
-            slSpec, ...
+            STCMetadata, ...
             userOptions ...
         );
     end
@@ -91,9 +87,8 @@ if strcmp(userOptions.groupStats, 'FFX')
     % fixed effect test
     rsa.util.prints('Stage 2 - Fixed Effects Analysis: ');
     tic
-    rsa.util.prints('Averaging RDMs across subjects and performing permutation tests to calculate r-values.');
-    indexMasks = rsa.meg.combineVertexMasks_source(indexMasks, 'combined_mask', userOptions);  
-    rsa.meg.FFX_permutation(model, indexMasks, userOptions)
+    rsa.util.prints('Averaging RDMs across subjects and performing permutation tests to calculate p-values.');
+    rsa.meg.FFX_permutation(model, slMasks, userOptions)
     toc
 else
     % random effect test
@@ -114,7 +109,7 @@ tic
 rsa.util.prints('Stage 3 - Spatiotemporal Clustering: ' );
 parfor j = 1:number_of_permutations/jobSize
     range = (j-1)*jobSize+1:j*jobSize;
-    rsa.meg.MEGFindCluster_source(model, range, indexMasks, userOptions);
+    rsa.meg.MEGFindCluster_source(model, range, slMasks, userOptions);
 end
 toc
 
