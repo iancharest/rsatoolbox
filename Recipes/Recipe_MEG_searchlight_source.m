@@ -19,12 +19,6 @@ model = rsa.constructModelRDMs(userOptions);
 % Only using one model at a time for searchlight analysis.
 model = model(1);
 
-%%%%%%%%%%%%%%%%%%
-%% Set metadata %%
-%%%%%%%%%%%%%%%%%%
-% TODO: This is bad
-userOptions = rsa.meg.setMetadata_MEG(model, userOptions);
-
 %%%%%%%%%%%%%%%%%%%%%%
 %% Mask preparation %% 
 %%%%%%%%%%%%%%%%%%%%%%

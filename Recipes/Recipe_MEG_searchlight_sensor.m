@@ -19,6 +19,7 @@ model = model(which_model);
 %%%%%%%%%%%%%%%%%%%%
 %% Set Meta-data %%
 %%%%%%%%%%%%%%%%%%%%
+% TODO: This isn't done anymore. Make sure that it's excised.
 userOptions = rsa.meg.setMetadata_MEG(model, userOptions);
 
 %%%%%%%%%%%%%%%%%%%%%%

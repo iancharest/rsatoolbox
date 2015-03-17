@@ -91,12 +91,8 @@ if overwriteFlag
                 localOptions.maskTimeWindows = {[time time+userOptions.temporalSearchlightWidth]};
                 tw{timeWindow} = num2str(localOptions.maskTimeWindows{1});
                 
-                % converting to data points equivalents
-                %             localOptions = setMetadata_MEG(Models, localOptions);
-                
                 lowerTimeLimit = time;
                 upperTimeLimit = time + userOptions.temporalSearchlightWidth; % i hope this makes sense!
-                
                 
                 % getting the starting data point by comparing starting points of searchlight and input data
                 differenceInms = lowerTimeLimit - MEGDataStcL.tmin*1000;
