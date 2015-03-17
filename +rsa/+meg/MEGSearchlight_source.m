@@ -1,15 +1,13 @@
 % MEGSearchlight_source
 %
-% MEGSearchlight_source(subjectNumber, sourceMeshesThisSubject, indexMasks, Models, userOptions)
-%
 % It is based on Su Li's code
 %
 % Cai Wingfield 3-2010, 9-2010 Su Li updated 3-2012
 
-% TODO: documentation
-% TODO: partial model numbers vs model number - make this coherent
+% TODO: Documentation
+% TODO: Partial model numbers vs model number - make this coherent
 
-function MEGSearchlight_source(subjectNumber, chi, sourceMeshesThisSubjectThisHemi, indexMask, model, partialModels, adjacencyMatrix, userOptions)
+function MEGSearchlight_source(subject_i, chi, sourceMeshesThisSubjectThisHemi, indexMask, model, partialModels, adjacencyMatrix, slSpec, userOptions)
 
 import rsa.*
 import rsa.fig.*
@@ -22,7 +20,7 @@ import rsa.util.*
 
 returnHere = pwd; % We'll come back here later
 
-subject = userOptions.subjectNames{subjectNumber};
+subject = userOptions.subjectNames{subject_i};
 nSubjects = numel(userOptions.subjectNames);
 
 usingMasks = ~isempty(userOptions.maskNames);
@@ -55,7 +53,7 @@ if overwriteFlag
     
     tic;%1
     
-    prints(['\tSearching in the source meshes of subject ' num2str(subjectNumber) ' of ' num2str(nSubjects) ':']);
+    prints(['\tSearching in the source meshes of subject ' num2str(subject_i) ' of ' num2str(nSubjects) ':']);
     
     [nVertices, nTimepoints, nConditions, nSessions] = size(sourceMeshesThisSubjectThisHemi);
     
@@ -69,9 +67,9 @@ if overwriteFlag
     %% Apply searchlight
     if userOptions.partial_correlation
         % It says searchlightRDMs are unused, but actually they're saved.
-        [thisSubjectRs, searchlightRDMs] = searchlightMapping_MEG_source(maskedMesh, indexMask, model, partialModels, adjacencyMatrix, userOptions); %#ok<ASGLU>
+        [thisSubjectRs, searchlightRDMs] = searchlightMapping_MEG_source(maskedMesh, indexMask, model, partialModels, adjacencyMatrix, slSpec, userOptions); %#ok<ASGLU>
     else
-        [thisSubjectRs, searchlightRDMs] = searchlightMapping_MEG_source(maskedMesh, indexMask, model, [], adjacencyMatrix, userOptions); %#ok<ASGLU>
+        [thisSubjectRs, searchlightRDMs] = searchlightMapping_MEG_source(maskedMesh, indexMask, model, [], adjacencyMatrix, slSpec, userOptions); %#ok<ASGLU>
     end
 
     rMetadataStruct = userOptions.STCmetaData;
@@ -95,7 +93,7 @@ if overwriteFlag
         filepath = [filepath 'masked_'];
     end
     gotoDir(userOptions.rootPath, 'RDMs');
-    save('-v7.3', [filepath, userOptions.subjectNames{subjectNumber}, '-', lower(chi), 'h'], 'searchlightRDMs');
+    save('-v7.3', [filepath, userOptions.subjectNames{subject_i}, '-', lower(chi), 'h'], 'searchlightRDMs');
 
     t = toc;%1
     prints('That took %s seconds.', t);

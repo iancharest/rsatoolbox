@@ -3,15 +3,11 @@
 %
 % It is based on Su Li's code
 %
-% [sourceMeshes[, baselineLimit] =] MEGDataPreparation_source(
-%                                                            subject_i,
-%                                                            chi,
-%                                                            betaCorrespondence,
-%                                                            userOptions)
-%
-%       subject_i --- a subject index
-%
-%       chi --- 'L' or 'R'
+% [sourceMeshes, STCMetadata] = MEGDataPreparation_source(
+%                                          betas,
+%                                          userOptions,
+%                                         ['subject_i', subject_i,]
+%                                         ['chi', 'L'|'R'])
 %
 %       betaCorrespondence --- The array of beta filenames.
 %               betas(condition, session).identifier is a string which referrs
@@ -38,42 +34,23 @@
 %                                        To be replaced by filenames as provided
 %                                        by betaCorrespondence.
 %
+%       subject_i --- a subject index
+%                If not provided, all subjects will be looped through.
+%
+%       chi --- 'L' or 'R'
+%                If not provided, both hemispheres will be looped through.
+%
 %       sourceMeshes
-%                sourceMeshes.L(vertices, timepoints, condition, session)
-%                sourceMeshes.R(vertices, timepoints, condition, session)
+%                sourceMeshes.(subjectName).(L|R)(vertices, timepoints, condition, session)
+%                This data is downsampled, as per userOptions preferences.
 %
-%       baselineLimit
-%
-% The following files are NO LONGER saved by this function:
-%        userOptions.rootPath/ImageData/
-%                userOptions.analysisName_CorticalMeshes.mat
-%                        Contains the subject source-reconstructed mesh data in
-%                        a struct such that sourceMeshes.(subjectName).(L|R) is
-%                        a [nVertices nTimepoints nConditions nSessions]-sized
-%                        matrix.
-
-%
-% REQUIRES MATLAB VERSION 7.3 OR LATER!
-%
-% Li Su's Note on 2-2012: the previous version of this function is not time
-% and space effective because when there are too many conditions, the
-% sourceMashes is too big to fit in the memory, and it takes a lot of disk
-% space. And the saved sourceMashes is slow when loading into the memory.
-% So, the current version will constract sourceMashes for each subject on
-% the fly and only store the r-map for each model fitting instead of saving
-% sourceMashes on to the disk. When the condition number is small, it
-% better to save the data RDMs to the disk so that we don't need to
-% recompute it when comparing it to differnt model. But for most of the
-% time, it is not possible because loading them from the disk is still
-% slow. As the reasons above, I decided to change this function from a
-% module to an engine function, and call it from MEGSearchlight_source.m 
-% and make it subject specific too. 
+% REQUIRES MATLAB VERSION 7.3 OR LATER
 %
 % Cai Wingfield 2010-05, 2010-06, 2015-03
 % updated by Li Su 2-2012 
 % updated by Fawad 3-12014
 
-function [varargout] = MEGDataPreparation_source(subject_i, chi, betaCorrespondence, userOptions)
+function [sourceMeshes, STCMetadata] = MEGDataPreparation_source(betas, userOptions, varargin)
 
 import rsa.*
 import rsa.fig.*
@@ -84,131 +61,205 @@ import rsa.spm.*
 import rsa.stat.*
 import rsa.util.*
 
-% TODO: Get this uncommented - right now it assumes we're working on all
-% TODO: subjects.
+%% Parse inputs
 
-% returnHere = pwd; % We'll return to the pwd when the function has finished
-% 
-% %% Set defaults and check options struct
-% 
-% % The filenames contain the analysisName as specified in the user options file
-% DetailsFilename = [userOptions.analysisName, '_MEGDataPreparation_source_Details.mat'];
-% BaselineLimitFilename = [userOptions.analysisName, '_BaselineLimit.mat'];
-% 
-% 
-% promptOptions.functionCaller = 'MEGDataPreparation_source';
-% promptOptions.defaultResponse = 'S';
-% promptOptions.checkFiles(1).address = fullfile(userOptions.rootPath, 'Details', DetailsFilename);
-% ImageDataFilename = [userOptions.analysisName, '_', userOptions.subjectNames{nSubjects}, '_CorticalMeshes.mat']; % only check the LAST subject
-% promptOptions.checkFiles(2).address = fullfile(userOptions.rootPath, 'ImageData', ImageDataFilename);
-% 
-% overwriteFlag = overwritePrompt(userOptions, promptOptions);
-% 
-% if overwriteFlag
+% 'subject_i'
+nameSubjectI    = 'subject_i';
+% Positive integer in range
+checkSubjectI   = @(x)(isinteger(x) && x >= 0 && x <= numel(userOptions.subjectNames));
+defaultSubjectI = 0;
 
-	%% Get Data
-	betas = betaCorrespondence;
-	[nSessions, nConditions] = size(betas);
-    downsampleRate = userOptions.temporalDownsampleRate;
-    
-    % First get just the first condition of the first subject's data,
-    % to set the correct sizes, even if a future reading fails due to
-    % artifact rejection
-    readPath = replaceWildcards(userOptions.betaPath, '[[betaIdentifier]]', betas(1, 1).identifier, '[[subjectName]]', userOptions.subjectNames{1}, '[[LR]]', lower(chi));
-    MEGDataStc = mne_read_stc_file1(readPath);
-    % TODO: This downsampling should be done in exactly one place, and then
-    % TODO: the resultant window sizes should be returned and reused
-    % TODO: elsewhere.  Right?
-    MEGDataStc.data = MEGDataStc.data(:,1:downsampleRate:end);
-    [nVertex_Raw, nTimepoint_Raw] = size(MEGDataStc.data);
-    
-	%for subject = 1:nSubjects % For each subject
+% 'chi'
+nameChi = 'chi';
+validChis = {'L', 'R', ''};
+checkChi = @(x) (any(validatestring(x, validChis)));
+defaultChi = '';
 
-		% Figure out the subject's name
-		thisSubject = userOptions.subjectNames{subject_i};
-        missingFilesLog = fullfile(userOptions.rootPath, 'ImageData', 'missingFilesLog.txt');
-        if ~exist(fullfile(userOptions.rootPath, 'ImageData'),'dir')
-            mkdir(userOptions.rootPath,'ImageData')
-        end
-        %ImageDataFilename = [userOptions.analysisName, '_', thisSubject, '_CorticalMeshes.mat'];
-        
-        % Preallocate with nans.
-        % The nans will remain if a condition fails to be read.
-        sourceMeshes = NaN(nVertex_Raw, nTimepoint_Raw, nConditions, nSessions); % (vertices, time, condition, session)
-		
-		for session = 1:nSessions % For each session...
-			for condition = 1:nConditions % and each condition...
+% Set up parser
+ip = inputParse;
+ip.CaseSensitive = false;
 
-				% Then read the brain data (for this session, condition)
-				readPath = replaceWildcards(userOptions.betaPath, '[[betaIdentifier]]', betas(session, condition).identifier, '[[subjectName]]', thisSubject, '[[LR]]', lower(chi));
-				
-				try
+% Parameters
+addParameter(ip, nameSubjectI, defaultSubjectI, checkSubjectI);
+addParameter(ip, nameChi, defaultChi, checkChis);
+
+% Parse the inputs
+parse(ip, betas, userOptions, varargin{:});
+
+% If subject_i was not given a default value, then it will be a positive
+% integer, and that's the subject_i we'll use
+singleSubject = (ip.Results.subject_i > 0);
+
+% If chi was not given a default value, then it will be either 'L' or 'R', 
+% and we'll use that.
+singleHemisphere = ~isempty(ip.Results.chi);
+
+% We'll return to the pwd when the function has finished
+returnHere = pwd;
+
+% If we're running a single subject, the we "loop" once on that
+% subject. If we're running all subjects, we loop through them all
+if singleSubject
+   firstSubject_i = ip.Results.subject_i;
+   lastSubject_i = ip.Results.subject_i;
+else
+    firstSubject_i = 1;
+    lastSubject_i = numel(userOptions.subjectNames);
+end
+
+% If we're running a single hemisphere, then we "loop" once on that
+% side. If we're running both sides, we loop through them both.
+if singleHemisphere
+    chis = ip.Results.chi;
+else
+    chis = 'LR';
+end
+
+[nSessions, nConditions] = size(betas);
+
+% Before we've read any data, we don't know the following values, which
+% will be set appropriately when we load the first piece of data
+dataEverRead            = false;
+nVertices_raw           = NaN;
+nVertices_downsampled   = NaN;
+nTimepoints_raw         = NaN;
+nTimepoints_downsampled = NaN;
+STCMetadata             = struct();
+
+% Some conditions will have been rejected, and we'll record those in
+% this text file.
+missingFilesLog = fullfile(userOptions.rootPath, 'ImageData', 'missingFilesLog.txt');
+
+% Where data will be saved
+gotoDir(userOptions.rootPath,'ImageData');
+
+%% Loop over all subjects under consideration
+for subject_i = firstSubject_i:lastSubject_i
+
+    % Figure out the subject's name
+    thisSubjectName = userOptions.subjectNames{subject_i};
+    %ImageDataFilename = [userOptions.analysisName, '_', thisSubject, '_CorticalMeshes.mat'];
+
+    %% Loop over all hemispheres under consideration
+    for chi = chis
+        % Loop over sessions and conditions
+        for session_i = 1:nSessions
+            for condition_i = 1:nConditions
+
+                % Then read the brain data (for this session, condition)
+                readPath = replaceWildcards(userOptions.betaPath, '[[betaIdentifier]]', betas(session_i, condition_i).identifier, '[[subjectName]]', thisSubjectName, '[[LR]]', lower(chi));
+
+                dataReadSuccessfully = false;
+                try
                     MEGDataStc = mne_read_stc_file1(readPath);
-                    
-                    % data reordering by vertex list IZ 06/13
-                    MEGDataStc.data = orderDatabyVertices(MEGDataStc.data, MEGDataStc.vertices);
-                    MEGDataVol = single(MEGDataStc.data);
-                    sourceMeshes(:, :, condition, session) = MEGDataVol(:,1:downsampleRate:end); % (vertices, time, condition, session)
-                    clear MEGDataVol;
+                    dataReadSuccessfully = true;
                 catch ex
                     % when a trial is rejected due to artifact, this item
                     % is replaced by NaNs. Li Su 3-2012
-                    prints(['Warning: Failed to read data for condition ' num2str(condition) '... Writing NaNs instead.']);
-                    dlmwrite(missingFilesLog, str2mat(replaceWildcards(betas(session, condition).identifier, '[[subjectName]]', thisSubject)), 'delimiter', '', '-append');
+                    prints(['Warning: Failed to read data for condition ' num2str(condition_i) '... Writing NaNs instead.']);
+                    % Log the missing file
+                    dlmwrite(missingFilesLog, str2mat(replaceWildcards(betas(session_i, condition_i).identifier, '[[subjectName]]', thisSubjectName)), 'delimiter', '', '-append');
+                end
+
+                if dataReadSuccessfully
+
+                    %% First time data is read
+
+                    % If this was the first time we read data, we can
+                    % record the sizes and do the preallocation
+                    if ~dataEverRead
+
+                        % We only want to do this once so we'll
+                        % remember now that we've read the data and
+                        % don't ned to do this again.
+                        dataEverRead = true;
+
+                        % Raw data sizes, before downsampling
+
+                        % The number of vertices and timepoints in the
+                        % raw data
+                        [nVertices_raw, nTimepoints_raw] = size(MEGDataStc.data);
+                        % The time index of the first datapoint, in
+                        % seconds.
+                        firstDatapointTime_raw = MEGDataStc.tmin;
+                        % The time index of the last datapoint, in
+                        % seconds.
+                        lastDatapointTime_raw = MEGDataStc.tmax;
+                        % The interval between successive datapoints in
+                        % the raw data, in seconds.
+                        timeStep_raw = MEGDataStc.tstep;
+
+                        %% Downsampling constants
+
+                        % Sanity checks for downsampling
+                        if nVertices_raw < userOptions.targetResolution
+                            error('MEGDataPreparation_source:InsufficientSpatialResolution', 'There aren''t enough vertices in the raw data to meet the target resolution.');
+                        end
+
+                        % Now the actual downsampling targets can be
+                        % calculated
+
+                        % We will be downsampling in space and time, so
+                        % we calculate some useful things here.
+
+                        % The number of vertices in the downsampled
+                        % data
+                        nVertices_downsampled = userOptions.targetResolution;
+                        % The number of timepoints in the downsampled
+                        % data
+                        nTimepoints_downsampled = numel(1:userOptions.temporalDownsampleRate:nTimepoints_raw);
+                        timeStep_downsampled = timeStep_raw * userOptions.temporalDownsampleRate;
+                        % Time time index of the first datapoint
+                        % doesn't change in the downsampled data
+                        firstDatapointTime_downsampled = firstDatapointTime_raw;
+                        % The time index of the last datapoint may
+                        % change in the downsampled data, so should be
+                        % recalculated
+                        lastDatapointTime_downsampled = firstDatapointTime_downsampled + (nTimepoints_downsampled * timeStep_downsampled);
+
+                        % This metadata struct will be useful for
+                        % writing appropriate files in future. This new
+                        % metadata should reflect the resolution and
+                        % specifices of the data which
+                        % MEGDataPreparation_source produces.
+                        STCMetadata.tmin     = firstDatapointTime_downsampled;
+                        STCMetadata.tmax     = lastDatapointTime_downsampled;
+                        STCMetadata.vertices = 1:nVertices_downsampled;
+                        STCMetadata.tstep    = timeStep_downsampled;
+                    end
+
+                    %% Every time data is read
+
+                    MEGDataStc.data = orderDatabyVertices(MEGDataStc.data, MEGDataStc.vertices);
+
+                    % Store the data in the mesh, downsampling as we go
+                    sourceMeshes.(thisSubjectName).(chi)(:, :, condition_i, session_i) = MEGDataStc.data( ...
+                        ...% Dowsample space by simply removing high-numbered vertices
+                        1:nVertices_downsampled, ...
+                        ...% Downsample time by subsampling the timepoints
+                        1:userOptions.temporalDownsampleRate:end ...
+                    ); % (vertices, time, condition, session)
+                else
                     % Make sure it actually has NaNs in if there was an
                     % error for this condition
-                    sourceMeshes(:, :, condition, session) = NaN(nVertex_Raw, nTimepoint_Raw);
-				end
-				
-				baselineLimit = double(-MEGDataStc.tmin/MEGDataStc.tstep); % I hope these are all the same!
-                
+                    sourceMeshes.(thisSubjectName).(chi)(:, :, condition_i, session_i) = NaN(nVertices_downsampled, nTimepoints_downsampled);
+                end
+
                 if nConditions > 10
-                    if mod(condition, floor(nConditions/20)) == 0, fprintf('\b.:'); end%if
+                    if mod(condition_i, floor(nConditions/20)) == 0, fprintf('\b.:'); end%if
                 else
                     fprintf('\b.:');
                 end
-				
-			end%for
+
+            end%for
             % fprintf('\b.:');
-            
-		end%for
+
+        end%for:session
         fprintf('\bData read successfully!\n');
         dlmwrite(missingFilesLog, '', '-append');
 
-		% For each subject, record the vectorised brain scan in a subject-name-indexed structure
-		
-		%% MEMORY DEBUG %%
-%  		cd(fullfile(userOptions.rootPath, 'ImageData'));
-%         fprintf(['Saving image data to ' fullfile(userOptions.rootPath, 'ImageData', ImageDataFilename) '\n']);
-%  		save(ImageDataFilename, 'sourceMeshes'); 		
-%		clear sourceMeshes subjectSourceData MEGDataStc MEGDataVol;
+    end%for:chi
 
-	%end%for:subjects
+end%for:subjects
 
-	%% Save relevant info
-
-% 	timeStamp = datestr(now);
-% 	%save(ImageDataFilename, 'sourceMeshes', '-v7.3'); % -v7.3 required as this is likely to be larger than 2GB
-% 	%% END DEBUG %%
-% 	save(BaselineLimitFilename, 'baselineLimit');
-% 	fprintf(['Saving Details to ' fullfile(userOptions.rootPath, 'Details', DetailsFilename) '\n']);
-% 	gotoDir(userOptions.rootPath, 'Details');
-% 	save(DetailsFilename, 'timeStamp', 'userOptions');
-	
-% else
-%     fprintf(['Loading previously saved meshes from ' fullfile(userOptions.rootPath, 'ImageData', ImageDataFilename) '...\n']);
-%     load(fullfile(userOptions.rootPath, 'ImageData', ImageDataFilename)); 
-% 	fprintf(['Loading previously saved baseline limit from ' fullfile(userOptions.rootPath, 'ImageData', BaselineLimitFilename) '...\n']);
-% 	load(fullfile(userOptions.rootPath, 'ImageData', BaselineLimitFilename));
-%end%if
-
-if nargout == 1
-	varargout{1} = sourceMeshes;
-elseif nargout == 2
-	varargout{1} = sourceMeshes;
-	varargout{2} = baselineLimit;
-elseif nargout > 0
-	error('0, 1 or 2 arguments out, please.');
-end%if:nargout
-
-%cd(returnHere); % Go back
+cd(returnHere); % Go back

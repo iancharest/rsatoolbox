@@ -59,14 +59,14 @@ for mask=1:nMasks
         
         time = userOptions.STCmetaData.tmin*1000;
         for j=1:size(base_map,1)
-            xticks{j} = num2str([time time+userOptions.temporalSearchlightResolution]);
-            time = time+ userOptions.temporalSearchlightResolution;
+            xticks{j} = num2str([time time+userOptions.temporalSearchlightTimestep]);
+            time = time+ userOptions.temporalSearchlightTimestep;
         end
         
         if length(xticks) > 25
             xtickIncrement = ceil(length(xticks)/15);
         else
-            xtickIncrement = userOptions.temporalSearchlightResolution;
+            xtickIncrement = userOptions.temporalSearchlightTimestep;
         end
         
         
@@ -114,14 +114,14 @@ for mask=1:nMasks
         
         time = userOptions.STCmetaData.tmin*1000;
         for j=1:size(r_values,2)            
-            xticks{j} = num2str([time time+userOptions.temporalSearchlightResolution]);
-            time = time+userOptions.temporalSearchlightResolution;
+            xticks{j} = num2str([time time+userOptions.temporalSearchlightTimestep]);
+            time = time+userOptions.temporalSearchlightTimestep;
         end
         
         if length(xticks) > 25
             xtickIncrement = ceil(length(xticks)/15);
         else
-            xtickIncrement = userOptions.temporalSearchlightResolution;
+            xtickIncrement = userOptions.temporalSearchlightTimestep;
         end
 
         %plots

@@ -44,13 +44,13 @@
 %                userOptions.RDMCorrelationType
 %                        A string descriptive of the distance measure to be used
 %                        to compare two RDMs. Defaults to 'Spearman'.
-%                userOptions.temporalSearchlightResolution
+%                userOptions.temporalSearchlightTimestep
 %                        An integer. The number of timepoints which the temporal
 %                        sliding window will move by for each iteration of the
 %                        searchlight. Defaults to 1.
 %                userOptions.temporalSearchlightWidth
 %                        An integer. The width of the temporal sliding window,
-%                        in timepoints. Defaults to 1.
+%                        in timepoints.
 %                userOptions.sensorSearchlightRadius
 %                        An integer. The number of steps away from the centre of
 %                        the searchlight that it extends. 0 means there's only
@@ -104,8 +104,6 @@ import rsa.util.*
 	if ~isfield(userOptions, 'analysisName'), error('MEGSearchlight_sensor:NoAnalysisName', 'analysisName must be set. See help'); end%if
 	if ~isfield(userOptions, 'rootPath'), error('MEGSearchlight_sensor:NoRootPath', 'rootPath must be set. See help'); end%if
 	userOptions = setIfUnset(userOptions, 'subjectNames', fieldnames(sensorImages));
-	userOptions = setIfUnset(userOptions, 'temporalSearchlightResolution', 1);
-	userOptions = setIfUnset(userOptions, 'temporalSearchlightWidth', 1);
 	userOptions = setIfUnset(userOptions, 'sensorSearchlightRadius', 1);
 	userOptions = setIfUnset(userOptions, 'distanceMeasure', 'Spearman');
 	userOptions = setIfUnset(userOptions, 'distance', 'Correlation');
@@ -233,15 +231,18 @@ import rsa.util.*
                 fifRs(sensorSite * 3, :) = squeeze(rs(sensorSite,:));
             end%for:sensorSites
             
+            % TODO: user getSearchlightSpec output in here - this is
+            % TODO: probably already calculated
+            
             % sfreq is in samples per second
             % the original sfreq will be nTimePoints_orig / timeCourseLength_seconds
             % the new one will be nTimePoints / timeWindowLength_seconds
-            sfreq = floor(subjectMetadataStruct.info.sfreq / userOptions.temporalSearchlightResolution); 
+            sfreq = floor(subjectMetadataStruct.info.sfreq / userOptions.temporalSearchlightTimestep); 
             subjectMetadataStruct.info.sfreq = sfreq; % sample frequency in samples per second?
             
             first = ceil(-nTimePoints / 2); % first time point (mne => this must be negative)
             last = floor(nTimePoints / 2) - 1; % last time point (minus 1... because I have to :( )
-            times = linspace(first,last,nTimePoints)/sfreq;%(userOptions.temporalSearchlightLimits(1):userOptions.temporalSearchlightResolution:epochLength-userOptions.temporalSearchlightWidth) / 1000; % time in seconds
+            times = linspace(first,last,nTimePoints)/sfreq;
             
             % The unused channels, including EEG, are set to 0
             epochs = subjectMetadataStruct.evoked.epochs(:,1:size(fifRs,2));

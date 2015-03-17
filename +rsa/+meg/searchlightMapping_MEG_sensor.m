@@ -14,6 +14,8 @@ import rsa.util.*
 	% CW 5-2010 Edited IZ 07/13 
 
 	%% Get parameters
+    
+    % TODO: make sure this uses getSearchlightSpec properly
 
 	% Prepare models
     nModels = size(models,2);
@@ -40,7 +42,7 @@ import rsa.util.*
 	nSensorTypes = numel(fieldnames(singleSubjectTopography));
 
 	% Number of time points to loop with
-	nTimePoints = floor((epochLength - userOptions.temporalSearchlightWidth) / userOptions.temporalSearchlightResolution);
+	nTimePoints = floor((epochLength - userOptions.temporalSearchlightWidth) / userOptions.temporalSearchlightTimestep);
 
 	%% similarity-graph-map the volume with the searchlight
 
@@ -62,7 +64,7 @@ import rsa.util.*
 		for t = 1:nTimePoints
 
 			% Work out the current time window
-			currentTimeStart = 1 + (t - 1) * userOptions.temporalSearchlightResolution;
+			currentTimeStart = 1 + (t - 1) * userOptions.temporalSearchlightTimestep;
 			currentTimeWindow = (currentTimeStart : currentTimeStart + userOptions.temporalSearchlightWidth - 1);
 
 			% Restrict data to current searchlight

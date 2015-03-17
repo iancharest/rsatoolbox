@@ -29,6 +29,7 @@ for chi_i = 1:2
         end%switch:chirality
         
 		indexMasks(chi_i).vertices = 1:userOptions.targetResolution; % update IZ 02/12 previously: vertexMask + 1;
+        % TODO: where is this used?
 		indexMasks(chi_i).timepoints = userOptions.temporalSearchlightLimits;
         indexMasks(chi_i).chirality = chi;
         indexMasls(chi_i).name = ['all_' lower(chi) 'h'];

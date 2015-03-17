@@ -75,6 +75,8 @@ if overwriteFlag
         
         sourceMesh_load = load (fullfile(output_path_Meshes, userOptions.subjectNames{subject}));
         
+        % TODO: make sure this uses getSearchlightSpec properly
+        
         for mask=1:nMasks
             thisMask = userOptions.maskNames{mask};
             disp(thisMask);
@@ -82,7 +84,7 @@ if overwriteFlag
 
             timeWindow=1;
             if currentTimeWindow(1) < MEGDataStcL.tmin*1000, currentTimeWindow(1) = MEGDataStcL.tmin*1000; end
-            for time = currentTimeWindow(1):userOptions.temporalSearchlightResolution:currentTimeWindow(2)-userOptions.temporalSearchlightWidth
+            for time = currentTimeWindow(1):userOptions.temporalSearchlightTimestep:currentTimeWindow(2)-userOptions.temporalSearchlightWidth
                 disp([num2str(time) ' ms:'])
                 
                 localOptions.maskNames = {thisMask};
@@ -104,7 +106,7 @@ if overwriteFlag
                 differenceInms = norm(upperTimeLimit - lowerTimeLimit);
                 lastDataPoint = startingDataPoint + floor((differenceInms / (MEGDataStcL.tstep*1000))) -1;
                 
-                if lastDataPoint <= userOptions.maskTimetoDataPoints.(dashToUnderscores(thisMask))(2)+ceil(userOptions.temporalSearchlightWidth/userOptions.temporalSearchlightResolution)
+                if lastDataPoint <= userOptions.maskTimetoDataPoints.(dashToUnderscores(thisMask))(2)+ceil(userOptions.temporalSearchlightWidth/userOptions.temporalSearchlightTimestep)
                     localOptions.maskTimetoDataPoints.(dashToUnderscores(thisMask)) = [startingDataPoint lastDataPoint];
                     
                     indexMasks = MEGMaskPreparation_source(localOptions);

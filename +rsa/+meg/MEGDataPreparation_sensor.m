@@ -1,9 +1,9 @@
 % MEGDataPreparation_sensor is a function designed to take MEG data and load it into
 % the correct format for the rest of the toolbox to use.
 %
-% [sensorImages[, baselineLimit] =] MEGDataPreparation_sensor( ...
-%                                                        betaCorrespondence, ...
-%                                                        userOptions)
+% sensorImages = MEGDataPreparation_sensor( ...
+%                                          betaCorrespondence, ...
+%                                          userOptions)
 %
 % Specifics:  All three sensor types are normalised by their mean baseline
 % standard deviation (making them into comparable SNRs (thanks to Olaf!)).
@@ -51,7 +51,7 @@
 %
 % Cai Wingfield 12-2009, 3-2010, 6-2010
 
-function [varargout] = MEGDataPreparation_sensor(userOptions)
+function sensorImages = MEGDataPreparation_sensor(userOptions)
 
 import rsa.*
 import rsa.fig.*
@@ -73,7 +73,6 @@ if ~isfield(userOptions, 'subjectNames'), error('MEGDataPreparation_sensor:NoSub
 % The filenames contain the analysisName as specified in the user options file
 ImageDataFilename = [userOptions.analysisName, '_SensorImages.mat'];
 DetailsFilename = [userOptions.analysisName, '_MEGDataPreparation_sensor_Details.mat'];
-BaselineLimitFilename = [userOptions.analysisName, '_BaselineLimit.mat'];
 
 promptOptions.functionCaller = 'MEGDataPreparation_sensor';
 promptOptions.defaultResponse = 'S';
@@ -119,8 +118,6 @@ if overwriteFlag
 				EEGChannelsBin = EEGChannels == 2;
 
 				allMEGDataMatrix = allMEGData.evoked.epochs;
-				
-				baselineLimit = double(-allMEGData.evoked.first); % I hope these are all the same!
 
 				% Get the data for the time window of interest
 				grad1DataMatrix = allMEGDataMatrix(grad1Channels, :);
@@ -156,7 +153,6 @@ if overwriteFlag
 	fprintf(['Saving image data to ' fullfile(userOptions.rootPath, 'ImageData', ImageDataFilename) '\n']);
 	gotoDir(userOptions.rootPath, 'ImageData');
 	save(ImageDataFilename, 'sensorImages');
-	save(BaselineLimitFilename, 'baselineLimit');
 	
 	fprintf(['Saving Details to ' fullfile(userOptions.rootPath, 'Details', DetailsFilename) '\n']);
 	gotoDir(userOptions.rootPath, 'Details');
@@ -165,17 +161,6 @@ if overwriteFlag
 else
 	fprintf(['Loading previously saved topographies from ' fullfile(userOptions.rootPath, 'ImageData', ImageDataFilename) '...\n']);
 	load(fullfile(userOptions.rootPath, 'ImageData', ImageDataFilename));
-	fprintf(['Loading previously saved baseline limit from ' fullfile(userOptions.rootPath, 'ImageData', BaselineLimitFilename) '...\n']);
-	load(fullfile(userOptions.rootPath, 'ImageData', BaselineLimitFilename));
 end%if
-
-if nargout == 1
-	varargout{1} = sensorImages;
-elseif nargout == 2
-	varargout{1} = sensorImages;
-	varargout{2} = baselineLimit;
-elseif nargout > 0
-	error('0, 1 or 2 arguments out, please.');
-end%if:nargout
 
 cd(returnHere); % Go back

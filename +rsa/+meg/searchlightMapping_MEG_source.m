@@ -1,10 +1,10 @@
-% [smm_rs, searchlightRDMs] = searchlightMapping_MEG_source(singleSubjectMesh, indexMask, modelRDM, partialModelRDMs, adjacencyMatrix, userOptions)
+% [smm_rs, searchlightRDMs] = searchlightMapping_MEG_source(singleSubjectMesh, indexMask, modelRDM, partialModelRDMs, adjacencyMatrix, slSpec, userOptions)
 %
 % Based on Li Su's script
 % CW 2010-05, 2015-03
 % updated by Li Su 3-2012
 
-function [smm_rs, searchlightRDMs] = searchlightMapping_MEG_source(singleSubjectMesh, indexMask, modelRDM, partialModelRDMs, adjacencyMatrix, userOptions)
+function [smm_rs, searchlightRDMs] = searchlightMapping_MEG_source(singleSubjectMesh, indexMask, modelRDM, partialModelRDMs, adjacencyMatrix, slSpec, userOptions)
 
 import rsa.*
 import rsa.fig.*
@@ -24,19 +24,16 @@ if userOptions.partial_correlation
     control_for_modelRDMs = unwrapRDMs(vectoriseRDMs(partialModelRDMs));
 end
 
-[nVertices, epochLength, nConditions, nSessions] = size(singleSubjectMesh);
+[nVertices, nTimePoints_data, nConditions, nSessions] = size(singleSubjectMesh);
 
-% Number of DATA points to loop with given the width and time step of
-% searchlight updated by IZ 09-12
-nTimePoints = floor((epochLength - (userOptions.temporalSearchlightWidth * userOptions.toDataPoints)) / ...
-    (userOptions.temporalSearchlightResolution * userOptions.toDataPoints * userOptions.temporalDownsampleRate));
-
+% The number of positions the sliding window will take.
+nWindowPositions = size(slSpec.windowPositions, 2);
 
 %% similarity-graph-map the volume with the searchlight
 
 % Preallocate looped matrices for speed
-smm_rs = zeros([nVertices, nTimePoints]);
-searchlightRDMs(numel(indexMask.vertices), nTimePoints) = struct();
+smm_rs = zeros([nVertices, nWindowPositions]);
+searchlightRDMs(numel(indexMask.vertices), nWindowPositions) = struct();
 
 nVerticesSearched = 0;
 
@@ -52,17 +49,13 @@ for v = indexMask.vertices
     verticesCurrentlyWithinRadius = intersect(verticesCurrentlyWithinRadius, indexMask.vertices);
     
     % Search through time
-    % TODO: Why +1 ?
-    for t = 1:nTimePoints+1
+    window_i = 0;
+    for window = slSpec.windowPositions'
+        % thisWindow is the indices of timepoints in each window
+        thisWindow = window(1):window(2);
+        window_i = window_i + 1;
         
-        % Work out the current time window
-        % converted to data points - updated by IZ 09-12
-        currentTimeStart = (t - 1) * ...
-            (userOptions.temporalSearchlightResolution * userOptions.temporalDownsampleRate * userOptions.toDataPoints) + 1;
-        currentTimeWindow = ceil((currentTimeStart : currentTimeStart + ...
-            (userOptions.temporalSearchlightWidth * userOptions.toDataPoints) - 1));
-        
-        searchlightPatchData = singleSubjectMesh(verticesCurrentlyWithinRadius, currentTimeWindow, :, :); % (vertices, time, condition, session)
+        searchlightPatchData = singleSubjectMesh(verticesCurrentlyWithinRadius, thisWindow, :, :); % (vertices, time, condition, session)
         
         % Average across sessions
         
@@ -117,7 +110,7 @@ for v = indexMask.vertices
         searchlightRDM = vectorizeRDM(searchlightRDM);
         
         % Locally store the full brain's worth of indexed RDMs.
-        searchlightRDMs(v, t).RDM = searchlightRDM;
+        searchlightRDMs(v, window_i).RDM = searchlightRDM;
         
         % TODO: Refactor this into general method so it can be used
         % TODO: anywhere
@@ -130,9 +123,9 @@ for v = indexMask.vertices
             rs = corr(searchlightRDM', modelRDM_utv', 'type', userOptions.RDMCorrelationType, 'rows', 'pairwise');
         end
         
-        smm_rs(v, t) = rs;
+        smm_rs(v, window_i) = rs;
         
-    end%for:t
+    end%for:window
     
     % Indicate progress every once in a while...
     nVerticesSearched = nVerticesSearched + 1;

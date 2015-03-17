@@ -90,18 +90,6 @@ else % source level analysis
     %============================= input checks ============================= %
     % ====== comparing search light resolution to the time step of data ===== %
     
-    % TODO: userOptions.searchlight isn't in use any more. This adjustment
-    % TODO: should be done once, depending on the recipe being used.
-    % time step
-    if userOptions.searchlight % added 03/12 IZ
-        if MEGDataStcL.tstep * 1000 * userOptions.temporalDownsampleRate > userOptions.temporalSearchlightResolution
-            error('Error: The input time resolution of search light cannot be applied. The time resolution for data is lower.');
-        else
-            userOptions.STCmetaData.tstep = userOptions.temporalSearchlightResolution * ...
-                userOptions.temporalDownsampleRate / 1000;  % in s
-        end
-    end
-    
     % searchlight width in relation to downsample rate
     if userOptions.temporalSearchlightWidth < userOptions.STCmetaData.tstep * 1000
         disp('Warning: The searchlight width is less than data rate after downsampling');
@@ -150,7 +138,7 @@ else % source level analysis
                     disp(['Warning: The sliding window for mask: ', thisMaskName, ' over-runs the data sample. ']);
                     disp(strcat('>> Using maximum time point, with adjusted factor of source searchlight radius, from data instead... ', int2str(timeAdjusted-userOptions.sourceSearchlightRadius), ' ms'));
                     lastDataPoint = totalDataPoints - ...
-                        ceil(userOptions.temporalSearchlightWidth/userOptions.temporalSearchlightResolution);
+                        ceil(userOptions.temporalSearchlightWidth/userOptions.temporalSearchlightTimestep);
                 end
             else
                 if timeAdjusted <= upperTimeLimit
@@ -163,41 +151,6 @@ else % source level analysis
             % TODO: Don't store this in the userOptions
             userOptions.maskTimetoDataPoints.(thisMaskName) = [startingDataPoint lastDataPoint];
         end
-        
-    % TODO: userOptions.searchlight isn't in use any more. This adjustment
-    % TODO: should be done once, depending on the recipe being used.
-    elseif userOptions.searchlight % all brain searchlight
-        
-        userOptions.STCmetaData.tmin = userOptions.temporalSearchlightLimits(1)/1000;
-        
-        % getting the starting data point by comparing starting points of searchlight and input data
-        differenceInms = userOptions.temporalSearchlightLimits(1) - MEGDataStcL.tmin*1000;
-        startingDataPoint = 1 + floor((differenceInms / (MEGDataStcL.tstep*1000)));
-        
-        % getting last data point for searchlight limits
-        differenceInms = norm(userOptions.temporalSearchlightLimits(2) - userOptions.temporalSearchlightLimits(1));
-        lastDataPoint = startingDataPoint + floor((differenceInms / (MEGDataStcL.tstep*1000)));
-        
-        % lower temporal searchlight limit
-        if userOptions.temporalSearchlightLimits(1) < MEGDataStcL.tmin*1000
-            disp('Warning: The searchlight is attempting to access time point not in data.' );
-            disp(strcat(' >> Using minimum time point value instead... ', int2str(MEGDataStcL.tmin*1000), ' ms'));
-            startingDataPoint = 1;
-            userOptions.STCmetaData.tmin = MEGDataStcL.tmin;
-        end
-        
-        % upper temporal searchlight limit
-        if timeAdjusted-userOptions.temporalSearchlightWidth <= userOptions.temporalSearchlightLimits(2)
-            disp('Warning: The search light over-runs the data sample. ');
-            disp(strcat('>> Using maximum time point, with adjusted factor of source searchlight radius, from data instead... ', int2str(timeAdjusted-userOptions.sourceSearchlightRadius), ' ms'));
-            userOptions.temporalSearchlightLimits(2) = timeAdjusted;
-            lastDataPoint = totalDataPoints - ...
-                (userOptions.temporalSearchlightWidth/userOptions.temporalSearchlightResolution);
-        end
-        
-        userOptions.dataPointsSearchlightLimits = [startingDataPoint lastDataPoint];
-        
-    end
     
     % ========================== new fields ================================ %
     userOptions.toDataPoints = totalDataPoints/(userOptions.temporalDownsampleRate*totalTimeInMs);

@@ -22,12 +22,14 @@ modelName = spacesToUnderscores(model.name);
 
 usingMasks = ~isempty(userOptions.maskNames);
 
+% TODO: Make sure getSearchlightSpec is being used appropriately
+
 if userOptions.partial_correlation
     modelName = [modelName, '_partialCorr'];
 end
 
 %percent = userOptions.primaryThreshold;
-tStep = userOptions.temporalSearchlightResolution;
+tStep = userOptions.temporalSearchlightTimestep;
 
 % nullDistribution_lh = [];
 % nullDistribution_rh = [];

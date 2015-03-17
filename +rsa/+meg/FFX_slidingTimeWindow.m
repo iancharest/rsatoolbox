@@ -92,7 +92,7 @@ if overwriteFlag
                 [r(timeWindow) p(timeWindow)] = corr(vectorizeRDM(aRDMs.RDM)',modelRDM_vec','type',userOptions.RDMCorrelationType,'rows','pairwise');
             end
             disp([ts2 ' ' num2str(time) ' ms r: ' num2str(r(timeWindow),6) ' p: ' num2str(p(timeWindow),6)])
-            time = time + userOptions.temporalSearchlightResolution;
+            time = time + userOptions.temporalSearchlightTimestep;
             
             % step 2: threshold r map %
             if p(timeWindow) <= 0.05 && r(timeWindow) >= 0

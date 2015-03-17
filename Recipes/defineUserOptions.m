@@ -160,12 +160,16 @@ userOptions.temporalSearchlightWidth = 20; %20;
 userOptions.searchlightPatterns = 'spatiotemporal';
 
 % The timestep for sliding window (ms)
-userOptions.temporalSearchlightResolution = 10; %10; % (data point equivalent = total_in_ms/total_dataPoints)
+userOptions.temporalSearchlightTimestep = 10;
 
-% The overall window of interest (ms)
+% The overall window of interest for searchlight (ms)
 userOptions.temporalSearchlightLimits = [-200 800];
 
-% Time windows are specified for each regions.
+% Temporal downsampling
+% E.g., a value of 10 here means only taking each 10th point in time.
+userOptions.temporalDownsampleRate = 1;
+
+% Time windows are specified for each region.
 %
 % There should be one entry for each entry in userOptions.maskNames, and
 % they will be treated as corresponding pairs.
@@ -174,7 +178,8 @@ userOptions.temporalSearchlightLimits = [-200 800];
 % userOptions.maskTimeWindows, then [0 100] will go with 'mask-a', and
 % [-100 200] will go with 'mask-b'.
 %
-% For searchlight analysis, all time windows should be the same.
+% For searchlight analysis, these values will be ignored and
+% userOptions.temporalSearchlightLimits will be used instead.
 userOptions.maskTimeWindows = {
     [0 500], [0 500] ...
 };
@@ -209,27 +214,18 @@ userOptions.sensorSearchlightRadius = 1;
 % The radius of the source-space searchlight (in mm)
 userOptions.sourceSearchlightRadius = 20;
 
-% spatial smoothing and upsampling parameters
+% Spatial downsampling.
+% Set the target number of vertices per hemisphere.
 userOptions.targetResolution = 10242;
+
+% TODO: Explain this
 % 5mm is the smallest distance between two adjacent vertex in 10242 resolution.
 % 10mm is the smallest distance between two adjacent vertex in 2562 resolution.
 userOptions.minDist = 5; %mm
-userOptions.smoothingWidth = 10; %mm
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%
-%% ANALYSIS PREFERENCES %%
+%% First-order analysis %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%% First-order analysis
-
-% temporal downsampling
-% TODO: clean this up; there's only one value being set.
-% TODO: unless more could be set?
-userOptions.temporalDownsampleRate = 1;
-userOptions.temporalSearchlightWidth = userOptions.temporalSearchlightWidth / userOptions.temporalDownsampleRate;
-userOptions.temporalSearchlightResolution = userOptions.temporalSearchlightResolution / userOptions.temporalDownsampleRate;
-userOptions.temporalSearchlightLimits = userOptions.temporalSearchlightLimits / userOptions.temporalDownsampleRate;
 
 % Text lables which may be attached to the conditions for MDS plots.
 [userOptions.conditionLabels{1:92}] = deal(' ');
