@@ -11,27 +11,27 @@ function indexMasks_out = combineVertexMasks_source(indexMasks_in, newMaskName, 
     % We'll end up with two masks
     out_mask_i = 1;
     for chi = 'LR'
+        
         %% We union the masks together in a vectorised method, for speed
-        % We want the unique entries when...
-        maskVertices = unique( ...
-            ...% we get the masks...
-            [indexMasks_in( ...
-                    ...% where the chirality is the same as the hemisphere we're looking at...
-                    [indexMasks_in.chirality] == chi ...
-                    ...% and take their vertices.
-                    ).vertices]);
+        
+        % Masks this hemisphere
+        masksThisHemi = indexMasks_in([indexMasks_in.chirality] == chi);
+        
+        % We want any vertex which is in one of these masks, but without
+        % double-counting.
+        maskVsThisHemi = unique([masksThisHemi.vertices]);
         
         % Sort the vertices and cap them at the resolution set in
         % userOptions.
-        maskVertices = sort(maskVertices(maskVertices <= userOptions.targetResolution));
+        maskVsThisHemi = sort(maskVsThisHemi(maskVsThisHemi <= userOptions.targetResolution));
         
-        % Set the timeIndices also
-        % TODO: this isn't coming from the individual masks... is that ok?
-        timeIndices = userOptions.dataPointsSearchlightLimits;
+        % Do the same for the timepoints
+        maskTsThisHemi = unique([masksThisHemi.timepoints]);
+        maskTsThisHemi = sort(maskTsThisHemi);
         
         % Store the unioned bits in a new mask struct
-        indexMasks_out(out_mask_i).vertices   = maskVertices;
-        indexMasks_out(out_mask_i).timepoints = timeIndices;
+        indexMasks_out(out_mask_i).vertices   = maskVsThisHemi;
+        indexMasks_out(out_mask_i).timepoints = maskTsThisHemi;
         indexMasks_out(out_mask_i).chirality  = chi;
         indexMasks_out(out_mask_i).name       = sprintf('%s_%s', newMaskName, lower(chi));
        
