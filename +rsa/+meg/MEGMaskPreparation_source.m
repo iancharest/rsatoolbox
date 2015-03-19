@@ -27,8 +27,6 @@
 %        indexMasks --- A structured array with fields:
 %                indexMasks.vertices
 %                        The vertex indices in the mask.
-%                indexMasks.timepoints
-%                        The timepoints in the mask.
 %                indexMasks.chirality
 %                        Whether the mask is on the right ('R') or left
 %                        ('L') hemisphere
@@ -107,8 +105,6 @@ if overwriteFlag
 		
 		% Store in a struct
 		indexMasks(maskNumber).vertices   = label.vertices + 1;
-        % TODO: This is unused?
-		indexMasks(maskNumber).timepoints = timeWindow(1):timeWindow(2);
         % It's very important that the value set in .chirality is either
         % the single capital character 'L' or the single character 'R'.
         % This way, we can filter the struct using:

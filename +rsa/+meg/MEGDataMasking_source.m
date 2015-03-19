@@ -19,9 +19,6 @@
 %                indexMasks.vertices
 %                        A vector of indices inside the mask (indices above
 %                       10242 are ignored).
-%                indexMasks.timepoints
-%                        A vector of indices for timepoints to be included
-%                       within the mask.
 %                indexMasks.chirality
 %                        Either "L" or "R", depending on which hemisphere the
 %                       mask indices refer to. Cross-hemisphere RoIs aren't

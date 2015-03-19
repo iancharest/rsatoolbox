@@ -25,13 +25,8 @@ function indexMasks_out = combineVertexMasks_source(indexMasks_in, newMaskName, 
         % userOptions.
         maskVsThisHemi = sort(maskVsThisHemi(maskVsThisHemi <= userOptions.targetResolution));
         
-        % Do the same for the timepoints
-        maskTsThisHemi = unique([masksThisHemi.timepoints]);
-        maskTsThisHemi = sort(maskTsThisHemi);
-        
         % Store the unioned bits in a new mask struct
         indexMasks_out(out_mask_i).vertices   = maskVsThisHemi;
-        indexMasks_out(out_mask_i).timepoints = maskTsThisHemi;
         indexMasks_out(out_mask_i).chirality  = chi;
         indexMasks_out(out_mask_i).name       = sprintf('%s_%s', newMaskName, lower(chi));
        
