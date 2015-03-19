@@ -19,7 +19,7 @@
 %                indexMasks.vertices
 %                        A vector of indices inside the mask (indices above
 %                       10242 are ignored).
-%                indexMasks.chirality
+%                indexMasks.chi
 %                        Either "L" or "R", depending on which hemisphere the
 %                       mask indices refer to. Cross-hemisphere RoIs aren't
 %                       currently supported...
@@ -113,7 +113,7 @@ if overwriteFlag
         % TODO: This is confusing
         timeIndices = userOptions.maskTimetoDataPoints.(thisMaskName); % updated IZ 11-12
         % timeIndices = indexMasks.(thisMask).(thisTimeWindow).timeIndices;
-        chi = indexMasks(mask_i).chirality;
+        chi = indexMasks(mask_i).chi;
 
         for subject_i = 1:nSubjects % and for each subject...
 

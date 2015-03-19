@@ -27,7 +27,7 @@
 %        indexMasks --- A structured array with fields:
 %                indexMasks.vertices
 %                        The vertex indices in the mask.
-%                indexMasks.chirality
+%                indexMasks.chi
 %                        Whether the mask is on the right ('R') or left
 %                        ('L') hemisphere
 %                indexMasks.name
@@ -37,7 +37,6 @@
 % Cai Wingfield 2010-09, 2015-03
 % updated by Li Su 3-2012
 % update IZ 02/12, 03/12
-
 function [indexMasks] = MEGMaskPreparation_source(userOptions)
 
 import rsa.*
@@ -105,17 +104,17 @@ if overwriteFlag
 		
 		% Store in a struct
 		indexMasks(maskNumber).vertices   = label.vertices + 1;
-        % It's very important that the value set in .chirality is either
+        % It's very important that the value set in .chi is either
         % the single capital character 'L' or the single character 'R'.
         % This way, we can filter the struct using:
-        %     indexMasks([indexMasks.chirality] == 'L')
+        %     indexMasks([indexMasks.chi] == 'L')
         % The [] syntax in there requires that we have single characters,
         % else horrible things will happen because strings are just arrays
         % of chars.  We have to keep things uppercase because we must use
         % == and not strcmpi().
         % TODO: Use a Chi.L/Chi.R enum instead, to make this kind of thing 
         % TODO: more foolproof.
-		indexMasks(maskNumber).chirality  = chi;
+		indexMasks(maskNumber).chi  = chi;
         indexMasks(maskNumber).name       = maskName_noDash;
 		
 		fprintf('.');

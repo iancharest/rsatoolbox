@@ -29,7 +29,7 @@ for RoI=1:numel(RoIs) %left
     thisMask = allRegions{RoIs(RoI)};
 %     twFiledName = fieldnames(indexMasks.(thisMask));
     maskIndices = indexMasks.(thisMask).maskIndices;
-    chi = indexMasks.(thisMask).chirality;
+    chi = indexMasks.(thisMask).chi;
     maskIndices = maskIndices(maskIndices < number_of_vertex);
     
     if strcmp(chi, 'L')        

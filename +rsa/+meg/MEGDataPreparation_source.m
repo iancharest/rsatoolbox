@@ -244,22 +244,14 @@ for subject_i = firstSubject_i:lastSubject_i
                     % error for this condition
                     sourceMeshes.(thisSubjectName).(chi)(:, :, condition_i, session_i) = NaN(nVertices_downsampled, nTimepoints_downsampled);
                 end
-
-                if nConditions > 10
-                    if mod(condition_i, floor(nConditions/20)) == 0, fprintf('\b.:'); end%if
-                else
-                    fprintf('\b.:');
-                end
-
             end%for
             % fprintf('\b.:');
 
         end%for:session
-        fprintf('\bData read successfully!\n');
+        
+        prints('Subject %d''s %s-hemisphere data read successfully!', subject_i, chi);
         dlmwrite(missingFilesLog, '', '-append');
-
     end%for:chi
-
 end%for:subjects
 
 cd(returnHere); % Go back

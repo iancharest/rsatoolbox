@@ -46,7 +46,7 @@ if overwriteFlag
         end % switch: chilarity
         
         % Get combined mask for this side
-        maskThisHemi = combinedMasks([combinedMasks.chirality] == chi);
+        maskThisHemi = combinedMasks([combinedMasks.chi] == chi);
         nVertices = length(maskThisHemi.vertices);
         
         fprintf(['Computing Average Subject RDMs for ' (chi) ' hemisphere...']);

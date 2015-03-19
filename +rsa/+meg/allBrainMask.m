@@ -29,7 +29,7 @@ for chi_i = 1:2
         end%switch:chirality
         
 		indexMasks(chi_i).vertices = 1:userOptions.targetResolution; % update IZ 02/12 previously: vertexMask + 1;
-        indexMasks(chi_i).chirality = chi;
+        indexMasks(chi_i).chi = chi;
         indexMasls(chi_i).name = ['all_' lower(chi) 'h'];
 end
 

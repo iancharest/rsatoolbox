@@ -15,7 +15,7 @@ function indexMasks_out = combineVertexMasks_source(indexMasks_in, newMaskName, 
         %% We union the masks together in a vectorised method, for speed
         
         % Masks this hemisphere
-        masksThisHemi = indexMasks_in([indexMasks_in.chirality] == chi);
+        masksThisHemi = indexMasks_in([indexMasks_in.chi] == chi);
         
         % We want any vertex which is in one of these masks, but without
         % double-counting.
@@ -27,7 +27,7 @@ function indexMasks_out = combineVertexMasks_source(indexMasks_in, newMaskName, 
         
         % Store the unioned bits in a new mask struct
         indexMasks_out(out_mask_i).vertices   = maskVsThisHemi;
-        indexMasks_out(out_mask_i).chirality  = chi;
+        indexMasks_out(out_mask_i).chi  = chi;
         indexMasks_out(out_mask_i).name       = sprintf('%s_%s', newMaskName, lower(chi));
        
         % Make sure we don't overwrite
