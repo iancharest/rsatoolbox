@@ -30,14 +30,19 @@ nWindowPositions = size(slSpec.windowPositions, 1);
 %% map the volume with the searchlight
 
 % Preallocate looped matrices for speed
-smm_rs = zeros([nVertices, nWindowPositions]);
-searchlightRDMs(numel(indexMask.vertices), nWindowPositions) = struct();
+smm_rs = zeros(nVertices, nWindowPositions);
+searchlightRDMs(1:numel(indexMasks.vertices), 1:nWindowPositions) = struct('RDM', size(squareform(zeros(nConditions))));
 
 % For display purposes
 nVertsSearched = 0;
 
 % Search the vertices
-for v = indexMask.vertices
+for v_i = 1:numel(indexMask.vertices)
+    
+    % v_i loops through vertices in the mask
+    % v is the vertex number itself for each vertex
+    
+    v = indexMask.vertices(v_i);
     
     % Determine which vertexes are within the radius of the currently-picked vertex
     verticesCurrentlyWithinRadius = [v, adjacencyMatrix(v,:)];
@@ -117,7 +122,7 @@ for v = indexMask.vertices
         end
         
         % Store results to be retured.
-        searchlightRDMs(v, window_i).RDM = searchlightRDM;
+        searchlightRDMs(v_i, window_i).RDM = searchlightRDM;
         smm_rs(v, window_i) = rs;
         
     end%for:window
