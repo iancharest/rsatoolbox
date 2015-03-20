@@ -7,7 +7,7 @@
 % TODO: Documentation
 % TODO: Partial model numbers vs model number - make this coherent
 
-function [mapsPath, RDMsPath] = MEGSearchlight_source(subject_i, chi, sourceMeshes, slMask, model, partialModels, adjacencyMatrix, STCMetadata, userOptions)
+function [mapsPath, RDMsPath] = MEGSearchlight_source(subject_i, chi, maskedMeshes, slMask, model, partialModels, adjacencyMatrix, STCMetadata, userOptions)
 
 import rsa.*
 import rsa.fig.*
@@ -66,14 +66,16 @@ if overwriteFlag
     [slSpec, slSTCMetadata] = getSearchlightSpec(STCMetadata, userOptions);
     
     if userOptions.partial_correlation
-        [thisSubjectRs, searchlightRDMs] = searchlightMapping_MEG_source(sourceMeshes, slMask, model, partialModels, adjacencyMatrix, slSpec, userOptions); %#ok<ASGLU>
+        [thisSubjectRs, searchlightRDMs] = searchlightMapping_MEG_source(maskedMeshes, slMask, model, partialModels, adjacencyMatrix, slSpec, userOptions); %#ok<ASGLU>
     else
-        [thisSubjectRs, searchlightRDMs] = searchlightMapping_MEG_source(sourceMeshes, slMask, model, [], adjacencyMatrix, slSpec, userOptions); %#ok<ASGLU>
+        [thisSubjectRs, searchlightRDMs] = searchlightMapping_MEG_source(maskedMeshes, slMask, model, [], adjacencyMatrix, slSpec, userOptions); %#ok<ASGLU>
     end
     clear sourceMeshesThisSubjectThisHemi;
 
-    rSTCStruct = slSTCMetadata;
+    rSTCStruct          = slSTCMetadata;
     rSTCStruct.vertices = slMask.vertices;
+    % thisSubjectRs contains only the data inside the mask, but since the
+    % vertices are stored in this struct, that should be ok.
     rSTCStruct.data     = thisSubjectRs(:,:);
 
     %% Saving r-maps and RDM maps

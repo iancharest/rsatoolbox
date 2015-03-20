@@ -134,7 +134,9 @@ end
 [nSessions, nConditions] = size(betas);
 
 % Before we've read any data, we don't know the following values, which
-% will be set appropriately when we load the first piece of data
+% will be set appropriately when we load the first piece of data.
+% It's probably not necessary to do this, but I can't deal with Matlab's
+% gross lack of scoping, so by god I'll do it anyway.
 dataEverRead            = false;
 nVertices_raw           = NaN;
 nTimepoints_raw         = NaN;
@@ -197,9 +199,6 @@ for subject_i = firstSubject_i:lastSubject_i
                         % The time index of the first datapoint, in
                         % seconds.
                         firstDatapointTime_raw = MEGData_stc.tmin;
-                        % The time index of the last datapoint, in
-                        % seconds.
-                        lastDatapointTime_raw = MEGData_stc.tmax;
                         % The interval between successive datapoints in
                         % the raw data, in seconds.
                         timeStep_raw = MEGData_stc.tstep;
@@ -244,10 +243,7 @@ for subject_i = firstSubject_i:lastSubject_i
                         % If we're using masks, we only want to include
                         % those vertices which are inside the mask.
                         if usingMask
-                            % If a vertex is inside the mask, we only care
-                            % about it if it's one of the vertices in the
-                            % mesh after downsampling.
-                            STCMetadata.vertices = sort(indexMask.vertices(indexMask.vertices <= userOptions.targetResolution));
+                            STCMetadata.vertices = sort(ip.Results.mask.vertices);
                         else
                             % If we're not using a mask, we still need to
                             % downsample the mesh to the target resolution.
