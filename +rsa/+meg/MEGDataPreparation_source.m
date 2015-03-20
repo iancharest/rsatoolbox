@@ -6,6 +6,7 @@
 % [sourceMeshes, STCMetadata] = MEGDataPreparation_source(
 %                                          betas,
 %                                          userOptions,
+%                                         ['mask', indexMask,]
 %                                         ['subject_i', subject_i,]
 %                                         ['chi', 'L'|'R'])
 %
@@ -34,6 +35,11 @@
 %                                        To be replaced by filenames as provided
 %                                        by betaCorrespondence.
 %
+%       indexMask --- a struct containing at least:
+%                indexMask.vertices
+%                        A vector of integers which represent the vertices
+%                        inside the mask.
+%
 %       subject_i --- a subject index
 %                If not provided, all subjects will be looped through.
 %
@@ -47,7 +53,7 @@
 % REQUIRES MATLAB VERSION 7.3 OR LATER
 %
 % Cai Wingfield 2010-05, 2010-06, 2015-03
-% updated by Li Su 2-2012 
+% updated by Li Su 2-2012
 % updated by Fawad 3-12014
 
 function [sourceMeshes, STCMetadata] = MEGDataPreparation_source(betas, userOptions, varargin)
@@ -62,6 +68,12 @@ import rsa.stat.*
 import rsa.util.*
 
 %% Parse inputs
+
+% 'masks'
+nameMask = 'mask';
+% We don't do any validation checks on the mask
+checkMask = @(x) (true);
+defaultMask = {};
 
 % 'subject_i'
 nameSubjectI    = 'subject_i';
@@ -80,8 +92,9 @@ ip = inputParse;
 ip.CaseSensitive = false;
 
 % Parameters
+addParameter(ip, nameMask, defaultMask, checkMask);
 addParameter(ip, nameSubjectI, defaultSubjectI, checkSubjectI);
-addParameter(ip, nameChi, defaultChi, checkChis);
+addParameter(ip, nameChi, defaultChi, checkChi);
 
 % Parse the inputs
 parse(ip, betas, userOptions, varargin{:});
@@ -90,9 +103,12 @@ parse(ip, betas, userOptions, varargin{:});
 % integer, and that's the subject_i we'll use
 singleSubject = (ip.Results.subject_i > 0);
 
-% If chi was not given a default value, then it will be either 'L' or 'R', 
+% If chi was not given a default value, then it will be either 'L' or 'R',
 % and we'll use that.
 singleHemisphere = ~isempty(ip.Results.chi);
+
+% If masks was given a default value, we're not going to do any masking.
+usingMask = ~isempty(ip.Results.masks);
 
 % We'll return to the pwd when the function has finished
 returnHere = pwd;
@@ -100,8 +116,8 @@ returnHere = pwd;
 % If we're running a single subject, the we "loop" once on that
 % subject. If we're running all subjects, we loop through them all
 if singleSubject
-   firstSubject_i = ip.Results.subject_i;
-   lastSubject_i = ip.Results.subject_i;
+    firstSubject_i = ip.Results.subject_i;
+    lastSubject_i = ip.Results.subject_i;
 else
     firstSubject_i = 1;
     lastSubject_i = numel(userOptions.subjectNames);
@@ -121,7 +137,6 @@ end
 % will be set appropriately when we load the first piece of data
 dataEverRead            = false;
 nVertices_raw           = NaN;
-nVertices_downsampled   = NaN;
 nTimepoints_raw         = NaN;
 nTimepoints_downsampled = NaN;
 STCMetadata             = struct();
@@ -135,23 +150,23 @@ gotoDir(userOptions.rootPath,'ImageData');
 
 %% Loop over all subjects under consideration
 for subject_i = firstSubject_i:lastSubject_i
-
+    
     % Figure out the subject's name
     thisSubjectName = userOptions.subjectNames{subject_i};
     %ImageDataFilename = [userOptions.analysisName, '_', thisSubject, '_CorticalMeshes.mat'];
-
+    
     %% Loop over all hemispheres under consideration
     for chi = chis
         % Loop over sessions and conditions
         for session_i = 1:nSessions
             for condition_i = 1:nConditions
-
+                
                 % Then read the brain data (for this session, condition)
                 readPath = replaceWildcards(userOptions.betaPath, '[[betaIdentifier]]', betas(session_i, condition_i).identifier, '[[subjectName]]', thisSubjectName, '[[LR]]', lower(chi));
-
+                
                 dataReadSuccessfully = false;
                 try
-                    MEGDataStc = mne_read_stc_file1(readPath);
+                    MEGData_stc = mne_read_stc_file1(readPath);
                     dataReadSuccessfully = true;
                 catch ex
                     % when a trial is rejected due to artifact, this item
@@ -160,63 +175,61 @@ for subject_i = firstSubject_i:lastSubject_i
                     % Log the missing file
                     dlmwrite(missingFilesLog, str2mat(replaceWildcards(betas(session_i, condition_i).identifier, '[[subjectName]]', thisSubjectName)), 'delimiter', '', '-append');
                 end
-
+                
                 if dataReadSuccessfully
-
+                    
                     %% First time data is read
-
+                    
                     % If this was the first time we read data, we can
                     % record the sizes and do the preallocation
                     if ~dataEverRead
-
+                        
                         % We only want to do this once so we'll
                         % remember now that we've read the data and
                         % don't ned to do this again.
                         dataEverRead = true;
-
+                        
                         % Raw data sizes, before downsampling
-
+                        
                         % The number of vertices and timepoints in the
                         % raw data
-                        [nVertices_raw, nTimepoints_raw] = size(MEGDataStc.data);
+                        [nVertices_raw, nTimepoints_raw] = size(MEGData_stc.data);
                         % The time index of the first datapoint, in
                         % seconds.
-                        firstDatapointTime_raw = MEGDataStc.tmin;
+                        firstDatapointTime_raw = MEGData_stc.tmin;
                         % The time index of the last datapoint, in
                         % seconds.
-                        lastDatapointTime_raw = MEGDataStc.tmax;
+                        lastDatapointTime_raw = MEGData_stc.tmax;
                         % The interval between successive datapoints in
                         % the raw data, in seconds.
-                        timeStep_raw = MEGDataStc.tstep;
-
+                        timeStep_raw = MEGData_stc.tstep;
+                        
                         %% Downsampling constants
-
+                        
                         % Sanity checks for downsampling
                         if nVertices_raw < userOptions.targetResolution
                             error('MEGDataPreparation_source:InsufficientSpatialResolution', 'There aren''t enough vertices in the raw data to meet the target resolution.');
                         end
-
+                        
                         % Now the actual downsampling targets can be
                         % calculated
-
+                        
                         % We will be downsampling in space and time, so
                         % we calculate some useful things here.
-
-                        % The number of vertices in the downsampled
-                        % data
-                        nVertices_downsampled = userOptions.targetResolution;
                         % The number of timepoints in the downsampled
                         % data
                         nTimepoints_downsampled = numel(1:userOptions.temporalDownsampleRate:nTimepoints_raw);
                         timeStep_downsampled = timeStep_raw * userOptions.temporalDownsampleRate;
+                        
                         % Time time index of the first datapoint
                         % doesn't change in the downsampled data
                         firstDatapointTime_downsampled = firstDatapointTime_raw;
+                        
                         % The time index of the last datapoint may
                         % change in the downsampled data, so should be
                         % recalculated
                         lastDatapointTime_downsampled = firstDatapointTime_downsampled + (nTimepoints_downsampled * timeStep_downsampled);
-
+                        
                         % This metadata struct will be useful for
                         % writing appropriate files in future. This new
                         % metadata should reflect the resolution and
@@ -224,29 +237,43 @@ for subject_i = firstSubject_i:lastSubject_i
                         % MEGDataPreparation_source produces.
                         STCMetadata.tmin     = firstDatapointTime_downsampled;
                         STCMetadata.tmax     = lastDatapointTime_downsampled;
-                        STCMetadata.vertices = 1:nVertices_downsampled;
                         STCMetadata.tstep    = timeStep_downsampled;
+                        
+                        %% Apply mask
+                        
+                        % If we're using masks, we only want to include
+                        % those vertices which are inside the mask.
+                        if usingMask
+                            % If a vertex is inside the mask, we only care
+                            % about it if it's one of the vertices in the
+                            % mesh after downsampling.
+                            STCMetadata.vertices = sort(indexMask.vertices(indexMask.vertices <= userOptions.targetResolution));
+                        else
+                            % If we're not using a mask, we still need to
+                            % downsample the mesh to the target resolution.
+                            % Luckily, downsampling is just a matter of
+                            % taking low-numbered vertices, due to the way
+                            % they are laid out.
+                            STCMetadata.vertices = 1:userOptions.targetResolution;
+                        end%if
                     end
-
+                    
                     %% Every time data is read
-
-                    MEGDataStc.data = orderDatabyVertices(MEGDataStc.data, MEGDataStc.vertices);
-
-                    % Store the data in the mesh, downsampling as we go
-                    sourceMeshes.(thisSubjectName).(chi)(:, :, condition_i, session_i) = MEGDataStc.data( ...
-                        ...% Dowsample space by simply removing high-numbered vertices
-                        1:nVertices_downsampled, ...
-                        ...% Downsample time by subsampling the timepoints
-                        1:userOptions.temporalDownsampleRate:end ...
-                    ); % (vertices, time, condition, session)
+                    
+                    % Store the data in the mesh, masking and downsampling
+                    % as we go.
+                    sourceMeshes.(thisSubjectName).(chi)(:, :, condition_i, session_i) = ...
+                        MEGData_stc.data( ...
+                            ...% Downsample and mask space
+                            STCMetadata.vertices, ...
+                            ...% Downsample time by subsampling the timepoints
+                            1:userOptions.temporalDownsampleRate:end); % (vertices, time, condition, session)
                 else
                     % Make sure it actually has NaNs in if there was an
                     % error for this condition
-                    sourceMeshes.(thisSubjectName).(chi)(:, :, condition_i, session_i) = NaN(nVertices_downsampled, nTimepoints_downsampled);
+                    sourceMeshes.(thisSubjectName).(chi)(:, :, condition_i, session_i) = NaN(numel(STCMetadata.vertices), nTimepoints_downsampled);
                 end
-            end%for
-            % fprintf('\b.:');
-
+            end%for:condition
         end%for:session
         
         prints('Subject %d''s %s-hemisphere data read successfully!', subject_i, chi);
