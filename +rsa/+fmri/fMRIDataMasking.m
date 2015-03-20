@@ -205,7 +205,7 @@ if overwriteFlag
 	
 else
 	fprintf(['Loading previously saved RoIs from ' fullfile(userOptions.rootPath, 'ImageData', MaskedBrainsFilename) '...\n']);
-	load(fullfile(userOptions.rootPath, 'ImageData', MaskedBrainsFilename));
+	responsePatterns = load(fullfile(userOptions.rootPath, 'ImageData', MaskedBrainsFilename), 'responsePatterns');
 end%if
 
 if nargout == 1

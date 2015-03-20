@@ -112,8 +112,8 @@ if overwriteFlag
                 if strcmp(betaCorrespondence,'SPM')
                     brainMatrix = spm_read_vols(spm_vol(readPath));
                 else
-                load(readPath);
-                brainMatrix = betaImage;
+	                brainMatrix = load(readPath);
+	                brainMatrix = brainMatrix.betaImage;
                 end
 				brainVector = reshape(brainMatrix, 1, []);
 				subjectMatrix(:, condition, session) = brainVector; % (voxel, condition, session)
@@ -147,7 +147,7 @@ if overwriteFlag
 	
 else
 	fprintf(['Loading previously saved volumes from ' fullfile(userOptions.rootPath, 'ImageData', ImageDataFilename) '...\n']);
-	load(fullfile(userOptions.rootPath, 'ImageData', ImageDataFilename));
+	fullBrainVols = load(fullfile(userOptions.rootPath, 'ImageData', ImageDataFilename), 'fullBrainVols');;
 end%if
 
 if nargout == 1

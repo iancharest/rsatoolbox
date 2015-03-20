@@ -70,7 +70,7 @@ else
 
 	fprintf(['The file "' matrixFilename ' has already been created, loading it...\n']);
 
-	load(matrixFilename);
+	searchlightAdjacency = load(matrixFilename, 'searchlightAdjacency');
 
 end
 

@@ -181,7 +181,7 @@ if overwriteFlag
 	
 else
 	fprintf(['Loading previously saved RoIs from ' fullfile(userOptions.rootPath, 'ImageData', MaskedBrainsFilename) '...\n']);
-	load(fullfile(userOptions.rootPath, 'ImageData', MaskedBrainsFilename));
+	maskedMeshes = load(fullfile(userOptions.rootPath, 'ImageData', MaskedBrainsFilename), 'maskedMeshes');
 end%if
 
 cd(returnHere); % And go back to where you started

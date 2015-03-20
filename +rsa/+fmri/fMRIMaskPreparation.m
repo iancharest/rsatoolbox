@@ -124,7 +124,7 @@ if overwriteFlag
 	
 else
 	fprintf(['Loading previously saved masks from ' fullfile(userOptions.rootPath, 'ImageData', MasksFilename) '...\n']);
-	load(fullfile(userOptions.rootPath, 'ImageData', MasksFilename));
+	binaryMasks_nS = load(fullfile(userOptions.rootPath, 'ImageData', MasksFilename), 'binaryMasks_nS');
 end%if:overwriteFlag
 
 if nargout == 1
