@@ -2,7 +2,7 @@
 %
 % Cai Wingfield 2015-03
 
-function [RDMsPath] = MEGSearchlightRDMs_source(subject_i, chi, maskedMeshes, slMask, adjacencyMatrix, STCMetadata, userOptions)
+function [RDMsPath] = MEGSearchlightRDMs_source(subject_i, chi, meshPath, slMask, adjacencyMatrix, STCMetadata, userOptions)
 
 import rsa.*
 import rsa.meg.*
@@ -40,6 +40,8 @@ if overwriteFlag
     tic;%1
     
     [slSpec, slSTCMetadata] = getSearchlightSpec(STCMetadata, userOptions);
+    
+    maskedMeshes = load(meshPath, 'sourceMeshes');
     
     searchlightRDMs = searchlightMappingRDMs_MEG_source(maskedMeshes, slMask, adjacencyMatrix, slSpec, userOptions); %#ok<NASGU>
 

@@ -3,7 +3,7 @@
 %
 % It is based on Su Li's code
 %
-% [sourceMeshes, STCMetadata] = MEGDataPreparation_source(
+% [meshPaths, STCMetadata] = MEGDataPreparation_source(
 %                                          betas,
 %                                          userOptions,
 %                                         ['mask', indexMask,]
@@ -56,7 +56,7 @@
 % updated by Li Su 2-2012
 % updated by Fawad 3-12014
 
-function [sourceMeshes, STCMetadata] = MEGDataPreparation_source(betas, userOptions, varargin)
+function [meshPaths, STCMetadata] = MEGDataPreparation_source(betas, userOptions, varargin)
 
 import rsa.*
 import rsa.fig.*
@@ -145,20 +145,21 @@ STCMetadata             = struct();
 
 % Some conditions will have been rejected, and we'll record those in
 % this text file.
-missingFilesLog = fullfile(userOptions.rootPath, 'ImageData', 'missingFilesLog.txt');
+imageDataPath = fullfile(userOptions.rootPath, 'ImageData');
+missingFilesLog = fullfile(imageDataPath, 'missingFilesLog.txt');
 
 % Where data will be saved
-gotoDir(userOptions.rootPath,'ImageData');
+gotoDir(imageDataPath);
 
 %% Loop over all subjects under consideration
 for subject_i = firstSubject_i:lastSubject_i
     
     % Figure out the subject's name
     thisSubjectName = userOptions.subjectNames{subject_i};
-    %ImageDataFilename = [userOptions.analysisName, '_', thisSubject, '_CorticalMeshes.mat'];
     
     %% Loop over all hemispheres under consideration
     for chi = chis
+        
         % Loop over sessions and conditions
         for session_i = 1:nSessions
             for condition_i = 1:nConditions
@@ -258,7 +259,7 @@ for subject_i = firstSubject_i:lastSubject_i
                     
                     % Store the data in the mesh, masking and downsampling
                     % as we go.
-                    sourceMeshes.(thisSubjectName).(chi)(:, :, condition_i, session_i) = ...
+                    sourceMeshes(:, :, condition_i, session_i) = ...
                         MEGData_stc.data( ...
                             ...% Downsample and mask space
                             STCMetadata.vertices, ...
@@ -267,10 +268,18 @@ for subject_i = firstSubject_i:lastSubject_i
                 else
                     % Make sure it actually has NaNs in if there was an
                     % error for this condition
-                    sourceMeshes.(thisSubjectName).(chi)(:, :, condition_i, session_i) = NaN(numel(STCMetadata.vertices), nTimepoints_downsampled);
+                    sourceMeshes(:, :, condition_i, session_i) = NaN(numel(STCMetadata.vertices), nTimepoints_downsampled);
                 end
             end%for:condition
         end%for:session
+        
+        % TODO: This won't work if more than one subject or chi are looped
+        % TODO: over.  Do we want to prevent this entirely? Or change
+        % TODO: what's returned depending on the optional arguments?
+        meshPaths = fullfile(imageDataPath, [userOptions.analysisName, '_', thisSubjectName, '_CorticalMeshes.mat']);
+        
+        gotoDir(imageDataPath);
+        save('-v7.3', meshPaths, 'sourceMeshes');
         
         prints('Subject %d''s %s-hemisphere data read successfully!', subject_i, chi);
         dlmwrite(missingFilesLog, '', '-append');
