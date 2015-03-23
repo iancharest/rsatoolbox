@@ -48,9 +48,9 @@ if userOptions.run_in_parallel
     p = rsa.par.initialise_CBU_Queue(userOptions);
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Searchlight - Brain RDM calculation %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%
+%% Load brain data %%
+%%%%%%%%%%%%%%%%%%%%%
 rsa.util.prints('Loading brain data:');
 parfor subject_i = 1:nSubjects
     
@@ -68,9 +68,9 @@ parfor subject_i = 1:nSubjects
     end
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Searchlight - Model search %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Searchlight - Calcualte Brain RDMs %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 rsa.util.prints('Searchlight Brain RDM Calculation:');
 parfor subject_i = 1:nSubjects
     
