@@ -5,6 +5,7 @@
 function [RDMsPath] = MEGSearchlightRDMs_source(subject_i, chi, maskedMeshes, slMask, adjacencyMatrix, STCMetadata, userOptions)
 
 import rsa.*
+import rsa.meg.*
 import rsa.util.*
 
 returnHere = pwd; % We'll come back here later
