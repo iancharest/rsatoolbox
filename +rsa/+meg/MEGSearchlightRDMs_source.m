@@ -24,7 +24,7 @@ else
 end
 RDMsPath = fullfile(RDMsDir, RDMsFile);
 
-promptOptions.functionCaller = 'MEGSearchlight_source';
+promptOptions.functionCaller = 'MEGSearchlightRDMs_source';
 promptOptions.defaultResponse = 'S';
 promptOptions.checkFiles(1).address = RDMsPath;
 
