@@ -16,8 +16,9 @@ import rsa.util.*
 
 returnHere = pwd;
 
-maximumVertices = 40968;
-downsampleRate = log(ceil(maximumVertices / nVertices)) / log(4) * 4; 
+MAX_VERTICES = 40968;
+
+downsampleRate = log(ceil(MAX_VERTICES / nVertices)) / log(4) * 4; 
 freesurferResolution = 1.25; % mm between freesurfer vertices
 
 searchlightRadius_freesurfer = searchlightRadius_mm / freesurferResolution;
@@ -30,7 +31,7 @@ gotoDir(userOptions.rootPath, 'ImageData');
 
 if ~exist(matrixFilename, 'file')
 
-	fprintf(['The file "' matrixFilename ' doesn''t exist yet, creating it...\n']);
+	fprintf('The file "%s" doesn''t exist yet, creating it...', matrixFilename);
 	
 	% building a hash table to store adjacency information of all vertexs. 
 	hashTableL = findAdjacentVerts(userOptions.averageSurfaceFile); % the resulting hash table is ht_*
@@ -38,12 +39,12 @@ if ~exist(matrixFilename, 'file')
 	% vertex indexing is the same across hemispheres, so I only do
 	% it for the left. Li Su
 	
-	fprintf('Building vertex adjacency matrix...\n');
+	prints('Building vertex adjacency matrix...');
 		
-	for currentSearchlightCentre = 1:nVertices
+	parfor currentSearchlightCentre = 1:nVertices
 	
 		if mod(currentSearchlightCentre,floor(nVertices/11)) == 0
-			fprintf(['   Working on the vertex ' num2str(currentSearchlightCentre) ' of ' num2str(nVertices) ': ' num2str(floor(100*(currentSearchlightCentre/nVertices))) '%%\n']);
+			prints(['   Working on the vertex ' num2str(currentSearchlightCentre) ' of ' num2str(nVertices) ': ' num2str(floor(100*(currentSearchlightCentre/nVertices))) '%%']);
 		end
 		
 		verticesWithinSearchlight = [];
@@ -56,7 +57,7 @@ if ~exist(matrixFilename, 'file')
 		searchlightAdjacency(currentSearchlightCentre,1:numel(verticesWithinSearchlight)) = verticesWithinSearchlight';
 	end
 	
-	fprintf('      Done!\n');
+	prints('      Done!');
 	
 	searchlightAdjacency(searchlightAdjacency == 0) = NaN;
 	
@@ -68,10 +69,114 @@ if ~exist(matrixFilename, 'file')
 
 else
 
-	fprintf(['The file "' matrixFilename ' has already been created, loading it...\n']);
+	prints('The file "%s" has already been created, loading it...', matrixFilename);
 
 	load(matrixFilename);
 
 end
 
 cd(returnHere);
+
+end%function
+
+%%%%%%%%%%%%%%%%%%
+%% Subfunctions %%
+%%%%%%%%%%%%%%%%%%
+
+% this function returns a hash table containing the adjacent vertexes for
+% each vertex in the brain based on freesurfer cortical mash.
+% 
+% created by Li Su and Andy Thwaites, last updated by Li Su 01 Feb 2012
+function ht = findAdjacentVerts(path)
+
+    import rsa.*
+    import rsa.fig.*
+    import rsa.meg.*
+    import rsa.rdm.*
+    import rsa.sim.*
+    import rsa.spm.*
+    import rsa.stat.*
+    import rsa.util.*
+
+    % addpath /opt/mne/matlab/toolbox/ % CW: path doesn't exist.
+
+    [verts,faces] = mne_read_surface(path);
+    numberOfVerts = max(faces);
+    numberOfFaces = size(faces);
+
+    ht = java.util.Hashtable;
+
+    facesduplicate = zeros(length(faces)*3, 3);
+
+    for i = 1:length(faces)
+        q = length(faces);
+        % disp(num2str(i));
+        facesduplicate(i,1:3) = [faces(i,1) faces(i,2) faces(i,3)];
+        facesduplicate(i+q,1:3) = [faces(i,2) faces(i,1) faces(i,3)];
+        facesduplicate(i+(q*2),1:3) = [faces(i,3) faces(i,2) faces(i,1)];
+    end
+
+    sortedfaces = sortrows(facesduplicate,1);
+
+    thisface = 1;
+    adjacent = [];
+    for i = 1:length(sortedfaces)
+        % disp(num2str(i));
+        face = sortedfaces(i,1);
+        if  (face == thisface)
+            key = num2str(face);
+            adjacent = [adjacent sortedfaces(i,2)];
+            adjacent = [adjacent sortedfaces(i,3)];
+        else
+            unad = unique(adjacent);
+            ht.put(key,unad);
+            adjacent = [];
+            thisface = face;
+
+            % now continue as normall
+            key = num2str(face);
+            adjacent = [adjacent sortedfaces(i,2)];
+            adjacent = [adjacent sortedfaces(i,3)];
+        end
+    end
+
+end%function
+
+% by Li Su and Andy Thwaites
+function [adjacents, passed] = getadjacent(str1, int, hashtab)
+
+    import rsa.*
+    import rsa.fig.*
+    import rsa.meg.*
+    import rsa.rdm.*
+    import rsa.sim.*
+    import rsa.spm.*
+    import rsa.stat.*
+    import rsa.util.*
+
+    adjacentsbelow = [];
+    adjacents = [];
+    passed = [];
+    
+    if int==1
+       adjacents = hashtab.get(str1);
+       passed = [1];
+    else
+       [adjacentsbelow, passed] = getadjacent(str1, int-1, hashtab);
+       for j = 1:length(adjacentsbelow)
+          adjacents = [adjacents; hashtab.get(num2str(adjacentsbelow(j)))];
+       end
+       adjacents = unique(adjacents);
+       passed = [passed; adjacentsbelow];
+       for j = length(adjacents):-1:1
+          if(any(find(passed == adjacents(j))))
+              adjacents(j)=[];
+          end
+       end
+    end
+
+    adjacents = unique(adjacents);
+    passed = unique(passed);
+
+end%function
+
