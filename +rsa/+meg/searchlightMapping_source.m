@@ -10,11 +10,8 @@
 function [mapsPath] = searchlightMapping_source(subject_i, chi, RDMPath, slMask, model, partialModels, adjacencyMatrix, STCMetadata, userOptions)
 
 import rsa.*
-import rsa.fig.*
 import rsa.meg.*
 import rsa.rdm.*
-import rsa.sim.*
-import rsa.spm.*
 import rsa.stat.*
 import rsa.util.*
 
@@ -51,7 +48,7 @@ overwriteFlag = overwritePrompt(userOptions, promptOptions);
 
 if overwriteFlag
     
-    prints('Shining RSA searchlight in the source mesh of subject %d of %d...', subject_i, nSubjects);
+    prints('Shining RSA searchlight in the %s source mesh of subject %d of %d...',lower(chi),  subject_i, nSubjects);
     
     gotoDir(fullfile(userOptions.rootPath, 'Maps', modelName));
     
@@ -104,11 +101,8 @@ end%function
 function [smm_rs, searchlightRDMs] = searchlightMapping_MEG_source(searchlightRDMs, indexMask, modelRDM, partialModelRDMs, adjacencyMatrix, slSpec, userOptions)
 
 import rsa.*
-import rsa.fig.*
 import rsa.meg.*
 import rsa.rdm.*
-import rsa.sim.*
-import rsa.spm.*
 import rsa.stat.*
 import rsa.util.*
 
@@ -166,8 +160,8 @@ for v_i = 1:numel(indexMask.vertices)
     
     % Indicate progress every once in a while...
     nVertsSearched = nVertsSearched + 1;
-    if mod(nVertsSearched, 500) == 0
-        prints('%d vertices searched', nVertsSearched);
+    if mod(nVertsSearched, 200) == 0
+        prints('%d vertices searched: %d%% complete', nVertsSearched, floor((nVertsSearched / numel(indexMask.vertices)) * 100));
     end%if
     
 end%for:v
