@@ -77,8 +77,7 @@ defaultMask = {};
 
 % 'subject_i'
 nameSubjectI    = 'subject_i';
-% Positive integer in range
-checkSubjectI   = @(x)(isinteger(x) && x >= 0 && x <= numel(userOptions.subjectNames));
+checkSubjectI   = @(x)(isnumeric(x) && x >= 0 && x <= numel(userOptions.subjectNames));
 defaultSubjectI = 0;
 
 % 'chi'
@@ -88,8 +87,9 @@ checkChi = @(x) (any(validatestring(x, validChis)));
 defaultChi = '';
 
 % Set up parser
-ip = inputParse;
+ip = inputParser;
 ip.CaseSensitive = false;
+ip.StructExpand = false;
 
 % Parameters
 addParameter(ip, nameMask, defaultMask, checkMask);
@@ -97,7 +97,7 @@ addParameter(ip, nameSubjectI, defaultSubjectI, checkSubjectI);
 addParameter(ip, nameChi, defaultChi, checkChi);
 
 % Parse the inputs
-parse(ip, betas, userOptions, varargin{:});
+parse(ip, varargin{:});
 
 % If subject_i was not given a default value, then it will be a positive
 % integer, and that's the subject_i we'll use
@@ -108,7 +108,7 @@ singleSubject = (ip.Results.subject_i > 0);
 singleHemisphere = ~isempty(ip.Results.chi);
 
 % If masks was given a default value, we're not going to do any masking.
-usingMask = ~isempty(ip.Results.masks);
+usingMask = ~isempty(ip.Results.mask);
 
 % We'll return to the pwd when the function has finished
 returnHere = pwd;
