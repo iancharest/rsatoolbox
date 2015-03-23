@@ -41,7 +41,7 @@ if overwriteFlag
     
     [slSpec, slSTCMetadata] = getSearchlightSpec(STCMetadata, userOptions);
     
-    searchlightRDMs = rsa.meg.searchlightMappingRDMs_MEG_source(maskedMeshes, slMask, adjacencyMatrix, slSpec, userOptions); %#ok<NASGU>
+    searchlightRDMs = searchlightMappingRDMs_MEG_source(maskedMeshes, slMask, adjacencyMatrix, slSpec, userOptions); %#ok<NASGU>
 
     %% Saving RDM maps
     
@@ -178,7 +178,7 @@ for v_i = 1:numel(indexMask.vertices)
     
     % Indicate progress every once in a while...
     nVertsSearched = nVertsSearched + 1;
-    if mod(nVertsSearched, 500) == 0
+    if mod(nVertsSearched, 100) == 0
         prints('%d vertices searched', nVertsSearched);
     end%if
     

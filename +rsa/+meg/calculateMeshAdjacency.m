@@ -41,7 +41,7 @@ if ~exist(matrixFilename, 'file')
 	
 	prints('Building vertex adjacency matrix...');
 		
-	parfor currentSearchlightCentre = 1:nVertices
+	for currentSearchlightCentre = 1:nVertices
 	
 		if mod(currentSearchlightCentre,floor(nVertices/11)) == 0
 			prints(['   Working on the vertex ' num2str(currentSearchlightCentre) ' of ' num2str(nVertices) ': ' num2str(floor(100*(currentSearchlightCentre/nVertices))) '%%']);
