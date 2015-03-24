@@ -1,4 +1,3 @@
-function betas = getDataFromSPM(userOptions)
 %
 % getDataFromSPM is a function which will extract from the SPM metadata the
 % correspondence between the beta image filenames and the condition and session
@@ -32,15 +31,16 @@ function betas = getDataFromSPM(userOptions)
 %                        they're the same as the ones used for SPM!).
 %  
 %  Cai Wingfield 12-2009, 6-2010, 8-2010
-
+function betas = getDataFromSPM(userOptions)
+	
 	import rsa.*
-import rsa.fig.*
-import rsa.fmri.*
-import rsa.rdm.*
-import rsa.sim.*
-import rsa.spm.*
-import rsa.stat.*
-import rsa.util.*
+	import rsa.fig.*
+	import rsa.fmri.*
+	import rsa.rdm.*
+	import rsa.sim.*
+	import rsa.spm.*
+	import rsa.stat.*
+	import rsa.util.*
 
 	%% Set defaults and check for problems.
 	if ~isfield(userOptions, 'betaPath'), error('getDataFromSPM:NoBetaPath', 'userOptions.betaPath is not set. See help.'); end%if
@@ -50,7 +50,7 @@ import rsa.util.*
     firstSubject = userOptions.subjectNames{1};
 
 	readFile = replaceWildcards(fullfile(userOptions.betaPath, 'SPM.mat'), '[[subjectName]]', firstSubject, '[[betaIdentifier]]', '');
-	load(readFile);
+	SPM = load(readFile, 'SPM');
 	nBetas = max(size(SPM.Vbeta));
 
 	nConditions = numel(userOptions.conditionLabels);
