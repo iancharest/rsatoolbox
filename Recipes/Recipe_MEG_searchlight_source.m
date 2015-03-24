@@ -12,6 +12,8 @@ addpath(genpath(toolboxRoot));
 
 userOptions = defineUserOptions();
 
+rsa.util.prints('Starting RSA analysis "%s".', userOptions.analysisName);
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Model RDM calculation %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
