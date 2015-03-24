@@ -25,8 +25,8 @@ searchlightOptions.monitor = false;
 searchlightOptions.fisher = true;
 searchlightOptions.nSessions = 1;
 searchlightOptions.nConditions = 40;
-load([returnHere,filesep,'sampleMask_org.mat']);
-load([returnHere,filesep,'anatomy.mat']);% load the resliced structural image
+modelRDMs_SL_sim = load([returnHere,filesep,'sampleMask_org.mat'], 'modelRDMs_SL_sim');
+anatVol = load([returnHere,filesep,'anatomy.mat'], 'anatVol');% load the resliced structural image
 
 models = rsa.constructModelRDMs(modelRDMs_SL_sim, userOptions);
 
@@ -91,7 +91,7 @@ rsa.fig.handleCurrentFigure([returnHere,filesep,'DEMO4',filesep,'SLsimulationSet
 %% load the previously computed rMaps and concatenate across subjects
 % prepare the rMaps:
 for subjectI = 1:Nsubjects
-    load([userOptions.rootPath,filesep,'Maps',filesep,'rs_subject',num2str(subjectI),'.mat']);
+    rs = load([userOptions.rootPath,filesep,'Maps',filesep,'rs_subject',num2str(subjectI),'.mat'], 'rs');
     rMaps{subjectI} = rs;
     fprintf(['loading the correlation maps for subject %d \n'],subjectI);
 end

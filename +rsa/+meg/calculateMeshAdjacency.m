@@ -71,7 +71,7 @@ else
 
 	prints('The file "%s" has already been created, loading it...', matrixFilename);
 
-	load(matrixFilename);
+	searchlightAdjacency = load(matrixFilename, 'searchlightAdjacency');
 
 end
 

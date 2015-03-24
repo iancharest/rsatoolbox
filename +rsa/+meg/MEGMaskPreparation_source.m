@@ -137,7 +137,7 @@ if overwriteFlag
 	
 else
 	fprintf(['Loading previously saved masks from ' fullfile(userOptions.rootPath, 'ImageData', MasksFilename) '...\n']);
-	load(fullfile(userOptions.rootPath, 'ImageData', MasksFilename));
+	indexMasks = load(fullfile(userOptions.rootPath, 'ImageData', MasksFilename), 'indexMasks');
 end%if:overwriteFlag
 
 cd(returnHere); % And go back to where you started

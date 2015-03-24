@@ -45,6 +45,9 @@ if overwriteFlag
     
     fprintf('Loading all data RDMs... ');
     try
+		% TODO: What variable name is this loading?
+		% TODO: We shouldn;t ever use bare load()s,
+		% TODO: as it's super hard to track data flow.
         load(rdms_path);
         disp('Done!');
     catch

@@ -285,7 +285,7 @@ if overwriteFlag
 	
 else
 	fprintf(['Loading previously saved masked topographies from ' fullfile(userOptions.rootPath, 'ImageData', MaskedSensorsFilename) '...\n']);
-	load(fullfile(userOptions.rootPath, 'ImageData', MaskedSensorsFilename));
+	maskedSensors = load(fullfile(userOptions.rootPath, 'ImageData', MaskedSensorsFilename), 'maskedSensors');
 end%if
 
 if nargout == 1
