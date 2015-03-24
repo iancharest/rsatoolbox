@@ -4,9 +4,6 @@
 % update by Li Su 3-2012, 11-2012
 % updated Fawad 12-2013, 02-2014, 10-2014
 
-%%%%%%%%%%%%%%%%%%%%
-%% Initialisation %%
-%%%%%%%%%%%%%%%%%%%%
 toolboxRoot = 'C:\Users\cai\code\rsagroup-rsatoolbox\'; 
 addpath(genpath(toolboxRoot));
 
@@ -14,16 +11,22 @@ userOptions = defineUserOptions();
 
 rsa.util.prints('Starting RSA analysis "%s".', userOptions.analysisName);
 
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%
+rsa.util.prints( ...
+    'Preparing model RDMs...');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Model RDM calculation %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 models = rsa.constructModelRDMs(userOptions);
 % Only using one model at a time for searchlight analysis.
 model = models(1);
 
+
+%% %%%%%%%%%%%%%%%%%%%
+rsa.util.prints( ...
+    'Preparing masks...');
 %%%%%%%%%%%%%%%%%%%%%%
-%% Mask preparation %% 
-%%%%%%%%%%%%%%%%%%%%%%
+
 usingMasks = ~isempty(userOptions.maskNames);
 if usingMasks
     slMasks = rsa.meg.MEGMaskPreparation_source(userOptions);
@@ -33,15 +36,17 @@ else
     slMasks = rsa.meg.allBrainMask(userOptions);
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Calculate adjacency matrix %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% Compute some constats
 nSubjects = numel(userOptions.subjectNames);
 adjacencyMatrix = rsa.meg.calculateMeshAdjacency(userOptions.targetResolution, userOptions.sourceSearchlightRadius, userOptions);
 
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+rsa.util.prints( ...
+    'Starting parallel toolbox...');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Starting parallel toolbox %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 if userOptions.flush_Queue
     rsa.par.flushQ();
 end
@@ -50,19 +55,23 @@ if userOptions.run_in_parallel
     p = rsa.par.initialise_CBU_Queue(userOptions);
 end
 
+
+%% %%%%%%%%%%%%%%%%%%
+rsa.util.prints( ...
+    'Loading brain data...');
 %%%%%%%%%%%%%%%%%%%%%
-%% Load brain data %%
-%%%%%%%%%%%%%%%%%%%%%
-rsa.util.prints('Loading brain data...');
+
 [meshPaths, STCMetadata] = rsa.meg.MEGDataPreparation_source( ...
     betaCorrespondence(), ...
     userOptions, ...
     'mask', slMasks);
 
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+rsa.util.prints( ...
+    'Searchlight Brain RDM Calculation...');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Searchlight - Calcualte Brain RDMs %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-rsa.util.prints('Searchlight Brain RDM Calculation...');
+
 parfor subject_i = 1:nSubjects
     
     % Work on each hemisphere separately
@@ -83,10 +92,12 @@ parfor subject_i = 1:nSubjects
     end
 end
 
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+rsa.util.prints( ...
+    'Searchlight Brain RDM Calculation...');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Searchlight - Model search %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-rsa.util.prints('Searchlight Brain RDM Calculation...');
+
 parfor subject_i = 1:nSubjects
     
     % Work on each hemisphere separately
@@ -108,9 +119,12 @@ parfor subject_i = 1:nSubjects
     end
 end
 
+
+%% %%%%%%%%%%%%%%%%%%%%%
+rsa.util.prints( ...
+    'Performing random permutations...');
 %%%%%%%%%%%%%%%%%%%%%%%%
-%% Random permutation %%
-%%%%%%%%%%%%%%%%%%%%%%%%
+
 if strcmp(userOptions.groupStats, 'FFX')
     % fixed effect test
     rsa.util.prints('Fixed Effects Analysis:');
@@ -127,47 +141,53 @@ else
     toc 
 end
 
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%
+rsa.util.prints( ...
+    'Spatiotemporal Clustering...' );
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Sptiotemporal clustering %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 jobSize = userOptions.jobSize;
 number_of_permutations = userOptions.significanceTestPermutations;
 
 tic
-rsa.util.prints('Spatiotemporal Clustering...' );
 parfor j = 1:number_of_permutations/jobSize
     range = (j-1)*jobSize+1:j*jobSize;
     rsa.meg.MEGFindCluster_source(model, range, slMasks, userOptions);
 end
 toc
 
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+rsa.util.prints( ...
+    'Computing cluster level p values...');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Compute cluster level p-values %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 tic
-rsa.util.prints('Computing cluster level p values...');
 rsa.meg.get_cluster_p_value(model, userOptions);
 toc
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Stopping parallel toolbox %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+rsa.util.prints( ...
+    'Cleaning up...');
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Close the parpool
 if userOptions.run_in_parallel
-    % Close the parpool
     delete(p);
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Delete Selected Directories %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if (userOptions.deleteTMaps_Dir || userOptions.deleteImageData_Dir || userOptions.deletePerm)
     rsa.util.deleteDir(userOptions, model);
 end
 
-%%%%%%%%%%%%%%%%%%%%%%
-%% Sending an email %%
-%%%%%%%%%%%%%%%%%%%%%%
+% Sending an email
 if userOptions.recieveEmail
     rsa.par.setupInternet();
     rsa.par.setupEmail(userOptions.mailto);
 end
+
+rsa.util.prints( ...
+    'RSA COMPLETE!');
+
