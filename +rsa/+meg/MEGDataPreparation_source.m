@@ -53,12 +53,10 @@
 function [meshPaths, STCMetadata] = MEGDataPreparation_source(betas, userOptions, varargin)
 
 import rsa.*
-import rsa.fig.*
 import rsa.meg.*
 import rsa.rdm.*
-import rsa.sim.*
-import rsa.spm.*
 import rsa.stat.*
+import rsa.par.*
 import rsa.util.*
 
 %% Parse inputs
@@ -244,7 +242,7 @@ parfor subject_i = 1:numel(userOptions.subjectNames);
             end%for:session
 
             gotoDir(imageDataPath);
-            parsave('-v7.3', meshPaths(subject_i).(chi), 'sourceMeshes');
+            parsave_local('-v7.3', meshPaths(subject_i).(chi), sourceMeshes);
 
             prints('Subject %s''s %s-hemisphere data read successfully!', thisSubjectName, chi);
             dlmwrite(missingFilesLog, '', '-append');
@@ -267,6 +265,6 @@ end%function
 %%%%%%%%%%%%%%%%%%
 
 % For some unknown reason this is necessary if using parfor
-function parsave(varargin)
-    save(varargin{:});
+function parsave_local(version, path, sourceMeshes) %#ok<INUSD>
+    save(version, path, 'sourceMeshes');
 end%function
