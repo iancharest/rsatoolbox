@@ -201,13 +201,13 @@ userOptions.MEGSensor_maskSpec.baselineWindow = [-100, -50];
 
 % time window for RoI analysis
 userOptions.MEGSensor_maskSpec.timeWindow = [-200 100];
-    
-    % ===========================  (sensor space) ========================%
 
 % The radius of the sensor searchlight (in adjacent sensors, excluding the centre: 0 => 1 sensor, 1 => ~9)
 userOptions.sensorSearchlightRadius = 1;
 
-    % ========================= OR (source space) ========================%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% MEG SOURCE-LEVEL ANALYSIS %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % The radius of the source-space searchlight (in mm)
 userOptions.sourceSearchlightRadius = 20;
