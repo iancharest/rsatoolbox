@@ -53,7 +53,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%
 %% Load brain data %%
 %%%%%%%%%%%%%%%%%%%%%
-rsa.util.prints('Loading brain data:');
+rsa.util.prints('Loading brain data...');
 [meshPaths, STCMetadata] = rsa.meg.MEGDataPreparation_source( ...
     betaCorrespondence(), ...
     userOptions, ...
@@ -62,7 +62,7 @@ rsa.util.prints('Loading brain data:');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Searchlight - Calcualte Brain RDMs %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-rsa.util.prints('Searchlight Brain RDM Calculation:');
+rsa.util.prints('Searchlight Brain RDM Calculation...');
 parfor subject_i = 1:nSubjects
     
     % Work on each hemisphere separately
@@ -86,7 +86,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Searchlight - Model search %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-rsa.util.prints('Stage 1 - Searchlight Brain RDM Calculation:');
+rsa.util.prints('Searchlight Brain RDM Calculation...');
 parfor subject_i = 1:nSubjects
     
     % Work on each hemisphere separately
@@ -113,16 +113,16 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%
 if strcmp(userOptions.groupStats, 'FFX')
     % fixed effect test
-    rsa.util.prints('Stage 2 - Fixed Effects Analysis: ');
+    rsa.util.prints('Fixed Effects Analysis:');
     tic
-    rsa.util.prints('Averaging RDMs across subjects and performing permutation tests to calculate p-values.');
+    rsa.util.prints('Averaging RDMs across subjects and performing permutation tests to calculate p-values...');
     rsa.meg.FFX_permutation(model, slMasks, userOptions)
     toc
 else
     % random effect test
-    rsa.util.prints('Stage 2 - Random Effects Analysis: ');
+    rsa.util.prints('Random Effects Analysis:');
     tic
-    rsa.util.prints('Performing permutation tests over all subjects (random effect) to calculate p-values.');
+    rsa.util.prints('Performing permutation tests over all subjects (random effect) to calculate p-values...');
     rsa.meg.RFX_permutation(model,userOptions);
     toc 
 end
@@ -134,7 +134,7 @@ jobSize = userOptions.jobSize;
 number_of_permutations = userOptions.significanceTestPermutations;
 
 tic
-rsa.util.prints('Stage 3 - Spatiotemporal Clustering: ' );
+rsa.util.prints('Spatiotemporal Clustering...' );
 parfor j = 1:number_of_permutations/jobSize
     range = (j-1)*jobSize+1:j*jobSize;
     rsa.meg.MEGFindCluster_source(model, range, slMasks, userOptions);
@@ -145,7 +145,7 @@ toc
 %% Compute cluster level p-values %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 tic
-rsa.util.prints('Stage 4 - Computing cluster level p values: ');
+rsa.util.prints('Computing cluster level p values...');
 rsa.meg.get_cluster_p_value(model, userOptions);
 toc
 
@@ -157,16 +157,16 @@ if userOptions.run_in_parallel
     delete(p);
 end
 
-%%%%%%%%%%%%%%%%%%%%
-%% Delete Selected Directories%%
-%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Delete Selected Directories %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if (userOptions.deleteTMaps_Dir || userOptions.deleteImageData_Dir || userOptions.deletePerm)
     rsa.util.deleteDir(userOptions, model);
 end
 
-%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%
 %% Sending an email %%
-%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%
 if userOptions.recieveEmail
     rsa.par.setupInternet();
     rsa.par.setupEmail(userOptions.mailto);
