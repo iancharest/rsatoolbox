@@ -51,7 +51,7 @@ if isfield(promptOptions, 'checkFiles')
 	% If no files are specified, it will go ahead and return "true" (probably resulting an overwrite)
 	for fileCount = 1:numel(promptOptions.checkFiles)
 		if not(exist(promptOptions.checkFiles(fileCount).address, 'file'))
-			exsitFlag = and(exsitFlag,false); % If one of the passed-in files doesn't exist, this will be set to false, updated by Li Su 2-2012
+			exsitFlag = false; % If one of the passed-in files doesn't exist, this will be set to false, updated by Li Su 2-2012
             break;
 		end%if
 	end%for
