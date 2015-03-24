@@ -109,7 +109,7 @@ parfor subject_i = 1:numel(userOptions.subjectNames);
     
     %% Loop over all hemispheres under consideration
     for chi = 'LR'
-        rsa.util.prints('Working on subject %d, %s side', subject_i, chi);
+        rsa.util.prints('Working on subject %d (%s), %s side', subject_i, thisSubjectName, chi);
         
         % For god knows what reason, this is necessary when using a parfor
         % loop, even though this variable ought to be scoped within the
@@ -217,15 +217,12 @@ parfor subject_i = 1:numel(userOptions.subjectNames);
             end%for:condition
         end%for:session
         
-        % TODO: This won't work if more than one subject or chi are looped
-        % TODO: over.  Do we want to prevent this entirely? Or change
-        % TODO: what's returned depending on the optional arguments?
         meshPaths(subject_i).(chi) = fullfile(imageDataPath, [userOptions.analysisName, '_', thisSubjectName, '_CorticalMeshes.mat']);
         
         gotoDir(imageDataPath);
         parsave('-v7.3', meshPaths(subject_i).(chi), 'sourceMeshes');
         
-        prints('Subject %d''s %s-hemisphere data read successfully!', subject_i, chi);
+        prints('Subject %s''s %s-hemisphere data read successfully!', thisSubjectName, chi);
         dlmwrite(missingFilesLog, '', '-append');
     end%for:chi
 end%for:subjects
