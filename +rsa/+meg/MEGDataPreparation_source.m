@@ -213,7 +213,7 @@ parfor subject_i = 1:numel(userOptions.subjectNames);
                         % If we're using masks, we only want to include
                         % those vertices which are inside the mask.
                         if usingMask
-                            STCMetadatas(subject_i).(chi).vertices = sort(ip.Results.mask.vertices);
+                            STCMetadatas(subject_i).(chi).vertices = sort(ip.Results.mask.(chi).vertices);
                         else
                             % If we're not using a mask, we still need to
                             % downsample the mesh to the target resolution.
