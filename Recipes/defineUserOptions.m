@@ -104,6 +104,16 @@ userOptions.maskNames = { ...
     'mask-lh', 'mask-rh'...
 };
 
+% The type of pattern to look at.
+% Options are:
+%     Correlate over space ('spatial')
+%     Correlate over time ('temporal')
+%     Correlate over space and time ('spatiotemporal')
+%     Regularized ('regularized')
+% For fMRI, the available options are 'spatial' and 'regularized'.
+% For MEG, the all options are available.
+userOptions.searchlightPatterns = 'spatiotemporal';
+
 %%%%%%%%%%%%%%%%%%%%%%%%
 %% EXPERIMENTAL SETUP %%
 %%%%%%%%%%%%%%%%%%%%%%%%
@@ -137,9 +147,6 @@ userOptions.voxelSize = [3 3 3.75];
 % What radius of searchlight should be used (mm)?
 userOptions.searchlightRadius = 15;
 
-% Correlate over space ('spatial') or regularized ('regularized')
-userOptions.searchlightPatterns = 'spatial';
-
 %% %% %% %% %%
 %%  MEG  %% Use these next four options if you're working in MEG:
 %% %% %% %% %%
@@ -149,12 +156,6 @@ userOptions.averageSurfaceFile = '/imaging/cw03/decom2/subjects/average/surf/lh.
 
 % The width of the sliding window (ms)
 userOptions.temporalSearchlightWidth = 20; %20;
-
-% Correlate over space ('spatial'),  time ('temporal') or
-% spatiotemporal ('spatiotemporal') (or regularized ('regularized') for
-% source level)
-% TODO: Explanation of what each one does
-userOptions.searchlightPatterns = 'spatiotemporal';
 
 % The timestep for sliding window (ms)
 userOptions.temporalSearchlightTimestep = 10;
