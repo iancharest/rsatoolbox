@@ -1,7 +1,7 @@
 % MEGDataPreparation_source is a function designed to take MEG data and load it
 % into the correct format for the rest of the toolbox to use.
 %
-% It is based on Su Li's code
+% It is based on code by Su Li.
 %
 % [meshPaths, STCMetadata] = MEGDataPreparation_source(
 %                                          betas,
@@ -10,46 +10,15 @@
 %                                         ['subject_i', subject_i,]
 %                                         ['chi', 'L'|'R'])
 %
-%       betaCorrespondence --- The array of beta filenames.
+%       betas --- The array of beta filenames.
 %               betas(condition, session).identifier is a string which referrs
 %               to the filename (not including path) of the SPM beta image.
-%
-%       userOptions --- The options struct.
-%                userOptions.analysisName
-%                        A string which is prepended to the saved files.
-%                userOptions.rootPath
-%                        A string describing the root path where files will be
-%                        saved (inside created directories).
-%                userOptions.subjectNames
-%                        A cell array containing strings identifying the subject
-%                        names. Defaults to the fieldnames in fullBrainVols.
-%                userOptions.betaPath
-%                        A string which contains the absolute path to the
-%                        location of the beta images. It can contain the
-%                        following wildcards which would be replaced as
-%                        indicated:
-%                                [[subjectName]]
-%                                        To be replaced with the name of each
-%                                        subject where appropriate.
-%                                [[betaIdentifier]]
-%                                        To be replaced by filenames as provided
-%                                        by betaCorrespondence.
-%
-%       indexMask --- a struct containing at least:
-%                indexMask.vertices
-%                        A vector of integers which represent the vertices
-%                        inside the mask.
-%
-%       sourceMeshes
-%                sourceMeshes(vertices, timepoints, condition, session)
-%                This data is downsampled, as per userOptions preferences.
 %
 % REQUIRES MATLAB VERSION 7.3 OR LATER
 %
 % Cai Wingfield 2010-05, 2010-06, 2015-03
 % updated by Li Su 2-2012
 % updated by Fawad 3-12014
-
 function [meshPaths, STCMetadata] = MEGDataPreparation_source(betas, userOptions, varargin)
 
 import rsa.*
@@ -137,6 +106,10 @@ end%function
 %%%%%%%%%%%%%%%%%%
 %% Subfunctions %%
 %%%%%%%%%%%%%%%%%%
+
+% Prepares the data of a single subject, and a single hemisphere.
+%
+% Cai Wingfiedl 2015-03, based on Su Li's code
 function STCMetadata = prepare_single_hemisphere_data(subject_i, chi, overwriteFlag, usingMask, masks, meshPaths, imageDataPath, missingFilesLog, betas, userOptions)
 
     import rsa.*
@@ -154,7 +127,15 @@ function STCMetadata = prepare_single_hemisphere_data(subject_i, chi, overwriteF
     % We only load the data if we haven't already done so, unless we've
     % been told to overwrite.
     if exist(meshPaths(subject_i).(chi), 'file') && ~overwriteFlag
-        prints('Subject %d (%s) %sh data already loaded. Skipping.', subject_i, thisSubjectName, chi);
+        prints('Subject %d (%s) %sh data already prepared. Loading just enough to get metadata.', subject_i, thisSubjectName, chi);
+        
+        % We still need the metadata file, so we'll read the first
+        % condition of the first session, and build the metadata based on
+        % that.
+        readPath = replaceWildcards(userOptions.betaPath, '[[betaIdentifier]]', betas(1, 1).identifier, '[[subjectName]]', thisSubjectName, '[[LR]]', lower(chi));
+        STCMetadata = convertToSTCMetadata( ...
+            mne_read_stc_file1(readPath), ...
+            usingMask, masks([masks.chi] == chi), userOptions);
     else
         prints('Loading on subject %d (%s), %s side', subject_i, thisSubjectName, chi);
 
@@ -179,69 +160,8 @@ function STCMetadata = prepare_single_hemisphere_data(subject_i, chi, overwriteF
 
                 if dataReadSuccessfully
 
-                    % Raw data sizes, before downsampling
-
-                    % The number of vertices and timepoints in the
-                    % raw data
-                    [nVertices_raw, nTimepoints_raw] = size(MEGData_stc.data);
-                    % The time index of the first datapoint, in
-                    % seconds.
-                    firstDatapointTime_raw = MEGData_stc.tmin;
-                    % The interval between successive datapoints in
-                    % the raw data, in seconds.
-                    timeStep_raw = MEGData_stc.tstep;
-
-                    %% Downsampling constants
-
-                    % Sanity checks for downsampling
-                    if nVertices_raw < userOptions.targetResolution
-                        error('MEGDataPreparation_source:InsufficientSpatialResolution', 'There aren''t enough vertices in the raw data to meet the target resolution.');
-                    end
-
-                    % Now the actual downsampling targets can be
-                    % calculated
-
-                    % We will be downsampling in space and time, so
-                    % we calculate some useful things here.
-                    % The number of timepoints in the downsampled
-                    % data
-                    nTimepoints_downsampled = numel(1:userOptions.temporalDownsampleRate:nTimepoints_raw);
-                    timeStep_downsampled = timeStep_raw * userOptions.temporalDownsampleRate;
-
-                    % Time time index of the first datapoint
-                    % doesn't change in the downsampled data
-                    firstDatapointTime_downsampled = firstDatapointTime_raw;
-
-                    % The time index of the last datapoint may
-                    % change in the downsampled data, so should be
-                    % recalculated
-                    lastDatapointTime_downsampled = firstDatapointTime_downsampled + (nTimepoints_downsampled * timeStep_downsampled);
-
-                    % This metadata struct will be useful for
-                    % writing appropriate files in future. This new
-                    % metadata should reflect the resolution and
-                    % specifices of the data which
-                    % MEGDataPreparation_source produces.
-                    STCMetadata.tmin     = firstDatapointTime_downsampled;
-                    STCMetadata.tmax     = lastDatapointTime_downsampled;
-                    STCMetadata.tstep    = timeStep_downsampled;
-
-                    %% Apply mask
-
-                    % If we're using masks, we only want to include
-                    % those vertices which are inside the mask.
-                    if usingMask
-                        % Make sure we're using the vertices of the
-                        % mask on the correct hemisphere.
-                        STCMetadata.vertices = sort(masks([masks.chi] == chi).vertices);
-                    else
-                        % If we're not using a mask, we still need to
-                        % downsample the mesh to the target resolution.
-                        % Luckily, downsampling is just a matter of
-                        % taking low-numbered vertices, due to the way
-                        % they are laid out.
-                        STCMetadata.vertices = 1:userOptions.targetResolution;
-                    end%if
+                    % Produce downsampled metadata struct from raw struct
+                    STCMetadata = convertToSTCMetadata(MEGData_stc, usingMask, masks([masks.chi] == chi), userOptions);
 
                     %% Every time data is read
 
@@ -267,6 +187,83 @@ function STCMetadata = prepare_single_hemisphere_data(subject_i, chi, overwriteF
         prints('Subject %s''s %s-hemisphere data read successfully!', thisSubjectName, chi);
         dlmwrite(missingFilesLog, '', '-append');
     end%if: proceed with load
+end%function
+
+% Converts raw STC metadata into a downsampled one
+%
+% Cai Wingfiedl 2015-03, based on Su Li's code
+function STCMetadata = convertToSTCMetadata(MEGData_stc, usingMask, mask, userOptions)
+
+    import rsa.*
+    import rsa.meg.*
+    import rsa.rdm.*
+    import rsa.stat.*
+    import rsa.par.*
+    import rsa.util.*
+    
+    % Raw data sizes, before downsampling
+
+    % The number of vertices and timepoints in the
+    % raw data
+    [nVertices_raw, nTimepoints_raw] = size(MEGData_stc.data);
+    % The time index of the first datapoint, in
+    % seconds.
+    firstDatapointTime_raw = MEGData_stc.tmin;
+    % The interval between successive datapoints in
+    % the raw data, in seconds.
+    timeStep_raw = MEGData_stc.tstep;
+    
+    %% Downsampling constants
+
+    % Sanity checks for downsampling
+    if nVertices_raw < userOptions.targetResolution
+        error('MEGDataPreparation_source:InsufficientSpatialResolution', 'There aren''t enough vertices in the raw data to meet the target resolution.');
+    end
+
+    % Now the actual downsampling targets can be
+    % calculated
+
+    % We will be downsampling in space and time, so
+    % we calculate some useful things here.
+    % The number of timepoints in the downsampled
+    % data
+    nTimepoints_downsampled = numel(1:userOptions.temporalDownsampleRate:nTimepoints_raw);
+    timeStep_downsampled = timeStep_raw * userOptions.temporalDownsampleRate;
+
+    % Time time index of the first datapoint
+    % doesn't change in the downsampled data
+    firstDatapointTime_downsampled = firstDatapointTime_raw;
+
+    % The time index of the last datapoint may
+    % change in the downsampled data, so should be
+    % recalculated
+    lastDatapointTime_downsampled = firstDatapointTime_downsampled + (nTimepoints_downsampled * timeStep_downsampled);
+
+    % This metadata struct will be useful for
+    % writing appropriate files in future. This new
+    % metadata should reflect the resolution and
+    % specifices of the data which
+    % MEGDataPreparation_source produces.
+    STCMetadata.tmin     = firstDatapointTime_downsampled;
+    STCMetadata.tmax     = lastDatapointTime_downsampled;
+    STCMetadata.tstep    = timeStep_downsampled;
+
+    %% Apply mask
+
+    % If we're using masks, we only want to include
+    % those vertices which are inside the mask.
+    if usingMask
+        % Make sure we're using the vertices of the
+        % mask on the correct hemisphere.
+        STCMetadata.vertices = sort(mask.vertices);
+    else
+        % If we're not using a mask, we still need to
+        % downsample the mesh to the target resolution.
+        % Luckily, downsampling is just a matter of
+        % taking low-numbered vertices, due to the way
+        % they are laid out.
+        STCMetadata.vertices = 1:userOptions.targetResolution;
+    end%if
 end%function
 
 % For some unknown reason this is necessary if using parfor
