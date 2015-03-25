@@ -95,7 +95,7 @@ if overwriteFlag
             if usingMasks
                 filepath = [filepath 'masked_'];
             end
-            load(promptOptions.checkFiles(chirality).address);
+            averageSubjectRDMs = load(promptOptions.checkFiles(chirality).address, 'averageSubjectRDMs');
             nTimePoints = length(fieldnames(averageSubjectRDMs.(chi).(['v_' num2str(masksThisHemi.vertices(1))])));
         end
         
@@ -166,6 +166,9 @@ if overwriteFlag
             end % switch: chilarity
             
             % compute corr with averageSubjectsRDM
+			% TODO: What variable name is this loading?
+			% TODO: We shouldn;t ever use bare load()s,
+			% TODO: as it's super hard to track data flow.
             load(fullfile(userOptions.rootPath,'RDMs',['averaged_' filepath  lower(chi) 'h']));
             
             simulated_r = zeros(userOptions.targetResolution*2, nTimePoints);

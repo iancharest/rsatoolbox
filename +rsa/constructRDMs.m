@@ -170,7 +170,7 @@ if overwriteFlag
 else
 % 	fprintf(['Loading previously saved RDMs from ' fullfile(userOptions.rootPath, 'RDMs', RDMsFilename) '...\n']);
   	disp(['Loading previously saved RDMs from ' fullfile(userOptions.rootPath, 'RDMs', RDMsFilename) '...']);
-    load(fullfile(userOptions.rootPath, 'RDMs', RDMsFilename));
+    RDMs = load(fullfile(userOptions.rootPath, 'RDMs', RDMsFilename), 'RDMs');
 end%if
 
 if nargout == 1
