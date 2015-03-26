@@ -41,7 +41,7 @@ if overwriteFlag
     
     [slSpec, slSTCMetadata] = getSearchlightSpec(STCMetadata, userOptions);
     
-    maskedMeshes = load(meshPath, 'sourceMeshes');
+    maskedMeshes = directLoad(meshPath, 'sourceMeshes');
     
     searchlightRDMs = searchlightMappingRDMs_MEG_source(maskedMeshes, slMask, adjacencyMatrix, slSpec, userOptions); %#ok<NASGU>
 

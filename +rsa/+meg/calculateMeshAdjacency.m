@@ -71,7 +71,7 @@ else
 
 	prints('The file "%s" has already been created, loading it...', matrixFilename);
 
-	searchlightAdjacency = load(matrixFilename, 'searchlightAdjacency');
+	searchlightAdjacency = directLoad(matrixFilename, 'searchlightAdjacency');
 
 end
 

@@ -114,7 +114,7 @@ if overwriteFlag
         % == and not strcmpi().
         % TODO: Use a Chi.L/Chi.R enum instead, to make this kind of thing 
         % TODO: more foolproof.
-		indexMasks(maskNumber).chi  = chi;
+		indexMasks(maskNumber).chi        = chi;
         indexMasks(maskNumber).name       = maskName_noDash;
 		
 		fprintf('.');
@@ -137,7 +137,7 @@ if overwriteFlag
 	
 else
 	fprintf(['Loading previously saved masks from ' fullfile(userOptions.rootPath, 'ImageData', MasksFilename) '...\n']);
-	indexMasks = load(fullfile(userOptions.rootPath, 'ImageData', MasksFilename), 'indexMasks');
+	indexMasks = directLoad(fullfile(userOptions.rootPath, 'ImageData', MasksFilename), 'indexMasks');
 end%if:overwriteFlag
 
 cd(returnHere); % And go back to where you started
