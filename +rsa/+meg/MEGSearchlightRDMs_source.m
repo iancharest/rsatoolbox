@@ -2,61 +2,77 @@
 %
 % Cai Wingfield 2015-03
 
-function [RDMsPath] = MEGSearchlightRDMs_source(subject_i, chi, meshPath, slMask, adjacencyMatrix, STCMetadata, userOptions)
+function [RDMsPaths] = MEGSearchlightRDMs_source(meshPaths, slMasks, adjacencyMatrix, STCMetadata, userOptions)
 
 import rsa.*
 import rsa.meg.*
 import rsa.util.*
 
-returnHere = pwd; % We'll come back here later
-
-subjectName = userOptions.subjectNames{subject_i};
+%% Constants
 
 usingMasks = ~isempty(userOptions.maskNames);
 
+nSubjects = numel(userOptions.subjectNames);
+
 %% File paths
+
+returnHere = pwd; % We'll come back here later
 
 RDMsDir = fullfile(userOptions.rootPath, 'RDMs');
 
-if usingMasks
-    RDMsFile = ['searchlightRDMs_masked_', subjectName, '-' lower(chi) 'h'];
-else
-    RDMsFile = ['searchlightRDMs_',        subjectName, '-' lower(chi) 'h'];
+file_i = 1;
+for subject_i = 1:nSubjects
+    thisSubjectName = userOptions.subjectNames{subject_i};
+    for chi = 'LR'
+        if usingMasks
+            RDMsFile = ['searchlightRDMs_masked_', thisSubjectName, '-' lower(chi) 'h'];
+        else
+            RDMsFile = ['searchlightRDMs_',        thisSubjectName, '-' lower(chi) 'h'];
+        end
+        RDMsPaths(subject_i).(chi) = fullfile(RDMsDir, RDMsFile);
+        
+        % We'll check all the files to be saved to see if they have already
+        % been saved.
+        promptOptions.checkFiles(file_i).address = RDMsPaths(subject_i).(chi);
+        file_i = file_i + 1;
+    end
 end
-RDMsPath = fullfile(RDMsDir, RDMsFile);
 
 promptOptions.functionCaller = 'MEGSearchlightRDMs_source';
 promptOptions.defaultResponse = 'S';
-promptOptions.checkFiles(1).address = RDMsPath;
 
 overwriteFlag = overwritePrompt(userOptions, promptOptions);
     
 %% Apply searchlight
+    
+parfor subject_i = 1:nSubjects
+    thisSubjectName = userOptions.subjectNames{subject_i};
 
-if overwriteFlag
-    
-    prints('Shining RSA searchlight in the source mesh of subject %d of %d...', subject_i, numel(userOptions.subjectNames));
-    
-    tic;%1
-    
-    [slSpec, slSTCMetadata] = getSearchlightSpec(STCMetadata, userOptions);
-    
-    maskedMeshes = directLoad(meshPath, 'sourceMeshes');
-    
-    searchlightRDMs = searchlightMappingRDMs_MEG_source(maskedMeshes, slMask, adjacencyMatrix, slSpec, userOptions); %#ok<NASGU>
+    % Work on each hemisphere separately
+    for chi = 'LR'
+        
+        % We'll only do the searchlight if we haven't already done so,
+        % unless we're being told to overwrite.
+        if exist(RDMsPaths(subject_i).(chi), 'file') && ~overwriteFlag
+            prints('Searchlight already performed in %sh hemisphere of subject %d. Skipping.', lower(chi), subject_i);
+        else
+            prints('Shining RSA searchlight in the %sh source mesh of subject %d of %d (%s)...', lower(chi), subject_i, nSubjects, thisSubjectName);
+            
+            single_hemisphere_searchlight( ...
+                STCMetadata, ...
+                meshPaths(subject_i).(chi), ...
+                RDMsPaths(subject_i).(chi), ...
+                RDMsDir, ...
+                slMasks([slMasks.chi] == chi), ...
+                adjacencyMatrix, ...
+                userOptions);
 
-    %% Saving RDM maps
-    
-    prints('Saving data RDMs to %s.', RDMsPath);
-    gotoDir(RDMsDir);
-    save('-v7.3', RDMsPath, 'searchlightRDMs');
-    
-    %% Done
-    t = toc;%1
-    prints('That took %s seconds.', t);
-else
-    prints('Searchlight already applied for subject %s, %s side, skipping it.', subjectName, lower(chi));
-end
+            %% Done
+            prints('Done with subeject %d''s %sh side.', subject_i, lower(chi));
+
+        end%if:overwrite
+    end%for:chi
+end%for:subject
 
 cd(returnHere); % And go back to where you started
 
@@ -66,6 +82,32 @@ end%function
 %% Subfunctions %%
 %%%%%%%%%%%%%%%%%%
 
+% Computes and saves searchlight RDMs for a single hemisphere of a single
+% subject.
+function single_hemisphere_searchlight(STCMetadata, meshPath, RDMsPath, RDMsDir, slMask, adjacencyMatrix, userOptions)
+
+    import rsa.*
+    import rsa.meg.*
+    import rsa.rdm.*
+    import rsa.stat.*
+    import rsa.util.*
+
+    [slSpec, slSTCMetadata] = getSearchlightSpec(STCMetadata, userOptions);
+
+    maskedMeshes = directLoad(meshPath, 'sourceMeshes');
+
+    searchlightRDMs = searchlightMappingRDMs_MEG_source(maskedMeshes, slMask, adjacencyMatrix, slSpec, userOptions); %#ok<NASGU>
+
+    %% Saving RDM maps
+
+    prints('Saving data RDMs to %s.', RDMsPath);
+    gotoDir(RDMsDir);
+    save('-v7.3', RDMsPath, 'searchlightRDMs');
+end%function
+
+% Computes and returns searchlight RDMs for a single hemisphere for a
+% single subject.
+%
 % Based on Li Su's script
 % Cai Wingfield 2015-03
 function [searchlightRDMs] = searchlightMappingRDMs_MEG_source(maskedMeshes, indexMask, adjacencyMatrix, slSpec, userOptions)
