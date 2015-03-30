@@ -50,7 +50,7 @@ function betas = getDataFromSPM(userOptions)
     firstSubject = userOptions.subjectNames{1};
 
 	readFile = replaceWildcards(fullfile(userOptions.betaPath, 'SPM.mat'), '[[subjectName]]', firstSubject, '[[betaIdentifier]]', '');
-	SPM = load(readFile, 'SPM');
+	SPM = directLoad(readFile, 'SPM');
 	nBetas = max(size(SPM.Vbeta));
 
 	nConditions = numel(userOptions.conditionLabels);

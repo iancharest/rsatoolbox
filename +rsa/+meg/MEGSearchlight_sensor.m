@@ -291,10 +291,10 @@ import rsa.util.*
 		
 	else
 		fprintf(['Loading previously saved maps from ' fullfile(userOptions.rootPath, 'Maps', MapsFilename) '...\n']);
-		rTopographies = load(fullfile(userOptions.rootPath, 'Maps', MapsFilename), 'rTopographies');
-		pTopographies = load(fullfile(userOptions.rootPath, 'Maps', MapsFilename), 'pTopographies');
-		nTopographies = load(fullfile(userOptions.rootPath, 'Maps', MapsFilename), 'nTopographies');
-		searchlightRDMs = load(fullfile(userOptions.rootPath, 'RDMs'), 'searchlightRDMs');
+		rTopographies   = directLoad(fullfile(userOptions.rootPath, 'Maps', MapsFilename), 'rTopographies');
+		pTopographies   = directLoad(fullfile(userOptions.rootPath, 'Maps', MapsFilename), 'pTopographies');
+		nTopographies   = directLoad(fullfile(userOptions.rootPath, 'Maps', MapsFilename), 'nTopographies');
+		searchlightRDMs = directLoad(fullfile(userOptions.rootPath, 'RDMs', RDMsFilename), 'searchlightRDMs');
 	end%if
 
 	if nargout == 3

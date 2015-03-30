@@ -68,7 +68,7 @@ if overwriteFlag
                     filepath = [filepath 'masked_'];
                 end
                 subjectRDMsFile = fullfile(userOptions.rootPath, 'RDMs', [filepath  userOptions.subjectNames{subjectNumber} '-' lower(chi) 'h']);
-                subjectRDMs = load(subjectRDMsFile);
+                subjectRDMs = directLoad(subjectRDMsFile, 'subjectRDMs');
 
                 for v=1:nVertices % vertices
                     nTimePoints = length(fieldnames(subjectRDMs.searchlightRDMs.(['v_' num2str(masksThisHemi.vertices(v))])));
@@ -95,7 +95,7 @@ if overwriteFlag
             if usingMasks
                 filepath = [filepath 'masked_'];
             end
-            averageSubjectRDMs = load(promptOptions.checkFiles(chirality).address, 'averageSubjectRDMs');
+            averageSubjectRDMs = directLoad(promptOptions.checkFiles(chirality).address, 'averageSubjectRDMs');
             nTimePoints = length(fieldnames(averageSubjectRDMs.(chi).(['v_' num2str(masksThisHemi.vertices(1))])));
         end
         

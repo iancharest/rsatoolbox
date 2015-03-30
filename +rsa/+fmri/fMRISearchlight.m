@@ -299,15 +299,15 @@ if overwriteFlag
 	
 else
 	fprintf(['Loading previously saved maps from ' fullfile(userOptions.rootPath, 'Maps', mapsFilename) '...\n']);
-	rMaps_nS = load(fullfile(userOptions.rootPath, 'Maps', mapsFilename), 'rMaps_nS');
-	nMaps_nS = load(fullfile(userOptions.rootPath, 'Maps', mapsFilename), 'nMaps_nS');
+	rMaps_nS = directLoad(fullfile(userOptions.rootPath, 'Maps', mapsFilename), 'rMaps_nS');
+	nMaps_nS = directLoad(fullfile(userOptions.rootPath, 'Maps', mapsFilename), 'nMaps_nS');
 	if isfield(userOptions, 'structuralsPath')
-		maskedSmoothedRMaps_sS = load(fullfile(userOptions.rootPath, 'Maps', mapsFilename), 'maskedSmoothedRMaps_sS');
-		rMaps_sS = load(fullfile(userOptions.rootPath, 'Maps', mapsFilename), 'rMaps_sS');
+		maskedSmoothedRMaps_sS = directLoad(fullfile(userOptions.rootPath, 'Maps', mapsFilename), 'maskedSmoothedRMaps_sS');
+		rMaps_sS = directLoad(fullfile(userOptions.rootPath, 'Maps', mapsFilename), 'rMaps_sS');
 	end
 	
 	fprintf(['Loading previously saved RDMs from ' fullfile(userOptions.rootPath, 'RDMs', RDMsFilename) '...\n']);
-	searchlightRDMs = load(fullfile(userOptions.rootPath, 'RDMs', RDMsFilename). 'searchlightRDMs');
+	searchlightRDMs = directLoad(fullfile(userOptions.rootPath, 'RDMs', RDMsFilename). 'searchlightRDMs');
 end%if
 
 if nargout == 3

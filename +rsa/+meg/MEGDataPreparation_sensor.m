@@ -160,7 +160,7 @@ if overwriteFlag
 	
 else
 	fprintf(['Loading previously saved topographies from ' fullfile(userOptions.rootPath, 'ImageData', ImageDataFilename) '...\n']);
-	sensorImages = load(fullfile(userOptions.rootPath, 'ImageData', ImageDataFilename), 'sensorImages');
+	sensorImages = directLoad(fullfile(userOptions.rootPath, 'ImageData', ImageDataFilename), 'sensorImages');
 end%if
 
 cd(returnHere); % Go back

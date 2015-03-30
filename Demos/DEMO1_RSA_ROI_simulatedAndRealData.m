@@ -24,18 +24,18 @@ patternDistanceMeasure='correlation';
 
 
 %% load RDMs and category definitions from Kriegeskorte et al. (Neuron 2008)
-RDMs_mIT_hIT_fig1 = load([pwd,filesep,'92imageData',filesep,'Kriegeskorte_Neuron2008_supplementalData.mat'], 'RDMs_mIT_hIT_fig1');
+RDMs_mIT_hIT_fig1 = rsa.util.directLoad([pwd,filesep,'92imageData',filesep,'Kriegeskorte_Neuron2008_supplementalData.mat'], 'RDMs_mIT_hIT_fig1');
 rdm_mIT=rsa.rdm.squareRDMs(RDMs_mIT_hIT_fig1(1).RDM);
 rdm_hIT=rsa.rdm.squareRDMs(RDMs_mIT_hIT_fig1(2).RDM);
 
-RDMs = load([pwd,filesep,'92imageData',filesep,'92_brainRDMs.mat'], 'RDMs');
+RDMs = rsa.util.directLoad([pwd,filesep,'92imageData',filesep,'92_brainRDMs.mat'], 'RDMs');
 RDMs_hIT_bySubject = rsa.rdm.averageRDMs_subjectSession(RDMs, 'session');
 rsa.fig.showRDMs(RDMs_hIT_bySubject,1);
 rsa.fig.handleCurrentFigure([userOptions.rootPath,filesep,'subjectRDMs_hIT_fMRI'],userOptions);
 
 
 %% load reconstructed patterns for simulating models
-simTruePatterns = load([pwd,filesep,'92imageData',filesep,'simTruePatterns.mat'],'simTruePatterns','simTruePatterns2')
+simTruePatterns = rsa.util.directLoad([pwd,filesep,'92imageData',filesep,'simTruePatterns.mat'],'simTruePatterns','simTruePatterns2');
 [nCond nDim]=size(simTruePatterns);
 
 %% simulate multiple subjects' noisy RDMs
@@ -56,11 +56,11 @@ rsa.fig.handleCurrentFigure([userOptions.rootPath,filesep,'simulatedSubjAndAvera
 [binRDM_animacy, nCatCrossingsRDM]=rsa.rdm.categoricalRDM(categoryVectors(:,1),3,true);
 ITemphasizedCategories=[1 2 5 6]; % animate, inanimate, face, body
 [binRDM_cats, nCatCrossingsRDM]=rsa.rdm.categoricalRDM(categoryVectors(:,ITemphasizedCategories),4,true);
-faceAnimateInaniClustersRDM = load([pwd,filesep,'92imageData',filesep,'faceAnimateInaniClustersRDM.mat'], 'faceAnimateInaniClustersRDM');
+faceAnimateInaniClustersRDM = rsa.util.directLoad([pwd,filesep,'92imageData',filesep,'faceAnimateInaniClustersRDM.mat'], 'faceAnimateInaniClustersRDM');
 
 
 %% load behavioural RDM from Mur et al. (Frontiers Perc Sci 2013)
-rdms_behav_92 = load([pwd,filesep,'92imageData',filesep,'92_behavRDMs.mat'], 'rdms_behav_92');
+rdms_behav_92 = rsa.util.directLoad([pwd,filesep,'92imageData',filesep,'92_behavRDMs.mat'], 'rdms_behav_92');
 rdm_simJudg=mean(rsa.rdm.stripNsquareRDMs(rdms_behav_92),3);
 
 
@@ -76,12 +76,12 @@ end
 
 
 %% load RDMs for V1 model and HMAX model with natural image patches from Serre et al. (Computer Vision and Pattern Recognition 2005)
-rdm92_V1model = load([pwd,filesep,'92imageData',filesep,'rdm92_V1model.mat'], 'rdm92_V1model');
-rdm92_HMAXnatImPatch = load([pwd,filesep,'92imageData',filesep,'rdm92_HMAXnatImPatch.mat'], 'rdm92_HMAXnatImPatch');
+rdm92_V1model = rsa.util.directLoad([pwd,filesep,'92imageData',filesep,'rdm92_V1model.mat'], 'rdm92_V1model');
+rdm92_HMAXnatImPatch = rsa.util.directLoad([pwd,filesep,'92imageData',filesep,'rdm92_HMAXnatImPatch.mat'], 'rdm92_HMAXnatImPatch');
 
 
 %% load RADON and silhouette models and human early visual RDM
-Models = load(['92imageData',filesep,'92_modelRDMs.mat'], 'Models');
+Models = rsa.util.directLoad(['92imageData',filesep,'92_modelRDMs.mat'], 'Models');
 FourCatsRDM=Models(2).RDM;
 humanEarlyVisualRDM=Models(4).RDM;
 silhouetteRDM=Models(7).RDM;

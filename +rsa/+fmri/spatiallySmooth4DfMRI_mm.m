@@ -22,7 +22,7 @@ gaussianKernelFWHM_vx=gaussianKernelFWHM_mm./voxSize_mm;
 gaussianKernelSD_vx=gaussianKernelFWHM_vx/sqrt(8*log(2));
 
 if ischar(Y_OR_Yfilename)
-    Y=load(Y_OR_Yfilename,'Y');
+    Y = directLoad(Y_OR_Yfilename,'Y');
 else
     Y=Y_OR_Yfilename;
     clear Y_OR_Yfilename;

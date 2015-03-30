@@ -56,7 +56,7 @@ if overwriteFlag
     
     [slSpec, slSTCMetadata] = getSearchlightSpec(STCMetadata, userOptions);
     
-    searchlightRDMs = load(RDMPath, 'searchlightRDMs');
+    searchlightRDMs = directLoad(RDMPath, 'searchlightRDMs');
     
     if userOptions.partial_correlation
         thisSubjectRs = searchlightMapping_MEG_source(searchlightRDMs, slMask, model, partialModels, adjacencyMatrix, slSpec, userOptions); %#ok<ASGLU>

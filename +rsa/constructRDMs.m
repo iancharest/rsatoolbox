@@ -1,5 +1,3 @@
-function [varargout] = constructRDMs(responsePatterns, betaCorrespondence, userOptions)
-%
 % [RDMs =] constructRDMs(responsePatterns, betaCorrespondence, userOptions)
 %
 % constructRDMs is a function which takes a matrix of imaging data and
@@ -22,7 +20,7 @@ function [varargout] = constructRDMs(responsePatterns, betaCorrespondence, userO
 % set, and the condition labels are the same as those used in SPM. It must
 % be noted that this module assumes that data is in such a format that the
 % input structure has one field per subject, session and mask. Defining
-% betaCorrespondence or choosing ‘SPM’ does not automatically compute the
+% betaCorrespondence or choosing 'SPM' does not automatically compute the
 % responsePatterns structure. At this point only the number of sessions
 % and/or conditions are extracted from SPM or betaCorrespondence.
 % 
@@ -37,7 +35,7 @@ function [varargout] = constructRDMs(responsePatterns, betaCorrespondence, userO
 % strings identifying the subject names. Defaults to the field names in
 % (the first mask of) responsePatterns.
 % userOptions.distance: A string indicating the distance measure with which
-% to calculate the RDMs. Defaults to “Correlation”, but can be set to any 
+% to calculate the RDMs. Defaults to C'orrelation', but can be set to any 
 % Matlab distance measure.
 % userOptions.RoIColor: A triple indicating the [R G B] value of the colour
 % which should be used to indicated RoI RDMs on various diagrams. Defaults
@@ -54,7 +52,8 @@ function [varargout] = constructRDMs(responsePatterns, betaCorrespondence, userO
 % Update: Isma Zulfiqar, Added regularized searchlight pattern option 11-12 
 %__________________________________________________________________________
 % Copyright (C) 2010 Medical Research Council
-
+function [varargout] = constructRDMs(responsePatterns, betaCorrespondence, userOptions)
+	
 import rsa.*
 import rsa.fig.*
 import rsa.fmri.*
@@ -167,10 +166,9 @@ if overwriteFlag
 	gotoDir(userOptions.rootPath, 'Details');
 	save(DetailsFilename, 'timeStamp', 'userOptions');
 	
-else
-% 	fprintf(['Loading previously saved RDMs from ' fullfile(userOptions.rootPath, 'RDMs', RDMsFilename) '...\n']);
-  	disp(['Loading previously saved RDMs from ' fullfile(userOptions.rootPath, 'RDMs', RDMsFilename) '...']);
-    RDMs = load(fullfile(userOptions.rootPath, 'RDMs', RDMsFilename), 'RDMs');
+	else
+		disp(['Loading previously saved RDMs from ' fullfile(userOptions.rootPath, 'RDMs', RDMsFilename) '...']);
+    RDMs = directLoad(fullfile(userOptions.rootPath, 'RDMs', RDMsFilename), 'RDMs');
 end%if
 
 if nargout == 1
