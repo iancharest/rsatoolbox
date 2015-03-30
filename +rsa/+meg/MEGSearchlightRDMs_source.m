@@ -25,9 +25,9 @@ for subject_i = 1:nSubjects
     thisSubjectName = userOptions.subjectNames{subject_i};
     for chi = 'LR'
         if usingMasks
-            RDMsFile = ['searchlightRDMs_masked_', thisSubjectName, '-' lower(chi) 'h'];
+            RDMsFile = ['searchlightRDMs_masked_', thisSubjectName, '-' lower(chi) 'h.mat'];
         else
-            RDMsFile = ['searchlightRDMs_',        thisSubjectName, '-' lower(chi) 'h'];
+            RDMsFile = ['searchlightRDMs_',        thisSubjectName, '-' lower(chi) 'h.mat'];
         end
         RDMsPaths(subject_i).(chi) = fullfile(RDMsDir, RDMsFile);
         
