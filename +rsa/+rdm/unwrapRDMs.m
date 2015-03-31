@@ -1,5 +1,6 @@
-function [RDMs,nRDMs]=unwrapRDMs(RDMs_struct)
-% unwraps dissimilarity matrices of a structured array (wrapped RDMs) with
+% [RDMs,nRDMs] = unwrapRDMs(RDMs_struct)
+%
+% Unwraps dissimilarity matrices of a structured array (wrapped RDMs) with
 % meta data by extracting the dissimilarity matrices (in square or lower
 % triangle form) and lining them up along the third dimension. (if they are
 % already in that format they are handed back unchanged.) it must be noted
@@ -16,14 +17,10 @@ function [RDMs,nRDMs]=unwrapRDMs(RDMs_struct)
 % squares with nans outside. 
 %
 % Copyright (C) 2010 Medical Research Council
+function [RDMs,nRDMs] = unwrapRDMs(RDMs_struct)
 
 import rsa.*
-import rsa.fig.*
-import rsa.fmri.*
 import rsa.rdm.*
-import rsa.sim.*
-import rsa.spm.*
-import rsa.stat.*
 import rsa.util.*
 
 if isstruct(RDMs_struct)

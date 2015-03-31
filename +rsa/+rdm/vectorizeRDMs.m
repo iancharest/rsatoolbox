@@ -5,12 +5,7 @@ function RDMs_utv=vectorizeRDMs(RDMs)
 % Copyright (C) 2009 Medical Research Council
 
 import rsa.*
-import rsa.fig.*
-import rsa.fmri.*
 import rsa.rdm.*
-import rsa.sim.*
-import rsa.spm.*
-import rsa.stat.*
 import rsa.util.*
 
 if isstruct(RDMs)
