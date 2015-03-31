@@ -20,6 +20,8 @@
 %     [2015-03-24 17:29:41.003] Loop iteration number 4.
 %     [2015-03-24 17:29:41.011] Loop iteration number 5.
 %
+% See also WARNS
+%
 % Cai Wingfield 2015-03
 function stamped_message = prints(varargin)
 
