@@ -44,6 +44,8 @@ function [glmMeshPaths] = searchlight_dynamicGLM_source(averageRDMPaths, models,
     
     %% Prepare lag for the models
     
+    prints('Computing appropriate lag for dynamic model GLM...');
+    
     % The models are assumed to have the same number of timepoints as the
     % data, and the timepoints are assumed to be corresponding.  All
     % computations of lag are based on these assumptions, and won't work at
@@ -68,6 +70,8 @@ function [glmMeshPaths] = searchlight_dynamicGLM_source(averageRDMPaths, models,
     
     
     %% Vectorise and apply lag to models
+    
+    prints('Applying lag to dynamic models...');
     
     [nTimepoints, nModels] = size(models);
     model_size = size(models(1,1).RDM);
@@ -110,6 +114,9 @@ function [glmMeshPaths] = searchlight_dynamicGLM_source(averageRDMPaths, models,
     %% Begin
     
     for chi = 'LR'
+        
+        prints('Performing dynamic GLM in %sh hemisphere...', lower(chi));
+        
         average_slRDMs = directLoad(averageRDMPaths.(chi), 'average_slRDMs');
         
         [nVertices, nTimepoints] = size(average_slRDMs);
@@ -118,6 +125,8 @@ function [glmMeshPaths] = searchlight_dynamicGLM_source(averageRDMPaths, models,
         glm_mesh(1:nVertices, 1:nTimepoints) = struct();
         
         parfor t = 1:nTimepoints
+            prints('Working on timepoint %d/%d...', t, nTimepoints);
+            
             for v = 1:nVertices
             
                 % Fit the GLM at this point
@@ -139,12 +148,16 @@ function [glmMeshPaths] = searchlight_dynamicGLM_source(averageRDMPaths, models,
             end%for:v
         end%for:t
 
+        %% Save results
+        
         glmMeshDir = fullfile(userOptions.rootPath, 'Meshes');
         glmMeshFilename = ['GLM_mesh_', lower(chi), 'h.mat'];
         glmMeshPaths.(chi) = fullfile(glmMeshDir, glmMeshFilename);
+        
+        prints('Saving GLM results for %sh hemisphere to %s...', lower(chi), glmMeshPaths.(chi));
+        
         gotoDir(glmMeshDir);
         save('-v7.3', glmMeshPaths.(chi), 'glm_mesh');
         
     end%for:chi
-    
 end%function
