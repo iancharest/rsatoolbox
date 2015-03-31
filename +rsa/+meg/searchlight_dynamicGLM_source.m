@@ -23,7 +23,7 @@ function [glmMeshPaths] = searchlight_dynamicGLM_source(averageRDMPaths, models,
     
     % 'lag'
     nameLag = 'lag';
-    checkLag = @(x) (isNumeric(x) && x >= 0);
+    checkLag = @(x) (isnumeric(x) && (x >= 0));
     defaultLag = 0;
     
     % Set up parser
@@ -106,7 +106,7 @@ function [glmMeshPaths] = searchlight_dynamicGLM_source(averageRDMPaths, models,
     % the GLM.
     for t = 1:nTimepoints
         for model_i = 1:nModels
-            modelStack{t}(model_i, :) = models(model_i).RDM;
+            modelStack{t}(model_i, :) = vectorizeRDM(models(model_i).RDM);
         end%for:model
     end
     
@@ -130,12 +130,15 @@ function [glmMeshPaths] = searchlight_dynamicGLM_source(averageRDMPaths, models,
             for v = 1:nVertices
             
                 % Fit the GLM at this point
+                % TODO: In case the models are all zeros, this will merrily
+                % TODO: produce meaningless betas along with a warning.
+                % TODO: We should probably check for this first.
                 [ ...
                     glm_mesh(v, t).betas, ...
                     glm_mesh(v, t).deviance, ...
                     glm_mesh(v, t).stats] = glmfit( ...
-                        modelStack{t}, ...
-                        average_slRDMs(v, t).RDM, ...
+                        modelStack{t}', ...
+                        average_slRDMs(v, t).RDM', ...
                         ...% TODO: Why are we making this assumption?
                         ...% TODO: What are the implications of this?
                         'normal');
