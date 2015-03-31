@@ -244,9 +244,9 @@ function STCMetadata = convertToSTCMetadata(MEGData_stc, usingMask, mask, userOp
     % metadata should reflect the resolution and
     % specifices of the data which
     % MEGDataPreparation_source produces.
-    STCMetadata.tmin     = firstDatapointTime_downsampled;
-    STCMetadata.tmax     = lastDatapointTime_downsampled;
-    STCMetadata.tstep    = timeStep_downsampled;
+    STCMetadata.tmin  = firstDatapointTime_downsampled;
+    STCMetadata.tmax  = lastDatapointTime_downsampled;
+    STCMetadata.tstep = timeStep_downsampled;
 
     %% Apply mask
 
