@@ -12,7 +12,7 @@
 %
 % Based on scripts written by Li Su and Isma Zulfiqar.
 %
-% Cai Wingfield 2015-03
+% Cai Wingfield 2015-03 -- 2015-04
 function [glmMeshPaths] = searchlight_dynamicGLM_source(averageRDMPaths, models, dataSTCMetadata, userOptions, varargin)
 
     import rsa.*
@@ -124,7 +124,7 @@ function [glmMeshPaths] = searchlight_dynamicGLM_source(averageRDMPaths, models,
         [nVertices, nTimepoints] = size(average_slRDMs);
         
         % preallocate
-        glm_mesh(1:nVertices, 1:nTimepoints) = struct();
+        glm_mesh(1:nVertices, 1:nTimepoints) = struct('betas', nan, 'deviance', nan, 'maxBeta', nan, 'maxBeta_i', nan);
         
         parfor t = 1:nTimepoints
     
