@@ -115,9 +115,11 @@ function [glmMeshPaths] = searchlight_dynamicGLM_source(averageRDMPaths, models,
     
     for chi = 'LR'
         
-        prints('Performing dynamic GLM in %sh hemisphere...', lower(chi));
+        prints('Loading average RDM mesh from "%s"...', averageRDMPaths.(chi));
         
         average_slRDMs = directLoad(averageRDMPaths.(chi), 'average_slRDMs');
+        
+        prints('Performing dynamic GLM in %sh hemisphere...', lower(chi));
         
         [nVertices, nTimepoints] = size(average_slRDMs);
         
@@ -125,6 +127,11 @@ function [glmMeshPaths] = searchlight_dynamicGLM_source(averageRDMPaths, models,
         glm_mesh(1:nVertices, 1:nTimepoints) = struct();
         
         parfor t = 1:nTimepoints
+    
+            % Temporarily dissable this warning
+            warning_id = 'stats:glmfit:IllConditioned';
+            warning('off', warning_id);
+
             prints('Working on timepoint %d/%d...', t, nTimepoints);
             
             for v = 1:nVertices
@@ -134,14 +141,18 @@ function [glmMeshPaths] = searchlight_dynamicGLM_source(averageRDMPaths, models,
                 % TODO: produce meaningless betas along with a warning.
                 % TODO: We should probably check for this first.
                 [ ...
-                    glm_mesh(v, t).betas, ...
-                    glm_mesh(v, t).deviance, ...
-                    glm_mesh(v, t).stats] = glmfit( ...
+                      glm_mesh(v, t).betas ...
+                    , glm_mesh(v, t).deviance ...
+                    ...% TODO: do we need these stats? It sure is a huge 
+                    ...% TODO: amount of data to keep in memory and read/
+                    ...% TODO: write from disk
+                    ...%, glm_mesh(v, t).stats ...
+                    ] = glmfit( ...
                         modelStack{t}', ...
                         average_slRDMs(v, t).RDM', ...
                         ...% TODO: Why are we making this assumption?
                         ...% TODO: What are the implications of this?
-                        'normal');
+                        'normal'); %#ok<PFOUS>
                 
                 % TODO: In case of a tie, this takes the first beta.
                 % TODO: It would be better to take a random one, perhaps
@@ -149,6 +160,10 @@ function [glmMeshPaths] = searchlight_dynamicGLM_source(averageRDMPaths, models,
                 [glm_mesh(v, t).maxBeta, glm_mesh(v, t).maxBeta_i] = max(glm_mesh(v, t).betas);
                 
             end%for:v
+            
+            % Re-enable warning
+            warning('on', warning_id);
+            
         end%for:t
 
         %% Save results
@@ -163,4 +178,5 @@ function [glmMeshPaths] = searchlight_dynamicGLM_source(averageRDMPaths, models,
         save('-v7.3', glmMeshPaths.(chi), 'glm_mesh');
         
     end%for:chi
+    
 end%function
