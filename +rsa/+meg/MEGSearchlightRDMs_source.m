@@ -2,7 +2,7 @@
 %
 % Cai Wingfield 2015-03
 
-function [RDMsPaths] = MEGSearchlightRDMs_source(meshPaths, slMasks, adjacencyMatrix, STCMetadata, userOptions)
+function [RDMsPaths, slSTCMetadata] = MEGSearchlightRDMs_source(meshPaths, slMasks, adjacencyMatrix, STCMetadata, userOptions)
 
 import rsa.*
 import rsa.meg.*
@@ -42,8 +42,11 @@ promptOptions.functionCaller = 'MEGSearchlightRDMs_source';
 promptOptions.defaultResponse = 'S';
 
 overwriteFlag = overwritePrompt(userOptions, promptOptions);
+
     
 %% Apply searchlight
+
+[slSpec, slSTCMetadata] = getSearchlightSpec(STCMetadata, userOptions);
     
 parfor subject_i = 1:nSubjects
     thisSubjectName = userOptions.subjectNames{subject_i};
@@ -59,7 +62,7 @@ parfor subject_i = 1:nSubjects
             prints('Shining RSA searchlight in the %sh source mesh of subject %d of %d (%s)...', lower(chi), subject_i, nSubjects, thisSubjectName);
             
             single_hemisphere_searchlight( ...
-                STCMetadata, ...
+                slSpec, ...
                 meshPaths(subject_i).(chi), ...
                 RDMsPaths(subject_i).(chi), ...
                 RDMsDir, ...
@@ -84,15 +87,13 @@ end%function
 
 % Computes and saves searchlight RDMs for a single hemisphere of a single
 % subject.
-function single_hemisphere_searchlight(STCMetadata, meshPath, RDMsPath, RDMsDir, slMask, adjacencyMatrix, userOptions)
+function single_hemisphere_searchlight(slSpec, meshPath, RDMsPath, RDMsDir, slMask, adjacencyMatrix, userOptions)
 
     import rsa.*
     import rsa.meg.*
     import rsa.rdm.*
     import rsa.stat.*
     import rsa.util.*
-
-    [slSpec, slSTCMetadata] = getSearchlightSpec(STCMetadata, userOptions);
 
     maskedMeshes = directLoad(meshPath, 'sourceMeshes');
 

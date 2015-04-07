@@ -1,5 +1,6 @@
-% [glmMeshPaths] = searchlightGLM(averageRDMPaths, models, dataSTCMetadata, userOptions ...
-%                                ['lag', <lag_in_ms>])
+% [glmMeshPaths, lagSTCMetadata] = ...
+%     searchlightGLM(averageRDMPaths, models, dataSTCMetadata, userOptions ...
+%                   ['lag', <lag_in_ms>])
 %
 % models: Is a nTimepoints x nModels struct with field .RDM
 %
@@ -13,7 +14,7 @@
 % Based on scripts written by Li Su and Isma Zulfiqar.
 %
 % Cai Wingfield 2015-03 -- 2015-04
-function [glmMeshPaths] = searchlight_dynamicGLM_source(averageRDMPaths, models, dataSTCMetadata, userOptions, varargin)
+function [glmMeshPaths, lagSTCMetadata] = searchlight_dynamicGLM_source(averageRDMPaths, models, dataSTCMetadata, userOptions, varargin)
 
     import rsa.*
     import rsa.rdm.*
@@ -47,11 +48,14 @@ function [glmMeshPaths] = searchlight_dynamicGLM_source(averageRDMPaths, models,
     prints('Computing appropriate lag for dynamic model GLM...');
     
     % The models are assumed to have the same number of timepoints as the
-    % data, and the timepoints are assumed to be corresponding.  All
-    % computations of lag are based on these assumptions, and won't work at
-    % all if they are violated.
+    % data, and the timepoints are assumed to be corresponding.
     
-    timestep_in_ms = dataSTCMetadata.tstep;
+    % The timepoints in the model timelines and the timepoints in the data
+    % timelines are assumed to be corresponding at 0 lag, though the models
+    % will be  offset by the specified lag.
+    
+    % Remember that STCmetadata.tstep measures lag in SECONDS!
+    timestep_in_ms = dataSTCMetadata.tstep * 1000;
     
     % Check if this lag is doable
     if mod(lag_in_ms, timestep_in_ms) ~= 0
@@ -66,49 +70,15 @@ function [glmMeshPaths] = searchlight_dynamicGLM_source(averageRDMPaths, models,
         lag_in_ms = achievable_lag_in_ms;
     end
     
-    lag_in_timePonts = lag_in_ms / timestep_in_ms;
+    lag_in_timepoints = lag_in_ms / timestep_in_ms;
     
     
-    %% Vectorise and apply lag to models
+    %% Prepare lag STC metadata
     
-    prints('Applying lag to dynamic models...');
-    
-    [nTimepoints, nModels] = size(models);
-    model_size = size(models(1,1).RDM);
-    
-    % Make sure we're using ltv form.
-    model_size = size(vectorizeRDM(zeros(model_size)));
-    
-    % Preallocate the models as NaNs.
-    % We'll then overwrite them as necessary
-    offset_models(1:nTimepoints, 1:nModels) = struct('RDM', nan(model_size));
-    
-    for model_i = 1:nModels
-        % This index tracks the timepoint indices of the data.
-        % The model's timepoint indices will be offset from this.
-       for datalocked_timepoint = 1:nTimepoints
-           offset_timepoint = datalocked_timepoint + lag_in_timePonts;
-           
-           % We don't want to exceed the bounds, so we make the check each
-           % time.
-           if offset_timepoint <= nTimepoints
-               offset_models(offset_timepoint, model_i).RDM = models(datalocked_timepoint, model_i).RDM;
-           end
-       end
-    end
-    
-    % `offset_models` now has the the same models as `models`, but with the
-    % time indices positively shifted by lag.  This means we may lose some
-    % of the later models, but this is ok, as with the hypothesised lag,
-    % they are not predicted to correlate with any data in our epoch.
-    
-    % Now at each timepoint we stack the models into a predictor matrix for
-    % the GLM.
-    for t = 1:nTimepoints
-        for model_i = 1:nModels
-            modelStack{t}(model_i, :) = vectorizeRDM(models(model_i).RDM);
-        end%for:model
-    end
+    lagSTCMetadata.tstep = dataSTCMetadata.tstep;
+    lagSTCMetadata.vertices = dataSTCMetadata.vertices;
+    lagSTCMetadata.tmax = dataSTCMetadata.tmax;
+    lagSTCMetadata.tmin = dataSTCMetadata.tmin + (lagSTCMetadata.tstep * lag_in_timepoints);
     
     
     %% Begin
@@ -119,20 +89,27 @@ function [glmMeshPaths] = searchlight_dynamicGLM_source(averageRDMPaths, models,
         
         average_slRDMs = directLoad(averageRDMPaths.(chi), 'average_slRDMs');
         
+        prints('Applying lag to dynamic model timelines...');
+    
+        [nVertices, nTimepoints_data] = size(average_slRDMs);
+        [modelStack, nTimepoints_overlap] = stack_and_offset_models(models, lag_in_timepoints, nTimepoints_data);
+    
+        prints('Working at a lag of %dms, which corresponds to %d timepoints at this resolution.', lag_in_ms, lag_in_timepoints);
+        
+        % Preallocate
+        glm_mesh(1:nVertices, 1:nTimepoints_overlap) = struct('betas', nan, 'deviance', nan, 'maxBeta', nan, 'maxBeta_i', nan);
+        
         prints('Performing dynamic GLM in %sh hemisphere...', lower(chi));
         
-        [nVertices, nTimepoints] = size(average_slRDMs);
-        
-        % preallocate
-        glm_mesh(1:nVertices, 1:nTimepoints) = struct('betas', nan, 'deviance', nan, 'maxBeta', nan, 'maxBeta_i', nan);
-        
-        parfor t = 1:nTimepoints
+        parfor t = 1:nTimepoints_overlap
+            
+            t_relative_to_data = t + lag_in_timepoints;
     
             % Temporarily dissable this warning
             warning_id = 'stats:glmfit:IllConditioned';
             warning('off', warning_id);
 
-            prints('Working on timepoint %d/%d...', t, nTimepoints);
+            prints('Working on timepoint %d/%d...', t, nTimepoints_overlap);
             
             for v = 1:nVertices
             
@@ -149,7 +126,7 @@ function [glmMeshPaths] = searchlight_dynamicGLM_source(averageRDMPaths, models,
                     ...%, glm_mesh(v, t).stats ...
                     ] = glmfit( ...
                         modelStack{t}', ...
-                        average_slRDMs(v, t).RDM', ...
+                        average_slRDMs(v, t_relative_to_data).RDM', ...
                         ...% TODO: Why are we making this assumption?
                         ...% TODO: What are the implications of this?
                         'normal'); %#ok<PFOUS>
@@ -157,7 +134,10 @@ function [glmMeshPaths] = searchlight_dynamicGLM_source(averageRDMPaths, models,
                 % TODO: In case of a tie, this takes the first beta.
                 % TODO: It would be better to take a random one, perhaps
                 % TODO: using rsa.util.chooseRandom() somehow.
-                [glm_mesh(v, t).maxBeta, glm_mesh(v, t).maxBeta_i] = max(glm_mesh(v, t).betas);
+                % TODO: Make it clear that the i-s are of the original
+                % TODO: betas, not of the betas in the list (which also has
+                % TODO: the first one as an all-ones beta).
+                [glm_mesh(v, t).maxBeta, glm_mesh(v, t).maxBeta_i] = max(glm_mesh(v, t).betas(2:end));
                 
             end%for:v
             
@@ -180,3 +160,40 @@ function [glmMeshPaths] = searchlight_dynamicGLM_source(averageRDMPaths, models,
     end%for:chi
     
 end%function
+
+
+function [modelStack, nTimepoints_overlap] = stack_and_offset_models(models, lag_in_timepoints, nTimepoints_data)
+
+    import rsa.*
+    import rsa.rdm.*
+
+    [nTimepoints_models, nModels] = size(models);
+    
+    % We only look at timepoints where the data's timeline overlaps with
+    % the models' lag-offset timelines.
+    %
+    %    (lag)>  |--------------------| lag-offset models
+    % |--------------------| data
+    %            .         .
+    %            |---------|
+    %                 ^
+    %             only look
+    %             in overlap
+    nTimepoints_overlap = nTimepoints_data - lag_in_timepoints;
+    
+    model_size = size(models(1,1).RDM);
+    
+    % Make sure we're using ltv form.
+    model_size = size(vectorizeRDM(zeros(model_size)));
+    
+    % Now at each timepoint we stack the models into a predictor matrix for
+    % the GLM.
+    % We are only looking in the first bit of the models' timelines, in the
+    % places where there is also data.
+    for t = 1:nTimepoints_overlap
+        for model_i = 1:nModels
+            modelStack{t}(model_i, :) = vectorizeRDM(models(t, model_i).RDM);
+        end%for:model
+    end%for:t
+end%function
+
