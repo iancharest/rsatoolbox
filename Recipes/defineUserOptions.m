@@ -35,10 +35,6 @@ userOptions.rootPath = 'pathToRootDirectoryOfProject';
 % "[[betaIdentifier]]" should be used as a placeholder to denote an output of betaCorrespondence.m if SPM is not being used; or an arbitrary filename if SPM is being used.
 userOptions.betaPath = 'pathToYourSingleConditionResponses';% e.g. /imaging/mb01/lexpro/multivariate/ffx_simple/[[subjectName]]/[[betaIdentifier]]
 
-% Regularization based on paper by Diedrichson et al. 2011.
-% TODO: this needs a lot of explanation
-userOptions.regularized = false;
-
 %%%%%%%%%%%%%%%%%%%
 %% Email Options %%
 %%%%%%%%%%%%%%%%%%%
@@ -109,8 +105,7 @@ userOptions.maskNames = { ...
 %     Correlate over space ('spatial')
 %     Correlate over time ('temporal')
 %     Correlate over space and time ('spatiotemporal')
-%     Regularized ('regularized')
-% For fMRI, the available options are 'spatial' and 'regularized'.
+% For fMRI, the available options are 'spatial'.
 % For MEG, the all options are available.
 userOptions.searchlightPatterns = 'spatiotemporal';
 

@@ -545,22 +545,12 @@ function [smm_rs, smm_ps, n, searchlightRDMs] = searchlightMapping_fMRI(fullBrai
 			searchlightRDM = zeros(localOptions.nConditions, localOptions.nConditions);
 			for session = 1:localOptions.nSessions
 				sessionId = ['s' num2str(session)];
-                if strcmpl(userOptions.searchlightPatterns,'regularized')
-                    r_matrix = g_matrix(t_patsPerSession.(sessionId)(:,cIllValidVox_YspaceINDs), nConditions, 1);
-                    searchlightRDM = searchlightRDM + (1-r_matrix);
-                else
-                    searchlightRDM = searchlightRDM + squareform(pdist(t_patsPerSession.(sessionId)(:,cIllValidVox_YspaceINDs),'correlation'));
-                end
-			end%for:sessions
+                searchlightRDM = searchlightRDM + squareform(pdist(t_patsPerSession.(sessionId)(:,cIllValidVox_YspaceINDs),'correlation'));
+            end%for:sessions
 			searchlightRDM = searchlightRDM / localOptions.nSessions;
         else
-            if strcmpl(userOptions.searchlightPatterns,'regularized')
-                    r_matrix = g_matrix(t_pats(:,cIllValidVox_YspaceINDs), nConditions, 1);
-                    searchlightRDM = searchlightRDM + (1-r_matrix);
-            else
-                searchlightRDM = squareform(pdist(t_pats(:,cIllValidVox_YspaceINDs), 'correlation'));
-            end
-		end%if
+            searchlightRDM = squareform(pdist(t_pats(:,cIllValidVox_YspaceINDs), 'correlation'));
+        end%if
 		
 		searchlightRDM = vectorizeRDM(searchlightRDM);
 		
