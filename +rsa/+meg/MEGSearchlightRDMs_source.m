@@ -146,7 +146,7 @@ for v_i = 1:numel(indexMask.vertices)
     % This also removes any nans.
     searchlightPatchVs = intersect(searchlightPatchVs, indexMask.vertices);
     
-    % Now we need to convrt the vertices into vertex *indices*.  For
+    % Now we need to convert the vertices into vertex *indices*.  For
     % example, our mask may be vertices [5, 6, 7], but since there will
     % only be three datapoints inside each of the masked meshes, we need to
     % be able to refer to vertex 1, 2 and 3.
@@ -156,7 +156,7 @@ for v_i = 1:numel(indexMask.vertices)
     % searchlight patch will be fast enough, though.
     searchlightPatchVIs = [];
     for slVertex = searchlightPatchVs
-        slVertex_i = find(searchlightPatchVs == slVertex);
+        slVertex_i = find(indexMask.vertices == slVertex);
         searchlightPatchVIs = [searchlightPatchVIs, slVertex_i];
     end%for
     
