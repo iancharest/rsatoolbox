@@ -159,18 +159,30 @@ function STCMetadata = prepare_single_hemisphere_data(subject_i, chi, overwriteF
                 end
 
                 if dataReadSuccessfully
+                    
+                    % If the vertices in the data aren't sorted for some
+                    % reason, we sort them and the data now.
+                    if ~issorted(MEGData_stc.vertices)
+                        [MEGData_stc.vertices, sortingVector] = sort(MEGData_stc.vertices);
+                        MEGData_stc.data = MEGData_stc.data(sortingVector, :);
+                    end
 
                     % Produce downsampled metadata struct from raw struct
                     STCMetadata = convertToSTCMetadata(MEGData_stc, usingMask, masks([masks.chi] == chi), userOptions);
 
                     %% Every time data is read
+                    
+                    % We aren't guaranteed that the vertices in the data
+                    % are consecutively numbered, so we have to find the
+                    % indices of the mask vertices
+                    maskVertices_logical = ismember(MEGData_stc.vertices, STCMetadata.vertices);
 
                     % Store the data in the mesh, masking and downsampling
                     % as we go.
                     sourceMeshes(:, :, condition_i, session_i) = ...
                         MEGData_stc.data( ...
                             ...% Downsample and mask space
-                            STCMetadata.vertices, ...
+                            maskVertices_logical, ...
                             ...% Downsample time by subsampling the timepoints
                             1:userOptions.temporalDownsampleRate:end); % (vertices, time, condition, session)
                 else
