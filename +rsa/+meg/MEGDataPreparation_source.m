@@ -203,7 +203,7 @@ end%function
 
 % Converts raw STC metadata into a downsampled one
 %
-% Cai Wingfiedl 2015-03, based on Su Li's code
+% Cai Wingfield 2015-03, based on Su Li's code
 function STCMetadata = convertToSTCMetadata(MEGData_stc, usingMask, mask, userOptions)
 
     import rsa.*
@@ -267,14 +267,14 @@ function STCMetadata = convertToSTCMetadata(MEGData_stc, usingMask, mask, userOp
     if usingMask
         % Make sure we're using the vertices of the
         % mask on the correct hemisphere.
-        STCMetadata.vertices = sort(mask.vertices);
+        STCMetadata.vertices = uint32(sort(mask.vertices(:)));
     else
         % If we're not using a mask, we still need to
         % downsample the mesh to the target resolution.
         % Luckily, downsampling is just a matter of
         % taking low-numbered vertices, due to the way
         % they are laid out.
-        STCMetadata.vertices = 1:userOptions.targetResolution;
+        STCMetadata.vertices = uint32((1:userOptions.targetResolution)');
     end%if
 end%function
 
