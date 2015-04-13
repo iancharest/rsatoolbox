@@ -14,7 +14,7 @@
 % Based on scripts written by Li Su and Isma Zulfiqar.
 %
 % Cai Wingfield 2015-03 -- 2015-04
-function [glmMeshPaths, lagSTCMetadata] = searchlight_dynamicGLM_source(averageRDMPaths, models, dataSTCMetadata, userOptions, varargin)
+function [glmMeshPaths, lagSTCMetadata] = searchlight_dynamicGLM_source(RDMPaths, models, dataSTCMetadata, userOptions, varargin)
 
     import rsa.*
     import rsa.rdm.*
@@ -85,13 +85,14 @@ function [glmMeshPaths, lagSTCMetadata] = searchlight_dynamicGLM_source(averageR
     
     for chi = 'LR'
         
-        prints('Loading average RDM mesh from "%s"...', averageRDMPaths.(chi));
+        % TODO: don't restrict this to averages
+        prints('Loading average RDM mesh from "%s"...', RDMPaths.(chi));
         
-        average_slRDMs = directLoad(averageRDMPaths.(chi), 'average_slRDMs');
+        slRDMs = directLoad(RDMPaths.(chi), 'average_slRDMs');
         
         prints('Applying lag to dynamic model timelines...');
     
-        [nVertices, nTimepoints_data] = size(average_slRDMs);
+        [nVertices, nTimepoints_data] = size(slRDMs);
         [modelStack, nTimepoints_overlap] = stack_and_offset_models(models, lag_in_timepoints, nTimepoints_data);
     
         prints('Working at a lag of %dms, which corresponds to %d timepoints at this resolution.', lag_in_ms, lag_in_timepoints);
@@ -126,7 +127,7 @@ function [glmMeshPaths, lagSTCMetadata] = searchlight_dynamicGLM_source(averageR
                     ...%, glm_mesh(v, t).stats ...
                     ] = glmfit( ...
                         modelStack{t}', ...
-                        average_slRDMs(v, t_relative_to_data).RDM', ...
+                        slRDMs(v, t_relative_to_data).RDM', ...
                         ...% TODO: Why are we making this assumption?
                         ...% TODO: What are the implications of this?
                         'normal'); %#ok<PFOUS>
