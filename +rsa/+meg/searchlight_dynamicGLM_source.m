@@ -14,7 +14,7 @@
 % Based on scripts written by Li Su and Isma Zulfiqar.
 %
 % Cai Wingfield 2015-03 -- 2015-04
-function [glmMeshPaths, lagSTCMetadata] = searchlight_dynamicGLM_source(averageRDMPaths, models, dataSTCMetadata, userOptions, varargin)
+function [glmMeshPaths, lagSTCMetadatas] = searchlight_dynamicGLM_source(averageRDMPaths, models, slSTCMetadatas, userOptions, varargin)
 
     import rsa.*
     import rsa.rdm.*
@@ -43,47 +43,47 @@ function [glmMeshPaths, lagSTCMetadata] = searchlight_dynamicGLM_source(averageR
     lag_in_ms = ip.Results.lag; % 111
     
     
-    %% Prepare lag for the models
-    
-    prints('Computing appropriate lag for dynamic model GLM...');
-    
-    % The models are assumed to have the same number of timepoints as the
-    % data, and the timepoints are assumed to be corresponding.
-    
-    % The timepoints in the model timelines and the timepoints in the data
-    % timelines are assumed to be corresponding at 0 lag, though the models
-    % will be  offset by the specified lag.
-    
-    % Remember that STCmetadata.tstep measures lag in SECONDS!
-    timestep_in_ms = dataSTCMetadata.tstep * 1000;
-    
-    % Check if this lag is doable
-    if mod(lag_in_ms, timestep_in_ms) ~= 0
-        warns('The requested lag of %dms cannot be achieved, as the timestep is %dms.', lag_in_ms, timestep_in_ms);
-        
-        % If it's not achievable, we adjust it until it is
-        desired_lag_in_steps = lag_in_ms / timestep_in_ms;
-        % TODO: this takes the floor, but should really take the nearest?
-        achievable_lag_in_steps = floor(desired_lag_in_steps);
-        achievable_lag_in_ms = achievable_lag_in_steps * timestep_in_ms;
-        warns('Using a lag of %dms instead.', achievable_lag_in_ms);
-        lag_in_ms = achievable_lag_in_ms;
-    end
-    
-    lag_in_timepoints = lag_in_ms / timestep_in_ms;
-    
-    
-    %% Prepare lag STC metadata
-    
-    lagSTCMetadata.tstep = dataSTCMetadata.tstep;
-    lagSTCMetadata.vertices = dataSTCMetadata.vertices;
-    lagSTCMetadata.tmax = dataSTCMetadata.tmax;
-    lagSTCMetadata.tmin = dataSTCMetadata.tmin + (lagSTCMetadata.tstep * lag_in_timepoints);
-    
-    
     %% Begin
     
     for chi = 'LR'
+    
+    
+        %% Prepare lag for the models
+
+        prints('Computing appropriate lag for dynamic model GLM...');
+
+        % The models are assumed to have the same number of timepoints as the
+        % data, and the timepoints are assumed to be corresponding.
+
+        % The timepoints in the model timelines and the timepoints in the data
+        % timelines are assumed to be corresponding at 0 lag, though the models
+        % will be  offset by the specified lag.
+
+        % Remember that STCmetadata.tstep measures lag in SECONDS!
+        timestep_in_ms = slSTCMetadatas.(chi).tstep * 1000;
+
+        % Check if this lag is doable
+        if mod(lag_in_ms, timestep_in_ms) ~= 0
+            warns('The requested lag of %dms cannot be achieved, as the timestep is %dms.', lag_in_ms, timestep_in_ms);
+
+            % If it's not achievable, we adjust it until it is
+            desired_lag_in_steps = lag_in_ms / timestep_in_ms;
+            % TODO: this takes the floor, but should really take the nearest?
+            achievable_lag_in_steps = floor(desired_lag_in_steps);
+            achievable_lag_in_ms = achievable_lag_in_steps * timestep_in_ms;
+            warns('Using a lag of %dms instead.', achievable_lag_in_ms);
+            lag_in_ms = achievable_lag_in_ms;
+        end
+
+        lag_in_timepoints = lag_in_ms / timestep_in_ms;
+    
+    
+        %% Prepare lag STC metadata
+
+        lagSTCMetadatas.(chi).tstep = slSTCMetadatas.(chi).tstep;
+        lagSTCMetadatas.(chi).vertices = slSTCMetadatas.(chi).vertices;
+        lagSTCMetadatas.(chi).tmax = slSTCMetadatas.(chi).tmax;
+        lagSTCMetadatas.(chi).tmin = slSTCMetadatas.(chi).tmin + (lagSTCMetadatas.(chi).tstep * lag_in_timepoints);
         
         prints('Loading average RDM mesh from "%s"...', averageRDMPaths.(chi));
         

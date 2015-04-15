@@ -2,7 +2,7 @@
 %
 % Cai Wingfield 2015-03
 
-function [RDMsPaths, slSTCMetadata] = MEGSearchlightRDMs_source(meshPaths, slMasks, adjacencyMatrix, STCMetadata, userOptions)
+function [RDMsPaths, slSTCMetadatas] = MEGSearchlightRDMs_source(meshPaths, slMasks, adjacencyMatrix, STCMetadatas, userOptions)
 
 import rsa.*
 import rsa.meg.*
@@ -46,7 +46,7 @@ overwriteFlag = overwritePrompt(userOptions, promptOptions);
     
 %% Apply searchlight
 
-[slSpec, slSTCMetadata] = getSearchlightSpec(STCMetadata, userOptions);
+[slSpecs, slSTCMetadatas] = getSearchlightSpec(STCMetadatas, userOptions);
     
 parfor subject_i = 1:nSubjects
     thisSubjectName = userOptions.subjectNames{subject_i};
@@ -62,7 +62,7 @@ parfor subject_i = 1:nSubjects
             prints('Shining RSA searchlight in the %sh source mesh of subject %d of %d (%s)...', lower(chi), subject_i, nSubjects, thisSubjectName);
             
             single_hemisphere_searchlight( ...
-                slSpec, ...
+                slSpecs.(chi), ...
                 meshPaths(subject_i).(chi), ...
                 RDMsPaths(subject_i).(chi), ...
                 RDMsDir, ...
