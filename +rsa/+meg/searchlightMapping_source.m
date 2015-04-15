@@ -7,7 +7,7 @@
 % TODO: Documentation
 % TODO: Partial model numbers vs model number - make this coherent
 
-function [mapsPath] = searchlightMapping_source(subject_i, chi, RDMPath, slMask, model, partialModels, adjacencyMatrix, STCMetadata, userOptions)
+function [mapsPath] = searchlightMapping_source(subject_i, chi, RDMPath, slMask, model, partialModels, adjacencyMatrix, STCMetadatas, userOptions)
 
 import rsa.*
 import rsa.meg.*
@@ -48,24 +48,24 @@ overwriteFlag = overwritePrompt(userOptions, promptOptions);
 
 if overwriteFlag
     
-    prints('Shining RSA searchlight in the %s source mesh of subject %d of %d...',lower(chi),  subject_i, nSubjects);
+    prints('Shining RSA searchlight in the %s source mesh of subject %d of %d...', lower(chi),  subject_i, nSubjects);
     
     gotoDir(fullfile(userOptions.rootPath, 'Maps', modelName));
     
     tic;%1
     
-    [slSpec, slSTCMetadata] = getSearchlightSpec(STCMetadata, userOptions);
+    [slSpecs, slSTCMetadatas] = getSearchlightSpec(STCMetadatas, userOptions);
     
     searchlightRDMs = directLoad(RDMPath, 'searchlightRDMs');
     
     if userOptions.partial_correlation
-        thisSubjectRs = searchlightMapping_MEG_source(searchlightRDMs, slMask, model, partialModels, adjacencyMatrix, slSpec, userOptions); %#ok<ASGLU>
+        thisSubjectRs = searchlightMapping_MEG_source(searchlightRDMs, slMask, model, partialModels, adjacencyMatrix, slSpecs.(chi), userOptions); %#ok<ASGLU>
     else
-        thisSubjectRs = searchlightMapping_MEG_source(searchlightRDMs, slMask, model, [], adjacencyMatrix, slSpec, userOptions); %#ok<ASGLU>
+        thisSubjectRs = searchlightMapping_MEG_source(searchlightRDMs, slMask, model, [], adjacencyMatrix, slSpecs.(chi), userOptions); %#ok<ASGLU>
     end
     clear sourceMeshesThisSubjectThisHemi;
 
-    rSTCStruct          = slSTCMetadata;
+    rSTCStruct          = slSTCMetadatas.(chi);
     rSTCStruct.vertices = slMask.vertices;
     % thisSubjectRs contains only the data inside the mask, but since the
     % vertices are stored in this struct, that should be ok.
@@ -98,7 +98,7 @@ end%function
 % CW 2010-05, 2015-03
 % updated by Li Su 3-2012
 
-function [smm_rs, searchlightRDMs] = searchlightMapping_MEG_source(searchlightRDMs, indexMask, modelRDM, partialModelRDMs, adjacencyMatrix, slSpec, userOptions)
+function [smm_rs, searchlightRDMs] = searchlightMapping_MEG_source(searchlightRDMs, indexMask, modelRDM, partialModelRDMs, adjacencyMatrix, slSpecs, userOptions)
 
 import rsa.*
 import rsa.meg.*
@@ -116,7 +116,7 @@ end
 [nVertices_masked, nTimePoints_masked] = size(searchlightRDMs);
 
 % The number of positions the sliding window will take.
-nWindowPositions = size(slSpec.windowPositions, 1);
+nWindowPositions = size(slSpecs.windowPositions, 1);
 
 %% map the volume with the searchlight
 
@@ -135,7 +135,7 @@ for v_i = 1:numel(indexMask.vertices)
     
     % Search through time
     window_i = 0;
-    for window = slSpec.windowPositions'
+    for window = slSpecs.windowPositions'
         % thisWindow is the indices of timepoints in each window
         thisWindow = window(1):window(2);
         window_i = window_i + 1;
