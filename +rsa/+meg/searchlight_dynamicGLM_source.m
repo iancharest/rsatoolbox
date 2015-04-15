@@ -213,7 +213,7 @@ function [glmMeshPaths, lagSTCMetadatas] = searchlight_dynamicGLM_source(average
             % We use model_i+1 here as the model indices are offset by 1 by
             % glmfit's all-1s vector.
             stc_metadata_to_save = all_data(:, :, model_i+1);
-            mne_write_stc_file1(fullfile(glmMeshdir, stc_file_name), stc_metadata_to_save);
+            mne_write_stc_file1(fullfile(glmMeshDir, stc_file_name), stc_metadata_to_save);
         end
         
     end%for:chi
