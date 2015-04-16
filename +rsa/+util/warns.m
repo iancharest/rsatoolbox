@@ -22,7 +22,7 @@
 %     [2015-03-24 17:29:41.003] Warning: Loop iteration number 4.
 %     [2015-03-24 17:29:41.011] Warning: Loop iteration number 5.
 %
-% See also PRINTS
+% See also rsa.util.PRINTS
 %
 % Cai Wingfield 2015-03
 function stamped_message = warns(varargin)
@@ -38,7 +38,7 @@ function stamped_message = warns(varargin)
     
     % If warnings are all turned off, we suppress sending to stdout.
     warning_state = warning;
-    if any([warning_state.state])
+    if ismember('on', {warning_state.state})
         % Send it to the output window, including a trailing newline.
         fprintf(['[\b' stamped_message, ']\b\n']);
     end
