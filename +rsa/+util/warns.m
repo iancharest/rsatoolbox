@@ -38,7 +38,7 @@ function stamped_message = warns(varargin)
     
     % If warnings are all turned off, we suppress sending to stdout.
     warning_state = warning;
-    if ismember('on', {warning_state.state})
+    if any(ismember({warning_state.state}, 'on'))
         % Send it to the output window, including a trailing newline.
         fprintf(['[\b' stamped_message, ']\b\n']);
     end
