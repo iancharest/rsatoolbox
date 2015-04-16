@@ -206,13 +206,13 @@ function [glmMeshPaths, lagSTCMetadatas] = searchlight_dynamicGLM_source(average
         
         % Save the beta values for each individual model at each vertex.
         prints('Saving individual model betas...');
-        parfor model_i = 1:nModels
+        for model_i = 1:nModels
             stc_file_name = sprintf('model_%d_betas-%sh.stc', model_i, lower(chi));
             prints('Saving betas for model %d in %s...', model_i, stc_file_name);
             
             % We use model_i+1 here as the model indices are offset by 1 by
             % glmfit's all-1s vector.
-            stc_metadata_to_save = all_data(:, :, model_i+1);
+            stc_metadata_to_save.data = all_data(:, :, model_i+1);
             mne_write_stc_file1(fullfile(glmMeshDir, stc_file_name), stc_metadata_to_save);
         end
         
