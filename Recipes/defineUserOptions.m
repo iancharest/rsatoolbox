@@ -134,7 +134,7 @@ userOptions.getSPMData = false;
 
 % What is the path to the anatomical (structural) fMRI scans for each subject?
 % "[[subjectName]]" should be used to denote an entry in userOptions.subjectNames
-userOptions.structuralsPath = 'paathToWhereYourSubject''s structuralImagesAreStored ';% e.g. /imaging/mb01/lexpro/[[subjectName]]/structurals/
+userOptions.structuralsPath = 'pathToWhereYourSubject''s structuralImagesAreStored ';% e.g. /imaging/mb01/lexpro/[[subjectName]]/structurals/
 
 % What are the dimensions (in mm) of the voxels in the scans?
 userOptions.voxelSize = [3 3 3.75];
