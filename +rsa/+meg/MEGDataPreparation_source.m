@@ -139,6 +139,8 @@ function STCMetadata = prepare_single_hemisphere_data(subject_i, chi, overwriteF
             usingMask, masks([masks.chi] == chi), userOptions);
     else
         prints('Loading on subject %d (%s), %s side', subject_i, thisSubjectName, chi);
+        
+        nTimepoints_downsampled = numel(1:userOptions.temporalDownsampleRate:nTimepoints_raw);
 
         % Loop over sessions and conditions
         for session_i = 1:nSessions
