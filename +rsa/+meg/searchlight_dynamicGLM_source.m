@@ -18,6 +18,7 @@ function [glmMeshPaths, lagSTCMetadatas] = searchlight_dynamicGLM_source(average
 
     import rsa.*
     import rsa.rdm.*
+    import rsa.stat.*
     import rsa.util.*
     
     %% Parse inputs
@@ -27,6 +28,13 @@ function [glmMeshPaths, lagSTCMetadatas] = searchlight_dynamicGLM_source(average
     checkLag = @(x) (isnumeric(x) && (x >= 0));
     defaultLag = 0;
     
+    % 'permutations'
+    namePermutations = 'permutations';
+    % TODO: use isint here when I can find it...
+    checkPermutations = @(x) (isnumeric(x));
+    % 0 means don't use permutations
+    defaultPermutations = 0;
+    
     % Set up parser
     ip = inputParser;
     ip.CaseSensitive = false;
@@ -34,13 +42,18 @@ function [glmMeshPaths, lagSTCMetadatas] = searchlight_dynamicGLM_source(average
     
     % Parameters
     addParameter(ip, nameLag, defaultLag, checkLag);
+    addParameter(ip, namePermutations, defaultPermutations, checkPermutations);
     
     % Parse the inputs
     parse(ip, varargin{:});
     
     % Get some nicer variable names
     % The lag in ms
-    lag_in_ms = ip.Results.lag; % 111
+    lag_in_ms = ip.Results.(nameLag);
+    nPermutations = ip.Results.(namePermutations);
+    
+    % Will we do permutations tests?
+    using_permutations = nPermutations > 0;
     
     [nTimepoints_models, nModels] = size(models);
     
@@ -98,10 +111,21 @@ function [glmMeshPaths, lagSTCMetadatas] = searchlight_dynamicGLM_source(average
     
         prints('Working at a lag of %dms, which corresponds to %d timepoints at this resolution.', lag_in_ms, lag_in_timepoints);
         
-        % Preallocate
+        % Preallocate.
         glm_mesh(1:nVertices, 1:nTimepoints_overlap) = struct('betas', nan, 'deviance', nan, 'maxBeta', nan, 'maxBeta_i', nan);
+        % Preallocate null mesh if we're doing that.
+        if using_permutations
+            % +1 because of that all-1s model from glmfit
+            h0_mesh(1:nVertices, 1:nTimepoints_overlap, 1:nModels+1, 1:nPermutations) = NaN;
+            p_mesh(1:nVertices, 1:nTimepoints_overlap, 1:nModels) = NaN;
+        end
         
-        prints('Performing dynamic GLM in %sh hemisphere...', lower(chi));
+        % Tell the user what's going on.
+        if using_permutations
+            prints('Performing dynamic GLM with %d permutations in %sh hemisphere...', nPermutations, lower(chi));
+        else
+            prints('Performing dynamic GLM in %sh hemisphere...', lower(chi));
+        end
         
         parfor t = 1:nTimepoints_overlap
             
@@ -141,6 +165,25 @@ function [glmMeshPaths, lagSTCMetadatas] = searchlight_dynamicGLM_source(average
                 % TODO: the first one as an all-ones beta).
                 [glm_mesh(v, t).maxBeta, glm_mesh(v, t).maxBeta_i] = max(glm_mesh(v, t).betas(2:end));
                 
+                if using_permutations
+                    % Calculate beta-distributions
+                    for p = 1:nPermutations
+                        permuted_data_rdm = randomizeSimMat(average_slRDMs(v, t_relative_to_data).RDM);
+                        h0_mesh(v, t, :, p) = glmfit( ...
+                            modelStack{t}', ...
+                            permuted_data_rdm', ...
+                        ...% TODO: Why are we making this assumption?
+                        ...% TODO: What are the implications of this?
+                            'normal');
+                    end
+                    
+                    % calculate p-vales
+                    for m = 1:nModels
+                        % +1 because of that annoying forced all-1s model.
+                        p_mesh(v, t, m) = 1 - portion(h0_mesh(v, t, m, :), glm_mesh(v, t).betas(m + 1));
+                    end
+                end
+                
             end%for:v
             
             % Re-enable warning
@@ -158,6 +201,12 @@ function [glmMeshPaths, lagSTCMetadatas] = searchlight_dynamicGLM_source(average
         
         gotoDir(glmMeshDir);
         save('-v7.3', glmMeshPaths.(chi), 'glm_mesh');
+        
+        if using_permutations
+            p_file_name = sprintf('p_mesh-%sh', lower(chi));
+            p_path = fullfile(glmMeshDir, p_file_name);
+            save(p_path, 'p_mesh');
+        end
         
         
         %% Save STCs
@@ -206,13 +255,13 @@ function [glmMeshPaths, lagSTCMetadatas] = searchlight_dynamicGLM_source(average
         
         % Save the beta values for each individual model at each vertex.
         prints('Saving individual model betas...');
-        for model_i = 1:nModels
-            stc_file_name = sprintf('model_%d_betas-%sh.stc', model_i, lower(chi));
-            prints('Saving betas for model %d in %s...', model_i, stc_file_name);
+        for m = 1:nModels
+            stc_file_name = sprintf('model_%d_betas-%sh.stc', m, lower(chi));
+            prints('Saving betas for model %d in %s...', m, stc_file_name);
             
             % We use model_i+1 here as the model indices are offset by 1 by
             % glmfit's all-1s vector.
-            stc_metadata_to_save.data = all_data(:, :, model_i+1);
+            stc_metadata_to_save.data = all_data(:, :, m+1);
             mne_write_stc_file1(fullfile(glmMeshDir, stc_file_name), stc_metadata_to_save);
         end
         
