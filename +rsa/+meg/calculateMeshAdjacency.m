@@ -69,7 +69,9 @@ function searchlightAdjacencies = calculateMeshAdjacency(nVertices, searchlightR
 
             prints('Building vertex adjacency matrix...');
 
-            parfor currentSearchlightCentre = 1:nVertices
+            % Can't use parfor here in Matlab 2014
+            %for currentSearchlightCentre = 1:nVertices
+            for currentSearchlightCentre = 1:nVertices
 
                 % Print feedback every once in a while.
                 if mod(currentSearchlightCentre, floor(nVertices/11)) == 0
