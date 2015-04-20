@@ -115,8 +115,6 @@ function [glmMeshPaths, lagSTCMetadatas] = searchlight_dynamicGLM_source(average
         glm_mesh(1:nVertices, 1:nTimepoints_overlap) = struct('betas', nan, 'deviance', nan, 'maxBeta', nan, 'maxBeta_i', nan);
         % Preallocate null mesh if we're doing that.
         if using_permutations
-            % +1 because of that all-1s model from glmfit
-            h0_mesh(1:nVertices, 1:nTimepoints_overlap, 1:nModels+1, 1:nPermutations) = NaN;
             p_mesh(1:nVertices, 1:nTimepoints_overlap, 1:nModels) = NaN;
         end
         
@@ -165,25 +163,6 @@ function [glmMeshPaths, lagSTCMetadatas] = searchlight_dynamicGLM_source(average
                 % TODO: the first one as an all-ones beta).
                 [glm_mesh(v, t).maxBeta, glm_mesh(v, t).maxBeta_i] = max(glm_mesh(v, t).betas(2:end));
                 
-                if using_permutations
-                    % Calculate beta-distributions
-                    for p = 1:nPermutations
-                        permuted_data_rdm = randomizeSimMat(average_slRDMs(v, t_relative_to_data).RDM);
-                        h0_mesh(v, t, :, p) = glmfit( ...
-                            modelStack{t}', ...
-                            permuted_data_rdm', ...
-                        ...% TODO: Why are we making this assumption?
-                        ...% TODO: What are the implications of this?
-                            'normal');
-                    end
-                    
-                    % calculate p-vales
-                    for m = 1:nModels
-                        % +1 because of that annoying forced all-1s model.
-                        p_mesh(v, t, m) = 1 - portion(h0_mesh(v, t, m, :), glm_mesh(v, t).betas(m + 1));
-                    end
-                end
-                
             end%for:v
             
             % Re-enable warning
@@ -201,12 +180,6 @@ function [glmMeshPaths, lagSTCMetadatas] = searchlight_dynamicGLM_source(average
         
         gotoDir(glmMeshDir);
         save('-v7.3', glmMeshPaths.(chi), 'glm_mesh');
-        
-        if using_permutations
-            p_file_name = sprintf('p_mesh-%sh', lower(chi));
-            p_path = fullfile(glmMeshDir, p_file_name);
-            save(p_path, 'p_mesh');
-        end
         
         
         %% Save STCs
@@ -263,6 +236,46 @@ function [glmMeshPaths, lagSTCMetadatas] = searchlight_dynamicGLM_source(average
             % glmfit's all-1s vector.
             stc_metadata_to_save.data = all_data(:, :, m+1);
             mne_write_stc_file1(fullfile(glmMeshDir, stc_file_name), stc_metadata_to_save);
+        end
+        
+        
+        %% Permutation ps
+        
+        if using_permutations
+            
+            prints('Calculating p values based on %d permutations...');
+            
+            parfor t = 1:nTimepoints_overlap
+                
+                prints('t = %d.', t);
+                
+                for v = 1:nVertices
+            
+                    % Calculate beta-distributions
+                    for p = 1:nPermutations
+                        permuted_data_rdm = randomizeSimMat(average_slRDMs(v, t_relative_to_data).RDM);
+                        h0_betas(:, p) = glmfit( ... % (nModels, nPermutations)
+                            modelStack{t}', ...
+                            permuted_data_rdm', ...
+                        ...% TODO: Why are we making this assumption?
+                        ...% TODO: What are the implications of this?
+                            'normal');
+                    end
+
+                    % calculate p-vales
+                    for m = 1:nModels
+                        % +1 because of that annoying forced all-1s model.
+                        p_mesh(v, t, m) = 1 - portion(h0_betas(m, :), glm_mesh(v, t).betas(m + 1));
+                    end
+                    
+                end%for:v
+            end%for:t
+
+            % Save results
+            p_file_name = sprintf('p_mesh-%sh', lower(chi));
+            p_path = fullfile(glmMeshDir, p_file_name);
+            save(p_path, 'p_mesh');
+            
         end
         
     end%for:chi
