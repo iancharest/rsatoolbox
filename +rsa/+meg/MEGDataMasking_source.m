@@ -100,6 +100,8 @@ if overwriteFlag
 	%% Get Data
 
 	nSubjects = numel(userOptions.subjectNames);
+	
+	% We assume that both hemispheres have the same size of data.
     [nVertices, nTimepoints, nConditions, nSessions] = size(sourceMeshes.L);
 
 	for mask_i = 1:nMasks

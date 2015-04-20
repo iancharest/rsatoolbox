@@ -147,7 +147,8 @@ userOptions.searchlightRadius = 15;
 %% %% %% %% %%
 
 % The average surface files
-userOptions.averageSurfaceFile = '/imaging/cw03/decom2/subjects/average/surf/lh.inflated';
+userOptions.averageSurfaceFiles.L = '/imaging/cw03/decom2/subjects/average/surf/lh.inflated';
+userOptions.averageSurfaceFiles.R = '/imaging/cw03/decom2/subjects/average/surf/rh.inflated';
 
 % The width of the sliding window (ms)
 userOptions.temporalSearchlightWidth = 20; %20;
