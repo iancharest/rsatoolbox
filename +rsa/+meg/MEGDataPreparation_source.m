@@ -139,8 +139,6 @@ function STCMetadata = prepare_single_hemisphere_data(subject_i, chi, overwriteF
             usingMask, masks([masks.chi] == chi), userOptions);
     else
         prints('Loading on subject %d (%s), %s side', subject_i, thisSubjectName, chi);
-        
-        nTimepoints_downsampled = numel(1:userOptions.temporalDownsampleRate:nTimepoints_raw);
 
         % Loop over sessions and conditions
         for session_i = 1:nSessions
@@ -162,7 +160,7 @@ function STCMetadata = prepare_single_hemisphere_data(subject_i, chi, overwriteF
                 end
 
                 if dataReadSuccessfully
-                    
+        
                     % If the vertices in the data aren't sorted for some
                     % reason, we sort them and the data now.
                     if ~issorted(MEGData_stc.vertices)
@@ -190,8 +188,10 @@ function STCMetadata = prepare_single_hemisphere_data(subject_i, chi, overwriteF
                             1:userOptions.temporalDownsampleRate:end); % (vertices, time, condition, session)
                 else
                     % Make sure it actually has NaNs in if there was an
-                    % error for this condition
-                    sourceMeshes(:, :, condition_i, session_i) = NaN(numel(STCMetadata.vertices), nTimepoints_downsampled);
+                    % error for this condition.
+                    % TODO: This only works if the first condition always
+                    % TODO: gets read.
+                    sourceMeshes(:, :, condition_i, session_i) = NaN(numel(STCMetadata.vertices), size(sourceMeshes, 2));
                 end
             end%for:condition
         end%for:session
