@@ -57,7 +57,7 @@ function searchlightAdjacencies = calculateMeshAdjacency(nVertices, searchlightR
 
     for chi = chis
 
-        matrixFilename = sprintf('%s_vertexAdjacencyTable_radius-%dmm_%d-verts-%sh.mat', userOptions.analysisname, searchlightRadius_mm, nVertices, lower(chi));
+        matrixFilename = sprintf('%s_vertexAdjacencyTable_radius-%dmm_%d-verts-%sh.mat', userOptions.analysisName, searchlightRadius_mm, nVertices, lower(chi));
 
         if ~exist(matrixFilename, 'file')
 
