@@ -30,7 +30,7 @@ function searchlightAdjacencies = calculateMeshAdjacency(nVertices, searchlightR
     addParameter(ip, nameHemis, defaultHemis, checkHemis);
 
     % Parse the inputs
-    parse(ip, {varargin{:});
+    parse(ip, varargin{:});
 
     % Which hemisphere are we using?
     % Use upper to keep the convention consistent and easy to read.
