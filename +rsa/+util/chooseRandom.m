@@ -1,6 +1,6 @@
 % random_elements = chooseRandom(vector_in[, n_to_select])
 %
-% Selects a random element(s) from the input vector.
+% Selects random element(s) from the input vector.
 %
 % EXAMPLE USAGES
 %

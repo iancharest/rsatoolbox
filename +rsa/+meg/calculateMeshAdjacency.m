@@ -75,7 +75,7 @@ function searchlightAdjacencies = calculateMeshAdjacency(nVertices, searchlightR
 
                 % Print feedback every once in a while.
                 if mod(currentSearchlightCentre, floor(nVertices/11)) == 0
-                    prints('Working on vertex %d of %d', currentSearchlightCentre, nVertices, floor(100*(currentSearchlightCentre/nVertices)));
+                    prints('Working on vertex %d of %d...', currentSearchlightCentre, nVertices, floor(100*(currentSearchlightCentre/nVertices)));
                 end
 
                 verticesWithinSearchlight = [];
