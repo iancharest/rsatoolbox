@@ -100,6 +100,16 @@ rsa.util.prints( ...
     'lag', 100);
 
 
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+rsa.util.prints( ...
+    'Thresholding GLM values...');
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+rsa.meg.searchlight_thresholdGLM_source( ...
+    glmMeshPaths, ...
+    lagSTCMetadatas);
+
+
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 rsa.util.prints( ...
     'Cleaning up...');
