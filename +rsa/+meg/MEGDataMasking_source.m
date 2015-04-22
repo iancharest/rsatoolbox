@@ -100,6 +100,8 @@ if overwriteFlag
 	%% Get Data
 
 	nSubjects = numel(userOptions.subjectNames);
+	
+	% We assume that both hemispheres have the same size of data.
     [nVertices, nTimepoints, nConditions, nSessions] = size(sourceMeshes.L);
 
 	for mask_i = 1:nMasks
@@ -129,7 +131,7 @@ if overwriteFlag
             else
                 maskedMesh = thisMesh(maskIndices, timeIndices(1):timeIndices(2), :, :); % (vertices, timePointes, conditions, sessions) % updated IZ 11-12
             end
-         if ~userOptions.regularized
+            
             % Reduce to correct data type
             switch lower(userOptions.searchlightPatterns)
                 % For spatial patterns, median across the time window
@@ -144,21 +146,6 @@ if overwriteFlag
                 case 'spatiotemporal'
                     reducedMaskedMesh = reshape(maskedMesh, [], size(maskedMesh, 3), size(maskedMesh, 4)); % update IZ 11-12
             end % switch
-
-          else% update IZ 11-12 
-             % case 'regularized' 
-             tempMesh = reshape(maskedMesh, [], size(maskedMesh, 3), size(maskedMesh, 4));   
-             reducedMaskedMesh = zeros(size(maskedMesh, 1)*size(maskedMesh,2), size(maskedMesh, 3)* size(maskedMesh, 4)); % (data, conditions, sessions)
-
-              % combining session-wise trials
-             k=1;
-             for j=1:size(tempMesh,2)
-                for i=1:nSessions
-                    reducedMaskedMesh(:,k) = (tempMesh(:,j,i)); 
-                    k=k+1;
-                end
-             end
-          end % if regularized                             
 
             % Store in struct
             maskedMeshes.(thisMaskName).(thisSubjectName) = reducedMaskedMesh;

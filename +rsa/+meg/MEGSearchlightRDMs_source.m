@@ -2,7 +2,7 @@
 %
 % Cai Wingfield 2015-03
 
-function [RDMsPaths, slSTCMetadata] = MEGSearchlightRDMs_source(meshPaths, slMasks, adjacencyMatrix, STCMetadata, userOptions)
+function [RDMsPaths, slSTCMetadatas] = MEGSearchlightRDMs_source(meshPaths, slMasks, adjacencyMatrix, STCMetadatas, userOptions)
 
 import rsa.*
 import rsa.meg.*
@@ -46,7 +46,7 @@ overwriteFlag = overwritePrompt(userOptions, promptOptions);
     
 %% Apply searchlight
 
-[slSpec, slSTCMetadata] = getSearchlightSpec(STCMetadata, userOptions);
+[slSpecs, slSTCMetadatas] = getSearchlightSpec(STCMetadatas, userOptions);
     
 parfor subject_i = 1:nSubjects
     thisSubjectName = userOptions.subjectNames{subject_i};
@@ -62,7 +62,7 @@ parfor subject_i = 1:nSubjects
             prints('Shining RSA searchlight in the %sh source mesh of subject %d of %d (%s)...', lower(chi), subject_i, nSubjects, thisSubjectName);
             
             single_hemisphere_searchlight( ...
-                slSpec, ...
+                slSpecs.(chi), ...
                 meshPaths(subject_i).(chi), ...
                 RDMsPaths(subject_i).(chi), ...
                 RDMsDir, ...
@@ -169,52 +169,27 @@ for v_i = 1:numel(indexMask.vertices)
         
         searchlightPatchData = maskedMeshes(searchlightPatchVIs, thisWindow, :, :); % (vertices, time, condition, session)
         
-        if ~userOptions.regularized
-            
-            switch lower(userOptions.searchlightPatterns)
-                case 'spatial'
-                    % Spatial patterns: median over time window
-                    searchlightPatchData = median(searchlightPatchData, 2); % (vertices, 1, conditions, sessions)
-                    searchlightPatchData = squeeze(searchlightPatchData); % (vertices, conditions, sessions);
-                case 'temporal'
-                    % Temporal patterns: mean over vertices within searchlight
-                    searchlightPatchData = mean(searchlightPatchData, 1); % (1, timePoints, conditions, sessions)
-                    searchlightPatchData = squeeze(searchlightPatchData); % (timePionts, conditions, sessions)
-                case 'spatiotemporal'
-                    % Spatiotemporal patterns: all the data concatenated
-                    searchlightPatchData = reshape(searchlightPatchData, [], size(searchlightPatchData, 3), size(searchlightPatchData, 4)); % (dataPoints, conditions, sessions)
-            end%switch:userOptions.sensorSearchlightPatterns
-            
-            % Average RDMs over sessions
-            searchlightRDM_square = zeros(nConditions);
-            for session = 1:nSessions
-                sessionRDM = squareform(pdist(squeeze(searchlightPatchData(:,:,session))',userOptions.distance));
-                searchlightRDM_square = searchlightRDM_square + sessionRDM;
-            end%for:sessions
-            searchlightRDM_square = searchlightRDM_square / nSessions;
-            
-        else
-            % TODO: Look into this closer
-            % data regularization based on algorithm by Diedrichson et al 2011 - updated 12-12 IZ
-            tempMesh = reshape(searchlightPatchData, [], size(searchlightPatchData, 3), size(searchlightPatchData, 4));
-            searchlightPatchData = zeros(size(tempMesh, 1), size(tempMesh, 2) * size(tempMesh, 3)); % (data, conditions, sessions)
-            
-            % combining session-wise trials
-            kk = 1;
-            for j = 1:size(tempMesh,2)
-                for i = 1:nSessions
-                    searchlightPatchData(:, kk) = (tempMesh(:, j, i));
-                    kk = kk + 1;
-                end
-            end
-            
-            r_matrix = g_matrix(zscore(squeeze(searchlightPatchData(:,:)))', nConditions, size(currentTimeWindow,2));
-            searchlightRDM_square = (1 - r_matrix);
-            
-            if isnan(searchlightRDM_square) % sessions and conditions should be optimal
-                error('Cannot calculate covariance matrix. Try reducing number of conditions');
-            end
-        end
+        switch lower(userOptions.searchlightPatterns)
+            case 'spatial'
+                % Spatial patterns: median over time window
+                searchlightPatchData = median(searchlightPatchData, 2); % (vertices, 1, conditions, sessions)
+                searchlightPatchData = squeeze(searchlightPatchData); % (vertices, conditions, sessions);
+            case 'temporal'
+                % Temporal patterns: mean over vertices within searchlight
+                searchlightPatchData = mean(searchlightPatchData, 1); % (1, timePoints, conditions, sessions)
+                searchlightPatchData = squeeze(searchlightPatchData); % (timePionts, conditions, sessions)
+            case 'spatiotemporal'
+                % Spatiotemporal patterns: all the data concatenated
+                searchlightPatchData = reshape(searchlightPatchData, [], size(searchlightPatchData, 3), size(searchlightPatchData, 4)); % (dataPoints, conditions, sessions)
+        end%switch:userOptions.sensorSearchlightPatterns
+
+        % Average RDMs over sessions
+        searchlightRDM_square = zeros(nConditions);
+        for session = 1:nSessions
+            sessionRDM = squareform(pdist(squeeze(searchlightPatchData(:,:,session))',userOptions.distance));
+            searchlightRDM_square = searchlightRDM_square + sessionRDM;
+        end%for:sessions
+        searchlightRDM_square = searchlightRDM_square / nSessions;
         
         % Store results to be retured.
         searchlightRDMs(v_i, window_i).RDM = vectorizeRDM(searchlightRDM_square);

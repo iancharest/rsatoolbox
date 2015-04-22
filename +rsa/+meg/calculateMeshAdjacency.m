@@ -1,81 +1,115 @@
-function searchlightAdjacency = calculateMeshAdjacency(nVertices, searchlightRadius_mm, userOptions)
-
-% searchlightAdjacency = calculateMeshAdjacency(nVertices, searchlightRadius_mm, userOptions)
+% searchlightAdjacencies = calculateMeshAdjacency(nVertices, searchlightRadius_mm, userOptions, ['hemi', 'L'|'R'|'LR'])
 %
 % All credit to Su Li and Andy Thwaites for working out how to do this and writing the original implementation
 % CW 5-2010, last updated by Li Su - 1 Feb 2012
+function searchlightAdjacencies = calculateMeshAdjacency(nVertices, searchlightRadius_mm, userOptions, varargin)
 
-import rsa.*
-import rsa.fig.*
-import rsa.meg.*
-import rsa.rdm.*
-import rsa.sim.*
-import rsa.spm.*
-import rsa.stat.*
-import rsa.util.*
+    import rsa.*
+    import rsa.fig.*
+    import rsa.meg.*
+    import rsa.rdm.*
+    import rsa.sim.*
+    import rsa.spm.*
+    import rsa.stat.*
+    import rsa.util.*
 
-returnHere = pwd;
+    %% Parse inputs
 
-MAX_VERTICES = 40968;
+    % 'hemis'
+    nameHemis = 'hemis';
+    validHemis = {'L', 'l', 'R', 'r', 'LR', 'lr', 'RL', 'rl'};
+    checkHemis = @(x) (any(validatestring(x, validHemis)));
+    defaultHemis = 'L';
 
-downsampleRate = log(ceil(MAX_VERTICES / nVertices)) / log(4) * 4; 
-freesurferResolution = 1.25; % mm between freesurfer vertices
+    % Set up parser
+    ip = inputParser;
+    ip.CaseSensitive = false;
+    ip.StructExpand = false;
 
-searchlightRadius_freesurfer = searchlightRadius_mm / freesurferResolution;
+    % Parameters
+    addParameter(ip, nameHemis, defaultHemis, checkHemis);
 
-searchlightCircleRadii_MNE = ceil(downsampleRate*(1:(searchlightRadius_freesurfer/downsampleRate)));
+    % Parse the inputs
+    parse(ip, varargin{:});
 
-matrixFilename = [userOptions.analysisName '_vertexAdjacencyTable_radius-' num2str(searchlightRadius_mm) 'mm_' num2str(nVertices) '-vertices.mat'];
+    % Which hemisphere are we using?
+    % Use upper to keep the convention consistent and easy to read.
+    chis = upper(ip.Results.hemis);
 
-gotoDir(userOptions.rootPath, 'ImageData');
+    returnHere = pwd;
 
-if ~exist(matrixFilename, 'file')
 
-	fprintf('The file "%s" doesn''t exist yet, creating it...', matrixFilename);
-	
-	% building a hash table to store adjacency information of all vertexs. 
-	hashTableL = findAdjacentVerts(userOptions.averageSurfaceFile); % the resulting hash table is ht_*
-	% I might be wrong, but I have discovered that the adjacent
-	% vertex indexing is the same across hemispheres, so I only do
-	% it for the left. Li Su
-	
-	prints('Building vertex adjacency matrix...');
-		
-	for currentSearchlightCentre = 1:nVertices
-	
-		if mod(currentSearchlightCentre,floor(nVertices/11)) == 0
-			prints(['   Working on the vertex ' num2str(currentSearchlightCentre) ' of ' num2str(nVertices) ': ' num2str(floor(100*(currentSearchlightCentre/nVertices))) '%%']);
-		end
-		
-		verticesWithinSearchlight = [];
-			
-		for rMNE = 1:numel(searchlightCircleRadii_MNE)
-			freesurferVerticesWithinThisMNERadius = getadjacent(num2str(currentSearchlightCentre),searchlightCircleRadii_MNE(rMNE),hashTableL);
-			verticesWithinSearchlight = [verticesWithinSearchlight; freesurferVerticesWithinThisMNERadius(freesurferVerticesWithinThisMNERadius <= nVertices)]; % By removing any which are greater than nVertices, we effectively downsample by the necessary ammount.  This seems a little too clever to work? < or <=?
-		end
-		
-		searchlightAdjacency(currentSearchlightCentre,1:numel(verticesWithinSearchlight)) = verticesWithinSearchlight';
-	end
-	
-	prints('      Done!');
-	
-	searchlightAdjacency(searchlightAdjacency == 0) = NaN;
-	
-	% Save this matrix
-	
-	cd(fullfile(userOptions.rootPath, 'ImageData'));
-	
-	save(matrixFilename, 'searchlightAdjacency');
+    %% Set up some constants
 
-else
+    % The maximum possible per-hemisphere resolution.
+    MAX_VERTICES = 40968;
 
-	prints('The file "%s" has already been created, loading it...', matrixFilename);
+    % Freesurfer resolution.
+    FS_RESOLUTION = 1.25; % mm between freesurfer vertices
 
-	searchlightAdjacency = directLoad(matrixFilename, 'searchlightAdjacency');
+    % Work out some derived values which don't change per hemisphere
 
-end
+    downsampleRate = log(ceil(MAX_VERTICES / nVertices)) / log(4) * 4; 
+    searchlightRadius_freesurfer = searchlightRadius_mm / FS_RESOLUTION;
+    searchlightCircleRadii_MNE = ceil(downsampleRate * (1:(searchlightRadius_freesurfer / downsampleRate)));
+    
+    gotoDir(userOptions.rootPath, 'ImageData');
 
-cd(returnHere);
+    for chi = chis
+
+        matrixFilename = sprintf('%s_vertexAdjacencyTable_radius-%dmm_%d-verts-%sh.mat', userOptions.analysisName, searchlightRadius_mm, nVertices, lower(chi));
+
+        if ~exist(matrixFilename, 'file')
+
+            prints('The file "%s" doesn''t exist yet, creating it...', matrixFilename);
+
+            % Building a hash table to store adjacency information of all vertexs. 
+            % The resulting hash table is ht_*
+            hashTable = findAdjacentVerts(userOptions.averageSurfaceFiles.(chi));
+
+            prints('Building vertex adjacency matrix...');
+
+            % Can't use parfor here in Matlab 2014
+            %for currentSearchlightCentre = 1:nVertices
+            for currentSearchlightCentre = 1:nVertices
+
+                % Print feedback every once in a while.
+                if mod(currentSearchlightCentre, floor(nVertices/11)) == 0
+                    prints('Working on vertex %d of %d', currentSearchlightCentre, nVertices, floor(100*(currentSearchlightCentre/nVertices)));
+                end
+
+                verticesWithinSearchlight = [];
+
+                for rMNE = 1:numel(searchlightCircleRadii_MNE)
+                    freesurferVerticesWithinThisMNERadius = getadjacent(num2str(currentSearchlightCentre),searchlightCircleRadii_MNE(rMNE),hashTable);
+                    verticesWithinSearchlight = [verticesWithinSearchlight; freesurferVerticesWithinThisMNERadius(freesurferVerticesWithinThisMNERadius <= nVertices)]; % By removing any which are greater than nVertices, we effectively downsample by the necessary ammount.  This seems a little too clever to work? < or <=?
+                end
+
+                searchlightAdjacency(currentSearchlightCentre,1:numel(verticesWithinSearchlight)) = verticesWithinSearchlight';
+            end
+
+            prints('Done!');
+
+            % Force nans where zeros are.
+            searchlightAdjacency(searchlightAdjacency == 0) = NaN;
+
+            % Save this matrix
+            save(matrixFilename, 'searchlightAdjacency');
+
+        else
+
+            prints('The file "%s" has already been created, loading it...', matrixFilename);
+
+            searchlightAdjacency = directLoad(matrixFilename, 'searchlightAdjacency');
+
+        end
+        
+        searchlightAdjacencies.(chi) = searchlightAdjacency;
+        clear searchlightAdjacency;
+        
+    end%for:chis
+
+    cd(returnHere);
 
 end%function
 

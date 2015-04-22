@@ -14,7 +14,7 @@
 % Based on scripts written by Li Su and Isma Zulfiqar.
 %
 % Cai Wingfield 2015-03 -- 2015-04
-function [glmMeshPaths, lagSTCMetadata] = searchlight_dynamicGLM_source(RDMPaths, models, dataSTCMetadata, userOptions, varargin)
+function [glmMeshPaths, lagSTCMetadatas] = searchlight_dynamicGLM_source(RDMPaths, models, slSTCMetadatas, userOptions, varargin)
 
     import rsa.*
     import rsa.rdm.*
@@ -42,6 +42,13 @@ function [glmMeshPaths, lagSTCMetadata] = searchlight_dynamicGLM_source(RDMPaths
     % The lag in ms
     lag_in_ms = ip.Results.lag; % 111
     
+    [nTimepoints_models, nModels] = size(models);
+    
+    
+    %% Begin
+    
+    for chi = 'LR'
+    
     
     %% Prepare lag for the models
     
@@ -55,7 +62,7 @@ function [glmMeshPaths, lagSTCMetadata] = searchlight_dynamicGLM_source(RDMPaths
     % will be  offset by the specified lag.
     
     % Remember that STCmetadata.tstep measures lag in SECONDS!
-    timestep_in_ms = dataSTCMetadata.tstep * 1000;
+        timestep_in_ms = slSTCMetadatas.(chi).tstep * 1000;
     
     % Check if this lag is doable
     if mod(lag_in_ms, timestep_in_ms) ~= 0
@@ -75,16 +82,11 @@ function [glmMeshPaths, lagSTCMetadata] = searchlight_dynamicGLM_source(RDMPaths
     
     %% Prepare lag STC metadata
     
-    lagSTCMetadata.tstep = dataSTCMetadata.tstep;
-    lagSTCMetadata.vertices = dataSTCMetadata.vertices;
-    lagSTCMetadata.tmax = dataSTCMetadata.tmax;
-    lagSTCMetadata.tmin = dataSTCMetadata.tmin + (lagSTCMetadata.tstep * lag_in_timepoints);
+        lagSTCMetadatas.(chi).tstep = slSTCMetadatas.(chi).tstep;
+        lagSTCMetadatas.(chi).vertices = slSTCMetadatas.(chi).vertices;
+        lagSTCMetadatas.(chi).tmax = slSTCMetadatas.(chi).tmax;
+        lagSTCMetadatas.(chi).tmin = slSTCMetadatas.(chi).tmin + (lagSTCMetadatas.(chi).tstep * lag_in_timepoints);
     
-    
-    %% Begin
-    
-    for chi = 'LR'
-        
         % TODO: don't restrict this to averages
         prints('Loading average RDM mesh from "%s"...', RDMPaths.(chi));
         
@@ -130,7 +132,7 @@ function [glmMeshPaths, lagSTCMetadata] = searchlight_dynamicGLM_source(RDMPaths
                         slRDMs(v, t_relative_to_data).RDM', ...
                         ...% TODO: Why are we making this assumption?
                         ...% TODO: What are the implications of this?
-                        'normal'); %#ok<PFOUS>
+                        'normal');
                 
                 % TODO: In case of a tie, this takes the first beta.
                 % TODO: It would be better to take a random one, perhaps
@@ -158,11 +160,74 @@ function [glmMeshPaths, lagSTCMetadata] = searchlight_dynamicGLM_source(RDMPaths
         gotoDir(glmMeshDir);
         save('-v7.3', glmMeshPaths.(chi), 'glm_mesh');
         
+        
+        %% Save STCs
+        
+        % Preallocate
+        max_beta_values = zeros(nVertices, nTimepoints_overlap);
+        max_beta_model_is = zeros(nVertices, nTimepoints_overlap);
+        deviances = zeros(nVertices, nTimepoints_overlap);
+        all_data = zeros(nVertices, nTimepoints_overlap, numel(glm_mesh(1,1).betas));
+        
+        % Reshape data into interesting formats
+        parfor t = 1:nTimepoints_overlap
+            for v = 1:nVertices
+                % We use 2:end because the GLM automatically puts an all-1s
+                % vector in as a predictor, but we're not interested in
+                % that.
+                [max_beta_values(v, t), max_beta_model_is(v, t)] = max(glm_mesh(v, t).betas(2:end));
+                deviances(v, t) = glm_mesh(v, t).deviance;
+                all_data(v, t, :) = glm_mesh(v, t).betas;
+            end
+        end
+        
+        % Copy the lag-adjusted metadata structure.
+        stc_metadata_to_save = lagSTCMetadatas.(chi);
+        
+        gotoDir(glmMeshDir);
+        
+        % Save max beta values at each vertex.
+        stc_file_name = sprintf('max_betas-%sh.stc', lower(chi));
+        prints('Saving maximum beta values to %s...', stc_file_name);
+        stc_metadata_to_save.data = max_beta_values;
+        mne_write_stc_file1(fullfile(glmMeshDir, stc_file_name), stc_metadata_to_save);
+        
+        % Save the index of the model with the max beta value at each
+        % vertex (not including the all-1s predictor of glmfit).
+        stc_file_name = sprintf('max_beta_model_is-%sh.stc', lower(chi));
+        prints('Saving peak model indices to %s...', stc_file_name);
+        stc_metadata_to_save.data = max_beta_model_is;
+        mne_write_stc_file1(fullfile(glmMeshDir, stc_file_name), stc_metadata_to_save);
+        
+        % Save the devainces at each vertex.
+        stc_file_name = sprintf('deviances-%sh.stc', lower(chi));
+        prints('Saving deviances to %s...', stc_file_name);
+        stc_metadata_to_save.data = deviances;
+        mne_write_stc_file1(fullfile(glmMeshDir, stc_file_name), stc_metadata_to_save);
+        
+        % Save the beta values for each individual model at each vertex.
+        prints('Saving individual model betas...');
+        for model_i = 1:nModels
+            stc_file_name = sprintf('model_%d_betas-%sh.stc', model_i, lower(chi));
+            prints('Saving betas for model %d in %s...', model_i, stc_file_name);
+            
+            % We use model_i+1 here as the model indices are offset by 1 by
+            % glmfit's all-1s vector.
+            stc_metadata_to_save.data = all_data(:, :, model_i+1);
+            mne_write_stc_file1(fullfile(glmMeshDir, stc_file_name), stc_metadata_to_save);
+        end
+        
     end%for:chi
     
 end%function
 
 
+% [modelStack, nTimepoints_overlap] = stack_and_offset_models(models, lag_in_timepoints, nTimepoints_data)
+%
+% Given some dynamic models, and a specified offset in timepoints, produces
+% a time-indexed cell array of model stacks suitable for glmfit.
+%
+% Cai Wingfield 2015-04
 function [modelStack, nTimepoints_overlap] = stack_and_offset_models(models, lag_in_timepoints, nTimepoints_data)
 
     import rsa.*
@@ -197,4 +262,3 @@ function [modelStack, nTimepoints_overlap] = stack_and_offset_models(models, lag
         end%for:model
     end%for:t
 end%function
-

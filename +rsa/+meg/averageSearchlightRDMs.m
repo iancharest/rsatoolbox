@@ -22,6 +22,8 @@ function averageRDMPaths = averageSearchlightRDMs(RDMPaths, userOptions)
 
             nVertices = NaN;
             nTimepoints = NaN;
+            
+            clear average_slRDMs;
 
             for subject_i = 1:nSubjects
 

@@ -49,7 +49,6 @@
 % timestamp.
 %
 % Cai Wingfield 11-2009, 12-2009, 3-2010, 6-2010
-% Update: Isma Zulfiqar, Added regularized searchlight pattern option 11-12 
 %__________________________________________________________________________
 % Copyright (C) 2010 Medical Research Council
 function [varargout] = constructRDMs(responsePatterns, betaCorrespondence, userOptions)
@@ -62,7 +61,6 @@ import rsa.sim.*
 import rsa.spm.*
 import rsa.stat.*
 import rsa.util.*
-% Update: Isma Zulfiqar, Added regularized searchlight pattern option 11-12 
 
 returnHere = pwd; % We'll come back here later
 
@@ -109,43 +107,24 @@ if overwriteFlag
 			% Figure out which subject this is
             thisSubject = userOptions.subjectNames{subject};
 
-            if ~userOptions.regularized
+            for session = 1:nSessions % and each session...
 
-                for session = 1:nSessions % and each session...
+                % Get the brain scan vol
+                thisActivityPattern = responsePatterns.(thisMask).(thisSubject);
 
-                    % Get the brain scan vol
-                    thisActivityPattern = responsePatterns.(thisMask).(thisSubject);
+                % Calculate the RDM
+                localRDM = squareform( ...
+                    pdist( ...
+                        squeeze(thisActivityPattern(:, :, session))', userOptions.distance));
 
-                    % Calculate the RDM
-                    localRDM = squareform( ...
-                        pdist( ...
-                            squeeze(thisActivityPattern(:, :, session))', userOptions.distance));
-
-                    % Store the RDM in a struct with the right names and things!
-                    RDMs(mask, subject, session).RDM = localRDM;
-                    RDMs(mask, subject, session).name = [deunderscore(thisMask) ' | ' thisSubject ' | Session: ' num2str(session)];
-                    RDMs(mask, subject, session).color = userOptions.RoIColor;
-
-                    clear localRDM;
-
-                end%for:session
-            else
-                thisActivityPattern = responsePatterns.(thisMask).(thisSubject); 
-                r_matrix = g_matrix(zscore(squeeze(thisActivityPattern))',nConditions, nSessions);
-                localRDM = (1 - r_matrix);
-                
-                if isnan(localRDM) % sessions and conditions should be optimal
-                    error('Cannot calculate g-matrix. Try reducing number of conditions');
-                end
-
-                session=1;
                 % Store the RDM in a struct with the right names and things!
                 RDMs(mask, subject, session).RDM = localRDM;
-                RDMs(mask, subject, session).name = [deunderscore(thisMask) '-regularised | ' thisSubject ' | all'];
+                RDMs(mask, subject, session).name = [deunderscore(thisMask) ' | ' thisSubject ' | Session: ' num2str(session)];
                 RDMs(mask, subject, session).color = userOptions.RoIColor;
 
                 clear localRDM;
-            end % if userOptions.regularized
+
+            end%for:session
              
 		end%for:subject
         fprintf('\b.:');

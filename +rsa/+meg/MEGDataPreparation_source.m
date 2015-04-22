@@ -19,7 +19,7 @@
 % Cai Wingfield 2010-05, 2010-06, 2015-03
 % updated by Li Su 2-2012
 % updated by Fawad 3-12014
-function [meshPaths, STCMetadata] = MEGDataPreparation_source(betas, userOptions, varargin)
+function [meshPaths, STCMetadatas] = MEGDataPreparation_source(betas, userOptions, varargin)
 
 import rsa.*
 import rsa.meg.*
@@ -74,7 +74,7 @@ end
 gotoDir(imageDataPath);
 
 % Make this available outside.
-STCMetadatas = struct();
+subjectSTCMetadatas = struct();
 
 promptOptions.functionCaller = 'MEGDataPreparation_source';
 promptOptions.defaultResponse = 'S';
@@ -89,14 +89,15 @@ parfor subject_i = 1:numel(userOptions.subjectNames);
     
     %% Loop over all hemispheres under consideration
     for chi = 'LR'
-        STCMetadatas(subject_i).(chi) = prepare_single_hemisphere_data(subject_i, chi, overwriteFlag, usingMask, ip.Results.mask, meshPaths, imageDataPath, missingFilesLog, betas, userOptions);
+        subjectSTCMetadatas(subject_i).(chi) = prepare_single_hemisphere_data(subject_i, chi, overwriteFlag, usingMask, ip.Results.mask, meshPaths, imageDataPath, missingFilesLog, betas, userOptions);
     end%for:chi
 end%for:subjects
 
 %% Prepare outputs
 
-% These should all be the same, so we can just take the first one
-STCMetadata = STCMetadatas(1).L;
+% These should all be the same, so we can just take the first on, which
+% will contain both hemispheres.
+STCMetadatas = subjectSTCMetadatas(1);
 
 cd(returnHere); % Go back
 
@@ -159,7 +160,7 @@ function STCMetadata = prepare_single_hemisphere_data(subject_i, chi, overwriteF
                 end
 
                 if dataReadSuccessfully
-                    
+        
                     % If the vertices in the data aren't sorted for some
                     % reason, we sort them and the data now.
                     if ~issorted(MEGData_stc.vertices)
@@ -187,8 +188,10 @@ function STCMetadata = prepare_single_hemisphere_data(subject_i, chi, overwriteF
                             1:userOptions.temporalDownsampleRate:end); % (vertices, time, condition, session)
                 else
                     % Make sure it actually has NaNs in if there was an
-                    % error for this condition
-                    sourceMeshes(:, :, condition_i, session_i) = NaN(numel(STCMetadata.vertices), nTimepoints_downsampled);
+                    % error for this condition.
+                    % TODO: This only works if the first condition always
+                    % TODO: gets read.
+                    sourceMeshes(:, :, condition_i, session_i) = NaN(numel(STCMetadata.vertices), size(sourceMeshes, 2));
                 end
             end%for:condition
         end%for:session

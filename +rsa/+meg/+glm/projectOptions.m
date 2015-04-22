@@ -30,11 +30,6 @@ userOptions.run_in_parallel = true;
 % sometimes the performance will drop if there are large number of tiny jobs due to the communication and setting-up overhead
 userOptions.jobSize = 10; 
 
-%% noise removal from RDMs
-% Whether or not to regularize the RDM using Diedrichsen and Friston et al
-% NI 2011 mehtods, this is should be set to 'true' if comparing RDMs
-% across ROIs, or across subjects, or different sample populations.
-userOptions.regularized = false;
 userOptions.slidingTimeWindow=false;
 userOptions.debug = false;
 
