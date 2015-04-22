@@ -1,11 +1,18 @@
-function searchlight_thresholdGLM_source(glmMeshPaths, lagSTCMetadatas)
+function searchlight_thresholdGLM_source(averageRDMPaths, glmMeshPaths, models, slSTCMetadatas, lagSTCMetadatas, userOptions)
 
-    %% Permutation ps
+    import rsa.*
+    import rsa.rdm.*
+    import rsa.util.*
 
-    if using_permutations
+    % Use L only
+    lag_in_timepoints = (lagSTCMetadatas.L.tmin - slSTCMetadatas.L.tmin) / lagSTCMetadatas.L.tstep;
+    nTimepoints_data = (slSTCMetadatas.L.tmax - slSTCMetadatas.L.tmin) - slSTCMetadatas.L.tstep;
 
-        prints('Calculating p values based on %d permutations.', nPermutations);
-        prints('(This will give the distribution at each vertex a total of %d values.)', nPermutations * nTimepoints_overlap);
+    [modelStack, nTimepoints_overlap] = stack_and_offset_models(models, lag_in_timepoints, nTimepoints_data);
+    
+    nModels = numel(modelStack);
+
+    %% Calculate pooled-over-time distributions of betas at each vertex
 
         % We'll pool across timepoints. So we'll make h0_betas a
         % nModels-x-(nPermutations*nTimepoints_overlap)-sized matrix.
