@@ -28,13 +28,6 @@ function [glmMeshPaths, lagSTCMetadatas] = searchlight_dynamicGLM_source(average
     checkLag = @(x) (isnumeric(x) && (x >= 0));
     defaultLag = 0;
     
-    % 'permutations'
-    namePermutations = 'permutations';
-    % TODO: use isint here when I can find it...
-    checkPermutations = @(x) (isnumeric(x));
-    % 0 means don't use permutations
-    defaultPermutations = 0;
-    
     % Set up parser
     ip = inputParser;
     ip.CaseSensitive = false;
@@ -42,7 +35,6 @@ function [glmMeshPaths, lagSTCMetadatas] = searchlight_dynamicGLM_source(average
     
     % Parameters
     addParameter(ip, nameLag, defaultLag, checkLag);
-    addParameter(ip, namePermutations, defaultPermutations, checkPermutations);
     
     % Parse the inputs
     parse(ip, varargin{:});
@@ -50,10 +42,6 @@ function [glmMeshPaths, lagSTCMetadatas] = searchlight_dynamicGLM_source(average
     % Get some nicer variable names
     % The lag in ms
     lag_in_ms = ip.Results.(nameLag);
-    nPermutations = ip.Results.(namePermutations);
-    
-    % Will we do permutations tests?
-    using_permutations = nPermutations > 0;
     
     [nTimepoints_models, nModels] = size(models);
     
@@ -113,17 +101,9 @@ function [glmMeshPaths, lagSTCMetadatas] = searchlight_dynamicGLM_source(average
         
         % Preallocate.
         glm_mesh(1:nVertices, 1:nTimepoints_overlap) = struct('betas', nan, 'deviance', nan, 'maxBeta', nan, 'maxBeta_i', nan);
-        % Preallocate null mesh if we're doing that.
-        if using_permutations
-            p_mesh(1:nVertices, 1:nTimepoints_overlap, 1:nModels) = NaN;
-        end
         
         % Tell the user what's going on.
-        if using_permutations
-            prints('Performing dynamic GLM with %d permutations in %sh hemisphere...', nPermutations, lower(chi));
-        else
-            prints('Performing dynamic GLM in %sh hemisphere...', lower(chi));
-        end
+        prints('Performing dynamic GLM in %sh hemisphere...', lower(chi));
         
         parfor t = 1:nTimepoints_overlap
             
@@ -144,10 +124,6 @@ function [glmMeshPaths, lagSTCMetadatas] = searchlight_dynamicGLM_source(average
                 [ ...
                       glm_mesh(v, t).betas ...
                     , glm_mesh(v, t).deviance ...
-                    ...% TODO: do we need these stats? It sure is a huge 
-                    ...% TODO: amount of data to keep in memory and read/
-                    ...% TODO: write from disk
-                    ...%, glm_mesh(v, t).stats ...
                     ] = glmfit( ...
                         modelStack{t}', ...
                         average_slRDMs(v, t_relative_to_data).RDM', ...
