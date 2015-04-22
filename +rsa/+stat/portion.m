@@ -3,6 +3,6 @@ function f = portion(distribution_range, test_value)
 
     n = numel(distribution_range);
     n_lower = sumall(distribution_range < test_value);
-    f = n_lower / f;
+    f = n_lower / n;
     
 end%function
