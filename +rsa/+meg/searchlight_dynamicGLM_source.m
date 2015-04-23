@@ -131,12 +131,6 @@ function [glmMeshPaths, lagSTCMetadatas] = searchlight_dynamicGLM_source(average
                         ...% TODO: What are the implications of this?
                         'normal');
                 
-                % TODO: In case of a tie, this takes the first beta.
-                % TODO: It would be better to take a random one, perhaps
-                % TODO: using rsa.util.chooseRandom() somehow.
-                % TODO: Make it clear that the i-s are of the original
-                % TODO: betas, not of the betas in the list (which also has
-                % TODO: the first one as an all-ones beta).
                 [glm_mesh(v, t).maxBeta, glm_mesh(v, t).maxBeta_i] = max(glm_mesh(v, t).betas(2:end));
                 
             end%for:v
@@ -160,60 +154,75 @@ function [glmMeshPaths, lagSTCMetadatas] = searchlight_dynamicGLM_source(average
         
         %% Save STCs
         
-        % Preallocate
-        max_beta_values = zeros(nVertices, nTimepoints_overlap);
-        max_beta_model_is = zeros(nVertices, nTimepoints_overlap);
-        deviances = zeros(nVertices, nTimepoints_overlap);
-        all_data = zeros(nVertices, nTimepoints_overlap, numel(glm_mesh(1,1).betas));
+        prints('Saving GLM results for %sh hemisphere to STC files...', lower(chi));
         
-        % Reshape data into interesting formats
-        parfor t = 1:nTimepoints_overlap
-            for v = 1:nVertices
-                % We use 2:end because the GLM automatically puts an all-1s
-                % vector in as a predictor, but we're not interested in
-                % that.
-                [max_beta_values(v, t), max_beta_model_is(v, t)] = max(glm_mesh(v, t).betas(2:end));
-                deviances(v, t) = glm_mesh(v, t).deviance;
-                all_data(v, t, :) = glm_mesh(v, t).betas;
-            end
-        end
-        
-        % Copy the lag-adjusted metadata structure.
-        stc_metadata_to_save = lagSTCMetadatas.(chi);
-        
-        gotoDir(glmMeshDir);
-        
-        % Save max beta values at each vertex.
-        stc_file_name = sprintf('max_betas-%sh.stc', lower(chi));
-        prints('Saving maximum beta values to %s...', stc_file_name);
-        stc_metadata_to_save.data = max_beta_values;
-        mne_write_stc_file1(fullfile(glmMeshDir, stc_file_name), stc_metadata_to_save);
-        
-        % Save the index of the model with the max beta value at each
-        % vertex (not including the all-1s predictor of glmfit).
-        stc_file_name = sprintf('max_beta_model_is-%sh.stc', lower(chi));
-        prints('Saving peak model indices to %s...', stc_file_name);
-        stc_metadata_to_save.data = max_beta_model_is;
-        mne_write_stc_file1(fullfile(glmMeshDir, stc_file_name), stc_metadata_to_save);
-        
-        % Save the devainces at each vertex.
-        stc_file_name = sprintf('deviances-%sh.stc', lower(chi));
-        prints('Saving deviances to %s...', stc_file_name);
-        stc_metadata_to_save.data = deviances;
-        mne_write_stc_file1(fullfile(glmMeshDir, stc_file_name), stc_metadata_to_save);
-        
-        % Save the beta values for each individual model at each vertex.
-        prints('Saving individual model betas...');
-        for m = 1:nModels
-            stc_file_name = sprintf('model_%d_betas-%sh.stc', m, lower(chi));
-            prints('Saving betas for model %d in %s...', m, stc_file_name);
-            
-            % We use model_i+1 here as the model indices are offset by 1 by
-            % glmfit's all-1s vector.
-            stc_metadata_to_save.data = all_data(:, :, m+1);
-            mne_write_stc_file1(fullfile(glmMeshDir, stc_file_name), stc_metadata_to_save);
-        end
+        save_GLM_results_as_stc_files(glm_mesh, lagSTCMetadatas, glmMeshDir, chi);
         
     end%for:chi
     
+end%function
+
+% Saves GLM results to STC files.
+function save_GLM_results_as_stc_files(glm_mesh, lagSTCMetadatas, glmMeshDir, chi)
+
+    import rsa.*
+    import rsa.util.*
+    
+    [nVertices, nTimepoints_overlap] = size(glm_mesh);
+    % -1 because we ignore those all-1s predictors.
+    nModels = numel(glm_mesh(1,1).betas) - 1;
+
+    % Preallocate
+    max_beta_values = zeros(nVertices, nTimepoints_overlap);
+    max_beta_model_is = zeros(nVertices, nTimepoints_overlap);
+    deviances = zeros(nVertices, nTimepoints_overlap);
+    all_data = zeros(nVertices, nTimepoints_overlap, numel(glm_mesh(1,1).betas));
+
+    % Reshape data into interesting formats
+    parfor t = 1:nTimepoints_overlap
+        for v = 1:nVertices
+            % We use 2:end because the GLM automatically puts an all-1s
+            % vector in as a predictor, but we're not interested in
+            % that.
+            [max_beta_values(v, t), max_beta_model_is(v, t)] = max(glm_mesh(v, t).betas(2:end));
+            deviances(v, t) = glm_mesh(v, t).deviance;
+            all_data(v, t, :) = glm_mesh(v, t).betas;
+        end
+    end
+
+    % Copy the lag-adjusted metadata structure.
+    stc_metadata_to_save = lagSTCMetadatas.(chi);
+
+    gotoDir(glmMeshDir);
+
+    % Save max beta values at each vertex.
+    stc_file_name = sprintf('max_betas-%sh.stc', lower(chi));
+    prints('Saving maximum beta values to %s...', stc_file_name);
+    stc_metadata_to_save.data = max_beta_values;
+    mne_write_stc_file1(fullfile(glmMeshDir, stc_file_name), stc_metadata_to_save);
+
+    % Save the index of the model with the max beta value at each
+    % vertex (not including the all-1s predictor of glmfit).
+    stc_file_name = sprintf('max_beta_model_is-%sh.stc', lower(chi));
+    prints('Saving peak model indices to %s...', stc_file_name);
+    stc_metadata_to_save.data = max_beta_model_is;
+    mne_write_stc_file1(fullfile(glmMeshDir, stc_file_name), stc_metadata_to_save);
+
+    % Save the devainces at each vertex.
+    stc_file_name = sprintf('deviances-%sh.stc', lower(chi));
+    prints('Saving deviances to %s...', stc_file_name);
+    stc_metadata_to_save.data = deviances;
+    mne_write_stc_file1(fullfile(glmMeshDir, stc_file_name), stc_metadata_to_save);
+
+    % Save the beta values for each individual model at each vertex.
+    prints('Saving individual model betas...');
+    for m = 1:nModels
+        stc_file_name = sprintf('model_%d_betas-%sh.stc', m, lower(chi));
+        prints('Saving betas for model %d in %s...', m, stc_file_name);
+
+        % We use model_i+1 here as the model indices are offset by 1 by
+        % glmfit's all-1s vector.
+        stc_metadata_to_save.data = all_data(:, :, m+1);
+        mne_write_stc_file1(fullfile(glmMeshDir, stc_file_name), stc_metadata_to_save);
+    end%for:models
 end%function
