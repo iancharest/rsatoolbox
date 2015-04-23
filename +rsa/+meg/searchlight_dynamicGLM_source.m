@@ -139,10 +139,23 @@ function [glmMeshPaths, lagSTCMetadatas] = searchlight_dynamicGLM_source(average
         end%for:t
         
         % Calculate max betas and max beta indices.
-        % Matlab may say that these variablesaren't being used, but 
+        % Matlab may say that these variables aren't being used, but 
         % actually they are saved later.
         [glm_mesh_max_betas, glm_mesh_max_beta_is] = max(glm_mesh_betas(:, :, 2:end), [], 3); %#ok<ASGLU>
+        
+        
+        %% Median
+        
+        % Calculate median betas over time window
+        % (vertices, models)
+        glm_mesh_betas_median = squeeze(median(glm_mesh_betas, 2));
+        
+        % Calculate the maximum betas.
+        % Matlab may say that these variables aren't being used, but 
+        % actually they are saved later.
+        [glm_mesh_max_betas_median, glm_mesh_max_beta_is_median] = max(glm_mesh_betas_median(:, 2:end), [], 2); %#ok<ASGLU>
 
+        
         %% Save results
         
         % Directory
@@ -158,13 +171,25 @@ function [glmMeshPaths, lagSTCMetadatas] = searchlight_dynamicGLM_source(average
             ['GLM_mesh_max_betas_', lower(chi), 'h.mat']);
         path_max_beta_is.(chi) = fullfile(glmMeshDir, ...
             ['GLM_mesh_max_beta_is_', lower(chi), 'h.mat']);
+        path_betas_median.(chi) = fullfile(glmMeshDir, ...
+            ['GLM_mesh_betas_median_', lower(chi), 'h.mat']);
+        path_max_betas_median.(chi) = fullfile(glmMeshDir, ...
+            ['GLM_mesh_max_betas_median_', lower(chi), 'h.mat']);
+        path_max_beta_is_median.(chi) = fullfile(glmMeshDir, ...
+            ['GLM_mesh_max_beta_is_median_', lower(chi), 'h.mat']);
         
         prints('Saving GLM results for %sh hemisphere to "%s"...', lower(chi), glmMeshDir);
         
+        % Save results
         save('-v7.3', path_betas.(chi), 'glm_mesh_betas');
         save('-v7.3', path_deviances.(chi), 'glm_mesh_deviances');
         save('-v7.3', path_max_betas.(chi), 'glm_mesh_max_betas');
         save('-v7.3', path_max_beta_is.(chi), 'glm_mesh_max_beta_is');
+        
+        % Save median results
+        save('-v7.3', path_betas_median.(chi), 'glm_mesh_betas_median');
+        save('-v7.3', path_max_betas_median.(chi), 'glm_mesh_max_betas_median');
+        save('-v7.3', path_max_beta_is_median.(chi), 'glm_mesh_max_beta_is_median');
         
         %prints('Saving GLM results for %sh hemisphere to STC files...', lower(chi));
         %save_GLM_results_as_stc_files(glm_mesh, lagSTCMetadatas, glmMeshDir, chi);
