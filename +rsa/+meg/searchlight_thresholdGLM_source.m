@@ -1,4 +1,4 @@
-function searchlight_thresholdGLM_source(averageRDMPaths, glmMeshPaths, models, slSTCMetadatas, lagSTCMetadatas, userOptions)
+function searchlight_thresholdGLM_source(averageRDMPaths, glm_paths, models, slSTCMetadatas, lagSTCMetadatas, userOptions)
 
     import rsa.*
     import rsa.rdm.*
@@ -25,7 +25,7 @@ function searchlight_thresholdGLM_source(averageRDMPaths, glmMeshPaths, models, 
         % We'll pool across timepoints. So we'll make h0_betas a
         % nModels-x-(nPermutations*nTimepoints_overlap)-sized matrix.
         % This is based on the assumption that the distributions of
-        % beta values should be independnt of time.
+        % beta values should be independent of time.
         % We may (or may not) want to make the same assumption about
         % space, but we won't do that for now.
         
