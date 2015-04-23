@@ -2,6 +2,7 @@ function searchlight_thresholdGLM_source(averageRDMPaths, glmMeshPaths, models, 
 
     import rsa.*
     import rsa.rdm.*
+    import rsa.stat.*
     import rsa.util.*
     
     % Use L only
@@ -41,11 +42,13 @@ function searchlight_thresholdGLM_source(averageRDMPaths, glmMeshPaths, models, 
         h0_betas = zeros(nVertices, pooled_dist_size);
 
         for v = 1:nVertices
+            
+            prints('Calculating p values at vertex %d of %d (%d%% complete...)', n, nVertices, percent(n, nVertices));
 
             h0_betas_this_vertex = zeros(nPermutations, nTimepoints_overlap * nModels);
 
             parfor p = 1:nPermutations
-                prints('Permutation %d of %d...', p, nPermutations);
+                prints('\tPermutation %d of %d...', p, nPermutations);
 
                 h0_betas_this_perm = zeros(nTimepoints_overlap, nModels);
 
@@ -68,9 +71,9 @@ function searchlight_thresholdGLM_source(averageRDMPaths, glmMeshPaths, models, 
             h0_betas(v, :) = h0_betas_this_vertex(:);
 
             % Give feedback every once in a while
-            if mod(v,20) == 0
-                prints('Null distibutions simulated for %d%% of vertices.', 100 * v / nVertices);
-            end
+            %if mod(v,20) == 0
+            %    prints('Null distibutions simulated for %d%% of vertices.', percent(v, nVertices));
+            %end
 
         end%for:v
         
