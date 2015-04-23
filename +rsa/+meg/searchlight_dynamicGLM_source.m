@@ -164,27 +164,27 @@ function [glmMeshPaths, lagSTCMetadatas] = searchlight_dynamicGLM_source(average
         
         % Paths
         path_betas.(chi) = fullfile(glmMeshDir, ...
-            ['GLM_mesh_betas_', lower(chi), 'h.mat']);
+            ['GLM_mesh_betas-', lower(chi), 'h.mat']);
         path_deviances.(chi) = fullfile(glmMeshDir, ...
-            ['GLM_mesh_deviances_', lower(chi), 'h.mat']);
+            ['GLM_mesh_deviances-', lower(chi), 'h.mat']);
         path_max_betas.(chi) = fullfile(glmMeshDir, ...
-            ['GLM_mesh_max_betas_', lower(chi), 'h.mat']);
+            ['GLM_mesh_max_betas-', lower(chi), 'h.mat']);
         path_max_beta_is.(chi) = fullfile(glmMeshDir, ...
-            ['GLM_mesh_max_beta_is_', lower(chi), 'h.mat']);
+            ['GLM_mesh_max_beta_is-', lower(chi), 'h.mat']);
         
         % Paths median
         path_betas_median.(chi) = fullfile(glmMeshDir, ...
-            ['GLM_mesh_betas_median_', lower(chi), 'h.mat']);
+            ['GLM_mesh_betas_median-', lower(chi), 'h.mat']);
         path_max_betas_median.(chi) = fullfile(glmMeshDir, ...
-            ['GLM_mesh_max_betas_median_', lower(chi), 'h.mat']);
+            ['GLM_mesh_max_betas_median-', lower(chi), 'h.mat']);
         path_max_beta_is_median.(chi) = fullfile(glmMeshDir, ...
-            ['GLM_mesh_max_beta_is_median_', lower(chi), 'h.mat']);
+            ['GLM_mesh_max_beta_is_median-', lower(chi), 'h.mat']);
         
         % Paths model template
         path_betas_model.(chi) = fullfile(glmMeshDir, ...
-            ['GLM_mesh_betas_model_%d', lower(chi), 'h.mat']);
+            ['GLM_mesh_betas_model_%d-', lower(chi), 'h.mat']);
         path_betas_model_median.(chi) = fullfile(glmMeshDir, ...
-            ['GLM_mesh_betas_model_%d_median', lower(chi), 'h.mat']);
+            ['GLM_mesh_betas_model_%d_median-', lower(chi), 'h.mat']);
         
         
         prints('Saving GLM results for %sh hemisphere to "%s"...', lower(chi), glmMeshDir);
