@@ -44,10 +44,10 @@ function [glm_paths, lagSTCMetadatas] = searchlight_dynamicGLM_source(averageRDM
     % The lag in ms
     lag_in_ms = ip.Results.(nameLag);
     
-    [nTimepoints_models, nModels] = size(models);
-    
     
     %% Begin
+    
+    nModels = size(models, 2);
     
     for chi = 'LR'
     
@@ -193,7 +193,6 @@ function [glm_paths, lagSTCMetadatas] = searchlight_dynamicGLM_source(averageRDM
         %% Save results
         prints('Saving GLM results for %sh hemisphere to "%s"...', lower(chi), glmMeshDir);
         
-        
         %% Save full results
         save('-v7.3', [glm_paths.betas.(chi) '.mat'], 'glm_mesh_betas');
         
@@ -237,7 +236,7 @@ function [glm_paths, lagSTCMetadatas] = searchlight_dynamicGLM_source(averageRDM
                 [sprintf(glm_paths.betas_model_median.(chi), model_i) '.stc']));
         end
        
-        % Save summary median results
+        %% Save summary median results
         save('-v7.3', [glm_paths.deviances_median.(chi) '.mat'],   'glm_mesh_deviances_median');
         save('-v7.3', [glm_paths.max_betas_median.(chi) '.mat'],   'glm_mesh_max_betas_median');
         save('-v7.3', [glm_paths.max_beta_is_median.(chi) '.mat'], 'glm_mesh_max_beta_is_median');

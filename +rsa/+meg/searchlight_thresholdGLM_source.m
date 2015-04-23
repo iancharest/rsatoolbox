@@ -49,6 +49,7 @@ function searchlight_thresholdGLM_source(averageRDMPaths, glm_paths, models, slS
             h0_betas_this_vertex = zeros(nPermutations, nTimepoints_overlap * nModels);
 
             parfor p = 1:nPermutations
+                
                 prints('\tPermutation %d of %d...', p, nPermutations);
 
                 h0_betas_this_perm = zeros(nTimepoints_overlap, nModels);
@@ -63,6 +64,7 @@ function searchlight_thresholdGLM_source(averageRDMPaths, glm_paths, models, slS
                         modelStack{t}', ...
                         scrambled_data_rdm', ...
                         'normal');
+                    
                 end%for:t
 
                 h0_betas_this_vertex(p, :) = h0_betas_this_perm(:);
@@ -70,11 +72,6 @@ function searchlight_thresholdGLM_source(averageRDMPaths, glm_paths, models, slS
             end%for:p
 
             h0_betas(v, :) = h0_betas_this_vertex(:);
-
-            % Give feedback every once in a while
-            %if mod(v,20) == 0
-            %    prints('Null distibutions simulated for %d%% of vertices.', percent(v, nVertices));
-            %end
 
         end%for:v
         
@@ -89,27 +86,35 @@ function searchlight_thresholdGLM_source(averageRDMPaths, glm_paths, models, slS
         %% Load existing data
         
         prints('Loading actual %sh beta values from "%s"...', lower(chi), glmMeshPaths.(chi));
-        glm_mesh = directLoad(glmMeshPaths.(chi), 'glm_mesh');
+        
+        glm_mesh_betas = directLoad([glm_paths.betas.(chi) '.mat'], 'glm_mesh_betas');
+        glm_mesh_betas_median = directLoad([glm_paths.betas_median.(chi) '.mat'], 'glm_mesh_betas_median');
 
         % Preallocate
         p_mesh = ones(nVetices, nTimepoints_overlap, nModels);
+        p_mesh_median = ones(nVertices, nModels);
 
         parfor m = 1:nModels
             prints('Computing p-values for model %d of %d...', m, nModels);
             for v = 1:nVertices
                 for t = 1:nTimepoints_overlap
                     % +1 because of that annoying forced all-1s model.
-                    p_mesh(v, t, m) = 1 - portion(h0_betas(m, :), glm_mesh(v, t).betas(m + 1));
+                    p_mesh(v, t, m) = 1 - portion(h0_betas(m, :), glm_mesh_betas(v, t, m + 1));
                 end
+                p_mesh_median(v, m) = 1 - portion(h0_betas(m, :), glm_mesh_betas_median(v, m + 1));
             end
         end
 
         % Save results
         p_file_name = sprintf('p_mesh-%sh', lower(chi));
         p_path = fullfile(glmMeshDir, p_file_name);
+        
+        p_median_file_name = sprintf('p_mesh_median-%sh', lower(chi));
+        p_median_path = fullfile(glmMeshDir, p_median_file_name);
 
-        prints('Saving p-meshes to "%s"...', p_path);
+        prints('Saving p-meshes to "%s"...', glmMeshDir);
         save(p_path, 'p_mesh');
+        save(p_median_path, 'p_mesh_median');
     
     end%for:chi
 
