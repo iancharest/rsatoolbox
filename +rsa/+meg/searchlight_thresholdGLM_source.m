@@ -1,6 +1,7 @@
 function searchlight_thresholdGLM_source(averageRDMPaths, glm_paths, models, slSTCMetadatas, lagSTCMetadatas, userOptions)
 
     import rsa.*
+    import rsa.meg.*
     import rsa.rdm.*
     import rsa.stat.*
     import rsa.util.*
