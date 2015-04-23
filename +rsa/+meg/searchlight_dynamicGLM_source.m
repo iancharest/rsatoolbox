@@ -109,7 +109,7 @@ function [glmMeshPaths, lagSTCMetadatas] = searchlight_dynamicGLM_source(average
             
             t_relative_to_data = t + lag_in_timepoints;
     
-            % Temporarily dissable this warning
+            % Temporarily disable this warning
             warning_id = 'stats:glmfit:IllConditioned';
             warning('off', warning_id);
 
@@ -146,16 +146,12 @@ function [glmMeshPaths, lagSTCMetadatas] = searchlight_dynamicGLM_source(average
         glmMeshFilename = ['GLM_mesh_', lower(chi), 'h.mat'];
         glmMeshPaths.(chi) = fullfile(glmMeshDir, glmMeshFilename);
         
-        prints('Saving GLM results for %sh hemisphere to %s...', lower(chi), glmMeshPaths.(chi));
-        
         gotoDir(glmMeshDir);
+        
+        prints('Saving GLM results for %sh hemisphere to %s...', lower(chi), glmMeshPaths.(chi));
         save('-v7.3', glmMeshPaths.(chi), 'glm_mesh');
         
-        
-        %% Save STCs
-        
         prints('Saving GLM results for %sh hemisphere to STC files...', lower(chi));
-        
         save_GLM_results_as_stc_files(glm_mesh, lagSTCMetadatas, glmMeshDir, chi);
         
     end%for:chi
