@@ -100,13 +100,15 @@ function [glmMeshPaths, lagSTCMetadatas] = searchlight_dynamicGLM_source(average
         prints('Working at a lag of %dms, which corresponds to %d timepoints at this resolution.', lag_in_ms, lag_in_timepoints);
         
         % Preallocate.
-        glm_mesh(1:nVertices, 1:nTimepoints_overlap) = struct('betas', nan, 'deviance', nan, 'maxBeta', nan, 'maxBeta_i', nan);
+        glm_mesh_betas = nan(1:nVertices, 1:nTimepoints_overlap, nModels + 1);
+        glm_mesh_deviances = nan(1:Vertices, 1:nTimepoints_overlap);
         
         % Tell the user what's going on.
         prints('Performing dynamic GLM in %sh hemisphere...', lower(chi));
         
         parfor t = 1:nTimepoints_overlap
             
+            % The timelines for the data and the models are offset.
             t_relative_to_data = t + lag_in_timepoints;
     
             % Temporarily disable this warning
@@ -116,43 +118,56 @@ function [glmMeshPaths, lagSTCMetadatas] = searchlight_dynamicGLM_source(average
             prints('Working on timepoint %d/%d...', t, nTimepoints_overlap);
             
             for v = 1:nVertices
-            
                 % Fit the GLM at this point
                 % TODO: In case the models are all zeros, this will merrily
                 % TODO: produce meaningless betas along with a warning.
                 % TODO: We should probably check for this first.
                 [ ...
-                      glm_mesh(v, t).betas ...
-                    , glm_mesh(v, t).deviance ...
+                      glm_mesh_betas(v, t, :), ...
+                      glm_mesh_deviances(v, t) ...
                     ] = glmfit( ...
                         modelStack{t}', ...
                         average_slRDMs(v, t_relative_to_data).RDM', ...
                         ...% TODO: Why are we making this assumption?
                         ...% TODO: What are the implications of this?
                         'normal');
-                
-                [glm_mesh(v, t).maxBeta, glm_mesh(v, t).maxBeta_i] = max(glm_mesh(v, t).betas(2:end));
-                
             end%for:v
             
             % Re-enable warning
             warning('on', warning_id);
             
         end%for:t
+        
+        % Calculate max betas and max beta indices.
+        % Matlab may say that these variablesaren't being used, but 
+        % actually they are saved later.
+        [glm_mesh_max_betas, glm_mesh_max_beta_is] = max(glm_mesh_betas(:, :, 2:end), [], 3); %#ok<ASGLU>
 
         %% Save results
         
+        % Directory
         glmMeshDir = fullfile(userOptions.rootPath, 'Meshes');
-        glmMeshFilename = ['GLM_mesh_', lower(chi), 'h.mat'];
-        glmMeshPaths.(chi) = fullfile(glmMeshDir, glmMeshFilename);
-        
         gotoDir(glmMeshDir);
         
-        prints('Saving GLM results for %sh hemisphere to %s...', lower(chi), glmMeshPaths.(chi));
-        save('-v7.3', glmMeshPaths.(chi), 'glm_mesh');
+        % Paths
+        path_betas.(chi) = fullfile(glmMeshDir, ...
+            ['GLM_mesh_betas_', lower(chi), 'h.mat']);
+        path_deviances.(chi) = fullfile(glmMeshDir, ...
+            ['GLM_mesh_deviances_', lower(chi), 'h.mat']);
+        path_max_betas.(chi) = fullfile(glmMeshDir, ...
+            ['GLM_mesh_max_betas_', lower(chi), 'h.mat']);
+        path_max_beta_is.(chi) = fullfile(glmMeshDir, ...
+            ['GLM_mesh_max_beta_is_', lower(chi), 'h.mat']);
         
-        prints('Saving GLM results for %sh hemisphere to STC files...', lower(chi));
-        save_GLM_results_as_stc_files(glm_mesh, lagSTCMetadatas, glmMeshDir, chi);
+        prints('Saving GLM results for %sh hemisphere to "%s"...', lower(chi), glmMeshDir);
+        
+        save('-v7.3', path_betas.(chi), 'glm_mesh_betas');
+        save('-v7.3', path_deviances.(chi), 'glm_mesh_deviances');
+        save('-v7.3', path_max_betas.(chi), 'glm_mesh_max_betas');
+        save('-v7.3', path_max_beta_is.(chi), 'glm_mesh_max_beta_is');
+        
+        %prints('Saving GLM results for %sh hemisphere to STC files...', lower(chi));
+        %save_GLM_results_as_stc_files(glm_mesh, lagSTCMetadatas, glmMeshDir, chi);
         
     end%for:chi
     
