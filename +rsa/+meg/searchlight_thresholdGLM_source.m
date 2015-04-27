@@ -6,13 +6,8 @@ function searchlight_thresholdGLM_source(averageRDMPaths, glm_paths, models, slS
     import rsa.stat.*
     import rsa.util.*
     
-    % Use L only
-    lag_in_timepoints = (lagSTCMetadatas.L.tmin - slSTCMetadatas.L.tmin) / lagSTCMetadatas.L.tstep;
-    nTimepoints_data = (slSTCMetadatas.L.tmax - slSTCMetadatas.L.tmin) - slSTCMetadatas.L.tstep;
-    
-    [modelStack, nTimepoints_overlap] = stack_and_offset_models(models, lag_in_timepoints, nTimepoints_data);
-    
-    nModels = numel(modelStack);
+    % TODO: fix
+    nPermutations = 10;
     
     for chi = 'LR'
         
@@ -20,6 +15,14 @@ function searchlight_thresholdGLM_source(averageRDMPaths, glm_paths, models, slS
         
         prints('Loading %sh data RDMs from "%s"...', lower(chi), averageRDMPaths.(chi));
         average_slRDMs = directLoad(averageRDMPaths.(chi), 'average_slRDMs');
+        
+        [nVertices, nTimepoints_data] = size(average_slRDMs);
+    
+        lag_in_timepoints = (lagSTCMetadatas.(chi).tmin - slSTCMetadatas.(chi).tmin) / lagSTCMetadatas.(chi).tstep;
+
+        [modelStack, nTimepoints_overlap] = stack_and_offset_models(models, lag_in_timepoints, nTimepoints_data);
+
+        nModels = numel(modelStack);
 
         %% Calculate pooled-over-time distributions of betas at each vertex
 
@@ -44,7 +47,7 @@ function searchlight_thresholdGLM_source(averageRDMPaths, glm_paths, models, slS
 
         for v = 1:nVertices
             
-            prints('Calculating p values at vertex %d of %d (%d%% complete...)', n, nVertices, percent(n, nVertices));
+            prints('Calculating p values at vertex %d of %d (%d%% complete...)', v, nVertices, floor(percent(v, nVertices)));
 
             h0_betas_this_vertex = zeros(nPermutations, nTimepoints_overlap * nModels);
 
@@ -96,13 +99,17 @@ function searchlight_thresholdGLM_source(averageRDMPaths, glm_paths, models, slS
 
         parfor m = 1:nModels
             prints('Computing p-values for model %d of %d...', m, nModels);
+            p_mesh_slice = ones(nVertices, nTimepoints_overlap);
+            p_mesh_median_slice = ones(nVertices, 1);
             for v = 1:nVertices
                 for t = 1:nTimepoints_overlap
                     % +1 because of that annoying forced all-1s model.
-                    p_mesh(v, t, m) = 1 - portion(h0_betas(m, :), glm_mesh_betas(v, t, m + 1));
+                    p_mesh_slice(v, t) = 1 - portion(h0_betas(m, :), glm_mesh_betas(v, t, m + 1));
                 end
-                p_mesh_median(v, m) = 1 - portion(h0_betas(m, :), glm_mesh_betas_median(v, m + 1));
+                p_mesh_median_slice(v) = 1 - portion(h0_betas(m, :), glm_mesh_betas_median(v, m + 1));
             end
+            p_mesh(:, :, m) = p_mesh_slice;
+            p_mesh_median(:, m) = p_mesh_median_slice;
         end
 
         % Save results
