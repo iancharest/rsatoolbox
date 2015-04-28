@@ -1,7 +1,7 @@
 % searchlight_thresholdGLM_source(averageRDMPaths, glm_paths, models, slSTCMetadatas, lagSTCMetadatas, nPermutations)
 %
 % Cai Wingfield 2015-04
-function searchlight_GLM_permutation_source(averageRDMPaths, glm_paths, models, slSTCMetadatas, lagSTCMetadatas, nPermutations)
+function [p_paths, p_median_paths] = searchlight_GLM_permutation_source(averageRDMPaths, glm_paths, models, slSTCMetadatas, lagSTCMetadatas, nPermutations)
 
     import rsa.*
     import rsa.meg.*
@@ -116,20 +116,20 @@ function searchlight_GLM_permutation_source(averageRDMPaths, glm_paths, models, 
                 end
                 p_mesh_median_slice(v) = 1 - portion(h0_betas(m, :), glm_mesh_betas_median(v, m + 1));
             end
-            p_mesh(:, :, m) = p_mesh_slice;
-            p_mesh_median(:, m) = p_mesh_median_slice;
+            p_mesh(:, :, m) = p_mesh_slice; %#ok<PFOUS> it's saved
+            p_mesh_median(:, m) = p_mesh_median_slice; %#ok<PFOUS> it's saved
         end
 
         % Save results
         p_file_name = sprintf('p_mesh-%sh', lower(chi));
-        p_path = fullfile(glmMeshDir, p_file_name);
+        p_paths.(chi) = fullfile(glmMeshDir, p_file_name);
         
         p_median_file_name = sprintf('p_mesh_median-%sh', lower(chi));
-        p_median_path = fullfile(glmMeshDir, p_median_file_name);
+        p_median_paths.(chi) = fullfile(glmMeshDir, p_median_file_name);
 
         prints('Saving p-meshes to "%s"...', glmMeshDir);
-        save(p_path, 'p_mesh');
-        save(p_median_path, 'p_mesh_median');
+        save(p_paths.(chi), 'p_mesh');
+        save(p_median_paths.(chi), 'p_mesh_median');
     
     end%for:chi
 
