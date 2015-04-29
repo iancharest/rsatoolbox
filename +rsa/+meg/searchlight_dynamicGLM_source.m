@@ -1,5 +1,5 @@
 % [glmMeshPaths, lagSTCMetadata] = ...
-%     searchlightGLM(averageRDMPaths, models, dataSTCMetadata, userOptions ...
+%     searchlightGLM(RDMPaths, models, dataSTCMetadata, userOptions ...
 %                   ['lag', <lag_in_ms>])
 %
 % models: Is a nTimepoints x nModels struct with field .RDM
@@ -87,10 +87,9 @@ function [glmMeshPaths, lagSTCMetadatas] = searchlight_dynamicGLM_source(RDMPath
         lagSTCMetadatas.(chi).tmax = slSTCMetadatas.(chi).tmax;
         lagSTCMetadatas.(chi).tmin = slSTCMetadatas.(chi).tmin + (lagSTCMetadatas.(chi).tstep * lag_in_timepoints);
     
-        % TODO: don't restrict this to averages
-        prints('Loading average RDM mesh from "%s"...', RDMPaths.(chi));
+        prints('Loading RDM mesh from "%s"...', RDMPaths.(chi));
         
-        slRDMs = directLoad(RDMPaths.(chi), 'average_slRDMs');
+        slRDMs = directLoad(RDMPaths.(chi));
         
         prints('Applying lag to dynamic model timelines...');
     
