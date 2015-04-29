@@ -1,7 +1,7 @@
-% searchlight_thresholdGLM_source(averageRDMPaths, glm_paths, models, slSTCMetadatas, lagSTCMetadatas, nPermutations)
+% searchlight_thresholdGLM_source(RDMPaths, glm_paths, models, slSTCMetadatas, lagSTCMetadatas, nPermutations)
 %
 % Cai Wingfield 2015-04
-function [p_paths, p_median_paths] = searchlight_GLM_permutation_source(averageRDMPaths, glm_paths, models, slSTCMetadatas, lagSTCMetadatas, nPermutations)
+function [p_paths, p_median_paths] = searchlight_GLM_permutation_source(RDMPaths, glm_paths, models, slSTCMetadatas, lagSTCMetadatas, nPermutations)
 
     import rsa.*
     import rsa.meg.*
@@ -34,10 +34,10 @@ function [p_paths, p_median_paths] = searchlight_GLM_permutation_source(averageR
         
         %% Load data RDMs
         
-        prints('Loading %sh data RDMs from "%s"...', lower(chi), averageRDMPaths.(chi));
-        average_slRDMs = directLoad(averageRDMPaths.(chi), 'average_slRDMs');
+        prints('Loading %sh data RDMs from "%s"...', lower(chi), RDMPaths.(chi));
+        slRDMs = directLoad(RDMPaths.(chi));
         
-        [nVertices, nTimepoints_data] = size(average_slRDMs);
+        [nVertices, nTimepoints_data] = size(slRDMs);
     
         lag_in_timepoints = (lagSTCMetadatas.(chi).tmin - slSTCMetadatas.(chi).tmin) / lagSTCMetadatas.(chi).tstep;
 
@@ -72,7 +72,7 @@ function [p_paths, p_median_paths] = searchlight_GLM_permutation_source(averageR
             for p = 1:nPermutations
                 for v = 1:nVertices
 
-                    scrambled_data_rdm = average_slRDMs(v, t_relative_to_data).RDM(lt_index_permutations(:, p));
+                    scrambled_data_rdm = slRDMs(v, t_relative_to_data).RDM(lt_index_permutations(:, p));
 
                     h0_betas(v, t, :, p) = glmfit( ...
                         modelStack{t}', ...
