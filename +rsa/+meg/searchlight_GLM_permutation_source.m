@@ -1,4 +1,7 @@
-function searchlight_thresholdGLM_source(averageRDMPaths, glm_paths, models, slSTCMetadatas, lagSTCMetadatas, userOptions)
+% searchlight_thresholdGLM_source(averageRDMPaths, glm_paths, models, slSTCMetadatas, lagSTCMetadatas, nPermutations)
+%
+% Cai Wingfield 2015-04
+function [p_paths, p_median_paths] = searchlight_GLM_permutation_source(averageRDMPaths, glm_paths, models, slSTCMetadatas, lagSTCMetadatas, nPermutations)
 
     import rsa.*
     import rsa.meg.*
@@ -6,8 +9,26 @@ function searchlight_thresholdGLM_source(averageRDMPaths, glm_paths, models, slS
     import rsa.stat.*
     import rsa.util.*
     
-    % TODO: fix
-    nPermutations = 10;
+    
+    %% Precompute permutations for speed
+    
+    % Indices for lower-triangular-form of RDM.
+    lt_indices = 1:numel(vectorizeRDM(models(1).RDM));
+    
+    % Indices for squareform of RDM.
+    sf_indices = squareform(lt_indices);
+    
+    % Preallocate
+    lt_index_permutations = nan(numel(lt_indices), nPermutations);
+    
+    prints('Precomputing index permutations');
+    
+    parfor p = 1:nPermutations
+        lt_index_permutations(:, p) = squareform(randomizeSimMat(sf_indices));
+    end
+    
+    
+    %% Both hemispheres separately.
     
     for chi = 'LR'
         
@@ -23,7 +44,10 @@ function searchlight_thresholdGLM_source(averageRDMPaths, glm_paths, models, slS
         [modelStack, nTimepoints_overlap] = stack_and_offset_models(models, lag_in_timepoints, nTimepoints_data);
 
         nModels = numel(modelStack);
+        % + 1 for that all-1s predictor
+        nBetas = nModels + 1;
 
+        
         %% Calculate pooled-over-time distributions of betas at each vertex
 
         % We'll pool across timepoints. So we'll make h0_betas a
@@ -37,49 +61,33 @@ function searchlight_thresholdGLM_source(averageRDMPaths, glm_paths, models, slS
         warning_id = 'stats:glmfit:IllConditioned';
         warning('off', warning_id);
 
-        pooled_dist_size = nPermutations * nTimepoints_overlap * nModels;
+        % Preallocate
+        h0_betas = zeros(nVertices, nTimepoints_overlap, nBetas, nPermutations);
 
         prints('Computing beta null distrubitions at %d vertices, %d permutations each...', nVertices, nPermutations);
-        prints('(This will give the distribution at each vertex a total of %d values.)', pooled_dist_size);
-
-        % Preallocate
-        h0_betas = zeros(nVertices, pooled_dist_size);
-
-        for v = 1:nVertices
             
-            prints('Calculating p values at vertex %d of %d (%d%% complete...)', v, nVertices, floor(percent(v, nVertices)));
+        parfor t = 1:nTimepoints_overlap
+            t_relative_to_data = t + lag_in_timepoints;
 
-            h0_betas_this_vertex = zeros(nPermutations, nTimepoints_overlap * nModels);
+            for p = 1:nPermutations
+                for v = 1:nVertices
 
-            parfor p = 1:nPermutations
-                
-                prints('\tPermutation %d of %d...', p, nPermutations);
+                    scrambled_data_rdm = average_slRDMs(v, t_relative_to_data).RDM(lt_index_permutations(:, p));
 
-                h0_betas_this_perm = zeros(nTimepoints_overlap, nModels);
-
-                for t = 1:nTimepoints_overlap
-
-                    t_relative_to_data = t + lag_in_timepoints;
-
-                    scrambled_data_rdm = randomizeSimMat(average_slRDMs(v, t_relative_to_data).RDM);
-
-                    h0_betas_this_perm(t, :) = glmfit( ...
+                    h0_betas(v, t, :, p) = glmfit( ...
                         modelStack{t}', ...
                         scrambled_data_rdm', ...
                         'normal');
-                    
-                end%for:t
-
-                h0_betas_this_vertex(p, :) = h0_betas_this_perm(:);
-
-            end%for:p
-
-            h0_betas(v, :) = h0_betas_this_vertex(:);
-
-        end%for:v
+                end%for
+            end%for
+        end%for
         
         % Re-enable warning
         warning('on', warning_id);
+        
+        % Reshape h0-betas
+        % This will now be nVertices x pooled-values sized
+        h0_betas = reshape(h0_betas, nVertices, nTimepoints_overlap * nPermutations * nBetas);
 
 
         %% Calculate p values
@@ -108,20 +116,20 @@ function searchlight_thresholdGLM_source(averageRDMPaths, glm_paths, models, slS
                 end
                 p_mesh_median_slice(v) = 1 - portion(h0_betas(m, :), glm_mesh_betas_median(v, m + 1));
             end
-            p_mesh(:, :, m) = p_mesh_slice;
-            p_mesh_median(:, m) = p_mesh_median_slice;
+            p_mesh(:, :, m) = p_mesh_slice; %#ok<PFOUS> it's saved
+            p_mesh_median(:, m) = p_mesh_median_slice; %#ok<PFOUS> it's saved
         end
 
         % Save results
         p_file_name = sprintf('p_mesh-%sh', lower(chi));
-        p_path = fullfile(glmMeshDir, p_file_name);
+        p_paths.(chi) = fullfile(glmMeshDir, p_file_name);
         
         p_median_file_name = sprintf('p_mesh_median-%sh', lower(chi));
-        p_median_path = fullfile(glmMeshDir, p_median_file_name);
+        p_median_paths.(chi) = fullfile(glmMeshDir, p_median_file_name);
 
         prints('Saving p-meshes to "%s"...', glmMeshDir);
-        save(p_path, 'p_mesh');
-        save(p_median_path, 'p_mesh_median');
+        save(p_paths.(chi), 'p_mesh');
+        save(p_median_paths.(chi), 'p_mesh_median');
     
     end%for:chi
 
