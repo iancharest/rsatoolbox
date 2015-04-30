@@ -1,7 +1,7 @@
-% searchlight_thresholdGLM_source(RDMPaths, glm_paths, models, slSTCMetadatas, lagSTCMetadatas, nPermutations)
+% [p_paths, p_median_paths] = searchlight_GLM_permutation_source(RDMPaths, glm_paths, models, slSTCMetadatas, lagSTCMetadatas, nPermutations, userOptions)
 %
 % Cai Wingfield 2015-04
-function [p_paths, p_median_paths] = searchlight_GLM_permutation_source(RDMPaths, glm_paths, models, slSTCMetadatas, lagSTCMetadatas, nPermutations)
+function [p_paths, p_median_paths] = searchlight_GLM_permutation_source(RDMPaths, glm_paths, models, slSTCMetadatas, lagSTCMetadatas, nPermutations, userOptions)
 
     import rsa.*
     import rsa.meg.*
@@ -23,7 +23,7 @@ function [p_paths, p_median_paths] = searchlight_GLM_permutation_source(RDMPaths
     
     prints('Precomputing index permutations');
     
-    parfor p = 1:nPermutations
+    for p = 1:nPermutations
         lt_index_permutations(:, p) = squareform(randomizeSimMat(sf_indices));
     end
     
@@ -43,7 +43,7 @@ function [p_paths, p_median_paths] = searchlight_GLM_permutation_source(RDMPaths
 
         [modelStack, nTimepoints_overlap] = stack_and_offset_models(models, lag_in_timepoints, nTimepoints_data);
 
-        nModels = numel(modelStack);
+        nModels = size(modelStack{1}, 1);
         % + 1 for that all-1s predictor
         nBetas = nModels + 1;
 
@@ -56,10 +56,6 @@ function [p_paths, p_median_paths] = searchlight_GLM_permutation_source(RDMPaths
         % beta values should be independent of time.
         % We may (or may not) want to make the same assumption about
         % space, but we won't do that for now.
-        
-        % Temporarily disable this warning
-        warning_id = 'stats:glmfit:IllConditioned';
-        warning('off', warning_id);
 
         % Preallocate
         h0_betas = zeros(nVertices, nTimepoints_overlap, nBetas, nPermutations);
@@ -67,12 +63,22 @@ function [p_paths, p_median_paths] = searchlight_GLM_permutation_source(RDMPaths
         prints('Computing beta null distrubitions at %d vertices, %d permutations each...', nVertices, nPermutations);
             
         parfor t = 1:nTimepoints_overlap
+        
+            % Temporarily disable this warning
+            %warning_id = 'stats:glmfit:IllConditioned';
+            w = warning('off', 'all');
+            
+            prints('Timepoint %d of %d...', t, nTimepoints_overlap);
+            
             t_relative_to_data = t + lag_in_timepoints;
+            
+            for v = 1:nVertices
+                
+                unscrambled_data_rdm = slRDMs(v, t_relative_to_data).RDM;
 
-            for p = 1:nPermutations
-                for v = 1:nVertices
-
-                    scrambled_data_rdm = slRDMs(v, t_relative_to_data).RDM(lt_index_permutations(:, p));
+                for p = 1:nPermutations
+		
+		    scrambled_data_rdm = unscrambled_data_rdm(lt_index_permutations(:, p));
 
                     h0_betas(v, t, :, p) = glmfit( ...
                         modelStack{t}', ...
@@ -80,10 +86,11 @@ function [p_paths, p_median_paths] = searchlight_GLM_permutation_source(RDMPaths
                         'normal');
                 end%for
             end%for
-        end%for
         
-        % Re-enable warning
-        warning('on', warning_id);
+            % Re-enable warning
+            %warning('on', warning_id);
+            warning(w);
+        end%for
         
         % Reshape h0-betas
         % This will now be nVertices x pooled-values sized
@@ -96,13 +103,15 @@ function [p_paths, p_median_paths] = searchlight_GLM_permutation_source(RDMPaths
         
         %% Load existing data
         
-        prints('Loading actual %sh beta values from "%s"...', lower(chi), glmMeshPaths.(chi));
+        glmMeshDir = fullfile(userOptions.rootPath, 'Meshes');
+        
+        prints('Loading actual %sh beta values...', lower(chi));
         
         glm_mesh_betas = directLoad([glm_paths.betas.(chi) '.mat'], 'glm_mesh_betas');
         glm_mesh_betas_median = directLoad([glm_paths.betas_median.(chi) '.mat'], 'glm_mesh_betas_median');
 
         % Preallocate
-        p_mesh = ones(nVetices, nTimepoints_overlap, nModels);
+        p_mesh = ones(nVertices, nTimepoints_overlap, nModels);
         p_mesh_median = ones(nVertices, nModels);
 
         parfor m = 1:nModels
@@ -127,7 +136,7 @@ function [p_paths, p_median_paths] = searchlight_GLM_permutation_source(RDMPaths
         p_median_file_name = sprintf('p_mesh_median-%sh', lower(chi));
         p_median_paths.(chi) = fullfile(glmMeshDir, p_median_file_name);
 
-        prints('Saving p-meshes to "%s"...', glmMeshDir);
+        prints('Saving p-meshes...');
         save(p_paths.(chi), 'p_mesh');
         save(p_median_paths.(chi), 'p_mesh_median');
     
