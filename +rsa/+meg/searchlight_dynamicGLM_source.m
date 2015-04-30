@@ -29,6 +29,11 @@ function [glm_paths, lagSTCMetadatas] = searchlight_dynamicGLM_source(RDMPaths, 
     checkLag = @(x) (isnumeric(x) && (x >= 0));
     defaultLag = 0;
     
+    % 'file-prefix'
+    nameFilePrefix = 'file-prefix';
+    checkFilePrefix = @(x) (ischar(x));
+    defaultFilePrefix = '';
+    
     % Set up parser
     ip = inputParser;
     ip.CaseSensitive = false;
@@ -36,18 +41,23 @@ function [glm_paths, lagSTCMetadatas] = searchlight_dynamicGLM_source(RDMPaths, 
     
     % Parameters
     addParameter(ip, nameLag, defaultLag, checkLag);
+    addParameter(ip, nameFilePrefix, defaultFilePrefix, checkFilePrefix);
     
     % Parse the inputs
     parse(ip, varargin{:});
     
     % Get some nicer variable names
+    
     % The lag in ms
     lag_in_ms = ip.Results.(nameLag);
     
-    [nTimepoints_models, nModels] = size(models);
+    % The file name prefix
+    file_name_prefix = ip.Results.(nameFilePrefix);
     
     
     %% Begin
+    
+    [nTimepoints_models, nModels] = size(models);
     
     for chi = 'LR'
     
@@ -165,29 +175,29 @@ function [glm_paths, lagSTCMetadatas] = searchlight_dynamicGLM_source(RDMPaths, 
         
         % Paths
         glm_paths.betas.(chi) = fullfile(glmMeshDir, ...
-            ['GLM_mesh_betas-', lower(chi), 'h']);
+            [file_name_prefix 'GLM_mesh_betas-', lower(chi), 'h']);
         glm_paths.deviances.(chi) = fullfile(glmMeshDir, ...
-            ['GLM_mesh_deviances-', lower(chi), 'h']);
+            [file_name_prefix 'GLM_mesh_deviances-', lower(chi), 'h']);
         glm_paths.max_betas.(chi) = fullfile(glmMeshDir, ...
-            ['GLM_mesh_max_betas-', lower(chi), 'h']);
+            [file_name_prefix 'GLM_mesh_max_betas-', lower(chi), 'h']);
         glm_paths.max_beta_is.(chi) = fullfile(glmMeshDir, ...
-            ['GLM_mesh_max_beta_is-', lower(chi), 'h']);
+            [file_name_prefix 'GLM_mesh_max_beta_is-', lower(chi), 'h']);
         
         % Paths median
         glm_paths.betas_median.(chi) = fullfile(glmMeshDir, ...
-            ['GLM_mesh_betas_median-', lower(chi), 'h']);
+            [file_name_prefix 'GLM_mesh_betas_median-', lower(chi), 'h']);
         glm_paths.deviances_median.(chi) = fullfile(glmMeshDir, ...
-            ['GLM_mesh_deviances_median-', lower(chi), 'h']);
+            [file_name_prefix 'GLM_mesh_deviances_median-', lower(chi), 'h']);
         glm_paths.max_betas_median.(chi) = fullfile(glmMeshDir, ...
-            ['GLM_mesh_max_betas_median-', lower(chi), 'h']);
+            [file_name_prefix 'GLM_mesh_max_betas_median-', lower(chi), 'h']);
         glm_paths.max_beta_is_median.(chi) = fullfile(glmMeshDir, ...
-            ['GLM_mesh_max_beta_is_median-', lower(chi), 'h']);
+            [file_name_prefix 'GLM_mesh_max_beta_is_median-', lower(chi), 'h']);
         
         % Paths model template
         glm_paths.betas_model.(chi) = fullfile(glmMeshDir, ...
-            ['GLM_mesh_betas_model_%d-', lower(chi), 'h']);
+            [file_name_prefix 'GLM_mesh_betas_model_%d-', lower(chi), 'h']);
         glm_paths.betas_model_median.(chi) = fullfile(glmMeshDir, ...
-            ['GLM_mesh_betas_model_%d_median-', lower(chi), 'h']);
+            [file_name_prefix 'GLM_mesh_betas_model_%d_median-', lower(chi), 'h']);
         
         
         %% Save results
