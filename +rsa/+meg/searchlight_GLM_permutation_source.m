@@ -1,7 +1,7 @@
-% [p_paths, p_median_paths] = searchlight_GLM_permutation_source(RDMPaths, glm_paths, models, slSTCMetadatas, lagSTCMetadatas, nPermutations, userOptions)
+% [p_paths, p_median_paths] = searchlight_GLM_permutation_source(RDMPaths, glm_paths, models, slSTCMetadatas, lagSTCMetadatas, nPermutations, threshold, userOptions)
 %
 % Cai Wingfield 2015-04
-function [p_paths, p_median_paths] = searchlight_GLM_permutation_source(RDMPaths, glm_paths, models, slSTCMetadatas, lagSTCMetadatas, nPermutations, userOptions)
+function [p_paths, p_median_paths] = searchlight_GLM_permutation_source(RDMPaths, glm_paths, models, slSTCMetadatas, lagSTCMetadatas, nPermutations, threshold, userOptions)
 
     import rsa.*
     import rsa.meg.*
@@ -64,7 +64,7 @@ function [p_paths, p_median_paths] = searchlight_GLM_permutation_source(RDMPaths
         nBetas = nModels + 1;
 
         
-        %% Calculate pooled-over-time distributions of betas at each vertex
+        %% Calculate distributions of betas at each vertex
 
         % Preallocate
         h0_betas = zeros(nVertices, nTimepoints_overlap, nBetas, nPermutations);
@@ -106,6 +106,9 @@ function [p_paths, p_median_paths] = searchlight_GLM_permutation_source(RDMPaths
             warning(w);
         end%for
         
+        
+        %% Pool and save H0-distributions
+        
         % Save null-distributions pre pooling
         gotoDir(userOptions.rootPath, 'Stats');
         save(sprintf('unpooled-h0-%sh', lower(chi)), 'h0_betas', '-v7.3');
@@ -130,38 +133,25 @@ function [p_paths, p_median_paths] = searchlight_GLM_permutation_source(RDMPaths
         
         % Save null-distributions post pooling
         save(sprintf('pooled-h0-%sh', lower(chi)), 'h0_betas', '-v7.3');
+        
+        
+        %% Calculate beta threshold
+        beta_thresholds = zeros(nVertices, 1);
+        for v = 1:nVertices
+           beta_thresholds(v) = quantile(h0_betas(v, :), 1 - threshold);
+        end
+        
+        prints('Selecting top %2.1f centile of the null distribution at each vertex.', 100 * (1 - threshold));
+        prints('This gives a median GLM coefficient threshold of %f over vertices.', median(beta_thresholds));
 
         
-        %% Load existing data
+        %% Threshold beta maps
         
         prints('Loading actual %sh beta values...', lower(chi));
         
         glm_mesh_betas = directLoad([glm_paths.betas.(chi) '.mat'], 'glm_mesh_betas');
         
         
-        %% Calculate p values
-        
-        prints('Calculating p-values at each vertex...');
-
-        % Preallocate
-        p_mesh = ones(nVertices, nTimepoints_overlap, nModels);
-
-        parfor m = 1:nModels
-            prints('Computing p-values for model %d of %d...', m, nModels);
-            p_mesh_slice = ones(nVertices, nTimepoints_overlap);
-            for v = 1:nVertices
-                for t = 1:nTimepoints_overlap
-                    % +1 because of that annoying forced all-1s model.
-                    p_mesh_slice(v, t) = 1 - portion(h0_betas(m, :), glm_mesh_betas(v, t, m + 1));
-                end
-            end
-            p_mesh(:, :, m) = p_mesh_slice; %#ok<PFOUS> it's saved
-        end
-        
-        %% Save results
-
-        prints('Saving p-meshes...');
-        save(p_paths.(chi), 'p_mesh');
     
     end%for:chi
 
