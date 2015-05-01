@@ -10,7 +10,7 @@ function averageRDMPaths = averageSearchlightRDMs(RDMPaths, userOptions)
         file_i = file_i + 1;
     end
     
-    promptOptions.functionCaller = 'MEGDataPreparation_source';
+    promptOptions.functionCaller = 'averageSearchlightRDMs';
     promptOptions.defaultResponse = 'S';
     
     overwriteFlag = overwritePrompt(userOptions, promptOptions);
