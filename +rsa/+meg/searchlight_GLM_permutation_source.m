@@ -69,7 +69,7 @@ function [p_paths, p_median_paths] = searchlight_GLM_permutation_source(RDMPaths
         % Preallocate
         h0_betas = zeros(nVertices, nTimepoints_overlap, nBetas, nPermutations);
 
-        prints('Computing beta null distrubitions at %d vertices, %d permutations each...', nVertices, nPermutations);
+        prints('Computing beta null distributions at %d vertices...', nVertices);
             
         parfor t = 1:nTimepoints_overlap
         
@@ -94,6 +94,11 @@ function [p_paths, p_median_paths] = searchlight_GLM_permutation_source(RDMPaths
                         scrambled_data_rdm', ...
                         'normal');
                 end%for
+                
+                % Occasional feedback
+                if feedback_throttle(10, v, nVertices)
+                    prints('%2.0f%% of vertices covered for timepoint %d.', percent(v, nVertices), t);
+                end
             end%for
         
             % Re-enable warning
