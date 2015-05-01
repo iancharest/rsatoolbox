@@ -30,7 +30,7 @@ function [glm_paths, lagSTCMetadatas] = searchlight_dynamicGLM_source(RDMPaths, 
     defaultLag = 0;
     
     % 'file-prefix'
-    nameFilePrefix = 'file-prefix';
+    nameFilePrefix = 'fileprefix';
     checkFilePrefix = @(x) (ischar(x));
     defaultFilePrefix = '';
     

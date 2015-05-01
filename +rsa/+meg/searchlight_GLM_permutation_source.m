@@ -112,7 +112,6 @@ function [p_paths, p_median_paths] = searchlight_GLM_permutation_source(RDMPaths
         % space, but we won't do that for now.
         
         % Reshape h0-betas
-        % This will now be nVertices x pooled-values sized
         h0_betas = reshape(h0_betas, nVertices, nTimepoints_overlap * nPermutations * nBetas);
         
         % Save null-distributions post pooling
