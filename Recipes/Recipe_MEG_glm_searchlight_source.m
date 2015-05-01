@@ -7,70 +7,70 @@
 toolboxRoot = '/imaging/cw04/code/rsagroup-rsatoolbox/';
 addpath(genpath(toolboxRoot));
 
+import rsa.*
+import rsa.util.*
+import rsa.par.*
+import rsa.meg.*
+
 userOptions = defineUserOptions();
 
-rsa.util.prints('Starting RSA analysis "%s".', userOptions.analysisName);
+prints('Starting RSA analysis "%s".', userOptions.analysisName);
 
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%
-rsa.util.prints( ...
-    'Preparing model RDMs...');
+prints('Preparing model RDMs...');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-models = rsa.constructModelRDMs(userOptions);
+models = constructModelRDMs(userOptions);
 
 
 %% %%%%%%%%%%%%%%%%%%%
-rsa.util.prints( ...
-    'Preparing masks...');
+prints('Preparing masks...');
 %%%%%%%%%%%%%%%%%%%%%%
 
 usingMasks = ~isempty(userOptions.maskNames);
 if usingMasks
-    slMasks = rsa.meg.MEGMaskPreparation_source(userOptions);
+    slMasks = MEGMaskPreparation_source(userOptions);
     % For this searchlight analysis, we combine all masks into one
-    slMasks = rsa.meg.combineVertexMasks_source(slMasks, 'combined_mask', userOptions);  
+    slMasks = combineVertexMasks_source(slMasks, 'combined_mask', userOptions);  
 else
-    slMasks = rsa.meg.allBrainMask(userOptions);
+    slMasks = allBrainMask(userOptions);
 end
 
 
 %% Compute some constats
 nSubjects = numel(userOptions.subjectNames);
-adjacencyMatrices = rsa.meg.calculateMeshAdjacency(userOptions.targetResolution, userOptions.sourceSearchlightRadius, userOptions, 'hemis', 'LR');
+adjacencyMatrices = calculateMeshAdjacency(userOptions.targetResolution, userOptions.sourceSearchlightRadius, userOptions, 'hemis', 'LR');
 
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%
-rsa.util.prints( ...
-    'Starting parallel toolbox...');
+prints('Starting parallel toolbox...');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if userOptions.flush_Queue
-    rsa.par.flushQ();
+    flushQ();
 end
 
 if userOptions.run_in_parallel
-    p = rsa.par.initialise_CBU_Queue(userOptions);
+    p = initialise_CBU_Queue(userOptions);
 end
 
 
 %% %%%%%%%%%%%%%%%%%%
-rsa.util.prints( ...
-    'Loading brain data...');
+prints('Loading brain data...');
 %%%%%%%%%%%%%%%%%%%%%
 
-[meshPaths, STCMetadatas] = rsa.meg.MEGDataPreparation_source( ...
+[meshPaths, STCMetadatas] = MEGDataPreparation_source( ...
     betaCorrespondence(), ...
     userOptions, ...
     'mask', slMasks);
 
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-rsa.util.prints( ...
-    'Searchlight Brain RDM Calculation...');
+prints('Searchlight Brain RDM Calculation...');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-[RDMsPaths, slSTCMetadatas] = rsa.meg.MEGSearchlightRDMs_source( ...
+[RDMsPaths, slSTCMetadatas] = MEGSearchlightRDMs_source( ...
     meshPaths, ...
     slMasks, ...
     ...% Assume that both hemis' adjacency matrices are the same so only use one.
@@ -80,21 +80,19 @@ rsa.util.prints( ...
 
 
 %% %%%%%
-rsa.util.prints( ...
-    'Averaging searchlight RDMs...');
+prints('Averaging searchlight RDMs...');
 %%%%%%%%
 
-averageRDMPaths = rsa.meg.averageSearchlightRDMs(RDMsPaths, userOptions);
+averageRDMPaths = averageSearchlightRDMs(RDMsPaths, userOptions);
 
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-rsa.util.prints( ...
-    'GLM-fitting models to searchlight RDMs...');
+prints('GLM-fitting models to searchlight RDMs...');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 for subject_i = 1:numel(userOptions.subjectNames)
     subjectName = userOptions.subjectNames{subject_i};
-    [glm_paths.(subjectName), lagSTCMetadatas.(subjectName)] = rsa.meg.searchlight_dynamicGLM_source( ...
+    [glm_paths.(subjectName), lagSTCMetadatas.(subjectName)] = searchlight_dynamicGLM_source( ...
         RDMPaths(subject_i), ...
         models, ...
         slSTCMetadatas, ...
@@ -104,11 +102,10 @@ for subject_i = 1:numel(userOptions.subjectNames)
 end
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-rsa.util.prints( ...
-    'Thresholding GLM values...');
+prints('Thresholding GLM values...');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-[p_paths, p_median_paths] = rsa.meg.searchlight_GLM_permutation_source( ...
+[p_paths, p_median_paths] = searchlight_GLM_permutation_source( ...
     averageRDMPaths, ...
     glm_paths, ...
     models, ...
@@ -117,7 +114,7 @@ rsa.util.prints( ...
     30, ...
     userOptions);
 
-[thresholded_glm_paths] = rsa.meg.searchlight_GLM_threshold_source( ...
+[thresholded_glm_paths] = searchlight_GLM_threshold_source( ...
     glm_paths, ...
     p_paths, ...
     p_median_paths, ...
@@ -126,8 +123,7 @@ rsa.util.prints( ...
 
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-rsa.util.prints( ...
-    'Cleaning up...');
+prints('Cleaning up...');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Close the parpool
@@ -137,9 +133,9 @@ end
 
 % Sending an email
 if userOptions.recieveEmail
-    rsa.par.setupInternet();
-    rsa.par.setupEmail(userOptions.mailto);
+    setupInternet();
+    setupEmail(userOptions.mailto);
 end
 
-rsa.util.prints( ...
+prints( ...
     'RSA COMPLETE!');
