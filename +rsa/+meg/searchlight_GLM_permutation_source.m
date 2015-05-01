@@ -1,7 +1,7 @@
-% [p_paths, p_median_paths] = searchlight_GLM_permutation_source(RDMPaths, glm_paths, models, slSTCMetadatas, lagSTCMetadatas, nPermutations, threshold, userOptions)
+% [h0_paths, h0_pooled_paths] = searchlight_GLM_permutation_source(RDMPaths, models, slSTCMetadatas, lagSTCMetadatas, nPermutations, userOptions)
 %
 % Cai Wingfield 2015-04
-function [h0_paths, h0_pooled_paths] = searchlight_GLM_permutation_source(RDMPaths, glm_paths, models, slSTCMetadatas, lagSTCMetadatas, nPermutations, threshold, userOptions)
+function [h0_paths, h0_pooled_paths] = searchlight_GLM_permutation_source(RDMPaths, models, slSTCMetadatas, lagSTCMetadatas, nPermutations, userOptions)
 
     import rsa.*
     import rsa.meg.*
@@ -14,8 +14,8 @@ function [h0_paths, h0_pooled_paths] = searchlight_GLM_permutation_source(RDMPat
     for chi = 'LR'
         % Where to save results
         glmStatsDir = fullfile(userOptions.rootPath, 'Stats');
-        h0_paths.(chi) = fullfile(glmStatsDir, sprintf('unpooled-h0-%sh', lower(chi)));
-        h0_pooled_paths.(chi) = fullfile(glmStatsDir, sprintf('pooled-h0-%sh', lower(chi)));
+        h0_paths.(chi)        = fullfile(glmStatsDir, sprintf('unpooled-h0-%sh', lower(chi)));
+        h0_pooled_paths.(chi) = fullfile(glmStatsDir, sprintf('pooled-h0-%sh',   lower(chi)));
     end%for
     
     
@@ -142,29 +142,10 @@ function [h0_paths, h0_pooled_paths] = searchlight_GLM_permutation_source(RDMPat
             h0_betas = max(h0_betas, 3);
             % (nVertices, nTimepoints_overlap * nPermutations)
             h0_betas = reshape(h0_betas, ...
-                nVertices, nTimepoints_overlap * nPermutations);
+                nVertices, nTimepoints_overlap * nPermutations); %#ok<NASGU> it's saved
 
             % Save null-distributions post pooling
             save(h0_pooled_paths.(chi), 'h0_betas', '-v7.3');
-
-
-            %% Calculate beta threshold
-            beta_thresholds = zeros(nVertices, 1);
-            for v = 1:nVertices
-               beta_thresholds(v) = quantile(h0_betas(v, :), 1 - threshold);
-            end
-
-            prints('Selecting top %2.1f centile of the null distribution at each vertex.', 100 * (1 - threshold));
-            prints('This gives a median GLM coefficient threshold of %f over vertices.', median(beta_thresholds));
-
-
-            %% Threshold beta maps
-
-            prints('Loading actual %sh beta values...', lower(chi));
-
-            glm_mesh_betas = directLoad([glm_paths.betas.(chi) '.mat'], 'glm_mesh_betas');
-
-
 
         end%for:chi
     end

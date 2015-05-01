@@ -70,11 +70,11 @@ function [glm_paths, lagSTCMetadatas] = searchlight_dynamicGLM_source(RDMPaths, 
         
         % Paths
         glm_paths.betas.(chi) = fullfile(glmMeshDir, ...
-            [file_name_prefix 'GLM_mesh_betas-', lower(chi), 'h']);
+            [file_name_prefix 'GLM_mesh_betas-',       lower(chi), 'h']);
         glm_paths.deviances.(chi) = fullfile(glmMeshDir, ...
-            [file_name_prefix 'GLM_mesh_deviances-', lower(chi), 'h']);
+            [file_name_prefix 'GLM_mesh_deviances-',   lower(chi), 'h']);
         glm_paths.max_betas.(chi) = fullfile(glmMeshDir, ...
-            [file_name_prefix 'GLM_mesh_max_betas-', lower(chi), 'h']);
+            [file_name_prefix 'GLM_mesh_max_betas-',   lower(chi), 'h']);
         glm_paths.max_beta_is.(chi) = fullfile(glmMeshDir, ...
             [file_name_prefix 'GLM_mesh_max_beta_is-', lower(chi), 'h']);
         
@@ -207,7 +207,7 @@ function [glm_paths, lagSTCMetadatas] = searchlight_dynamicGLM_source(RDMPaths, 
             prints('Saving GLM results for %sh hemisphere to "%s"...', lower(chi), glmMeshDir);
 
             %% Save full results
-            save('-v7.3', [glm_paths.betas.(chi) '.mat'], 'glm_mesh_betas');
+            save('-v7.3', glm_paths.betas.(chi), 'glm_mesh_betas');
 
             %% Save per-model results
             for model_i = 1:nModels
@@ -218,9 +218,9 @@ function [glm_paths, lagSTCMetadatas] = searchlight_dynamicGLM_source(RDMPaths, 
             end
 
             %% Save summary results
-            save('-v7.3', [glm_paths.deviances.(chi) '.mat'],   'glm_mesh_deviances');
-            save('-v7.3', [glm_paths.max_betas.(chi) '.mat'],   'glm_mesh_max_betas');
-            save('-v7.3', [glm_paths.max_beta_is.(chi) '.mat'], 'glm_mesh_max_beta_is');
+            save('-v7.3', glm_paths.deviances.(chi),   'glm_mesh_deviances');
+            save('-v7.3', glm_paths.max_betas.(chi),   'glm_mesh_max_betas');
+            save('-v7.3', glm_paths.max_beta_is.(chi), 'glm_mesh_max_beta_is');
             write_stc_file( ...
                 lagSTCMetadatas.(chi), ...
                 glm_mesh_deviances, ...
