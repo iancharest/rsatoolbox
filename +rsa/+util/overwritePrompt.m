@@ -29,12 +29,6 @@ function overwriteFlag = overwritePrompt(userOptions, promptOptions)
 % Copyright (C) 2010 Medical Research Council
 
 import rsa.*
-import rsa.fig.*
-import rsa.fmri.*
-import rsa.rdm.*
-import rsa.sim.*
-import rsa.spm.*
-import rsa.stat.*
 import rsa.util.*
 
 %% Set defaults and check options struct
@@ -136,22 +130,22 @@ if exsitFlag % If there are files which will eventually be saved but which alrea
 
 	if isempty(reply)
 		% If they jump through, go with the default
-		fprintf([ ...
-		'\nYou didn''t enter anything! Default option selected: [' promptOptions.defaultResponse ']\n']);
+        fprintf('\n');
+		prints('You didn''t enter anything! Default option selected: [%s]', promptOptions.defaultResponse);
 		reply = promptOptions.defaultResponse;
 		
 	elseif ~strcmpi(reply, 'A') && ~strcmpi(reply, 'S') && ~strcmpi(reply, 'R')
 		% If they enter something which doesn't make sense, go with the default
-		fprintf([ ...
-		'\n"' reply '" is for... Nothing! You didn''t input a valid\n' ...
-		'option. Default option selected: [' promptOptions.defaultResponse ']\n']);
+        fprintf('\n');
+		prints('"%s" is for... Nothing! You didn''t input a valid', reply);
+        prints('option. Default option selected: [%s]', promptOptions.defaultResponse);
 		reply = promptOptions.defaultResponse;
 	end%if
     
 
     if strcmpi(reply, 'A')
         % Abort: (no graphical version for this yet)
-        error('\n"A" is for "Abort": Data not overwritten!\n');
+        errors('"A" is for "Abort": Data not overwritten!');
 
         overwriteFlag = false;
 
@@ -169,10 +163,7 @@ if exsitFlag % If there are files which will eventually be saved but which alrea
 
         else
             % Textual version in here!
-            fprintf([ ...
-            '"S" is for "Skip": Data not overwritten.\n' ...
-            %'Moving on to the next stage of the process...\n' ... % Don't like this bit any more
-            ]);
+            prints('"S" is for "Skip": Data not overwritten.');
         end%if
 
         overwriteFlag = false;
@@ -190,8 +181,7 @@ if exsitFlag % If there are files which will eventually be saved but which alrea
             clear options;
         else
             % Textual version in here!
-            fprintf([ ...
-            '"R" is for "Rerun": Data will be overwritten.\n']);
+            prints('"R" is for "Rerun": Data will be overwritten.');
         end%if
 
         overwriteFlag = true;

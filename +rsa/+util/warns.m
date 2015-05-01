@@ -22,7 +22,7 @@
 %     [2015-03-24 17:29:41.003] Warning: Loop iteration number 4.
 %     [2015-03-24 17:29:41.011] Warning: Loop iteration number 5.
 %
-% See also rsa.util.PRINTS
+% See also rsa.util.PRINTS rsa.util.ERRORS
 %
 % Cai Wingfield 2015-03
 function stamped_message = warns(varargin)
