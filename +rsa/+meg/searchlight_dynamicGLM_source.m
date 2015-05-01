@@ -97,8 +97,6 @@ function [glm_paths, lagSTCMetadatas] = searchlight_dynamicGLM_source(RDMPaths, 
         
         %% Prepare lag for the models
 
-        prints('Computing appropriate lag for dynamic model GLM...');
-
         % The models are assumed to have the same number of timepoints as the
         % data, and the timepoints are assumed to be corresponding.
 
@@ -107,7 +105,7 @@ function [glm_paths, lagSTCMetadatas] = searchlight_dynamicGLM_source(RDMPaths, 
         % will be  offset by the specified lag.
 
         % Remember that STCmetadata.tstep measures lag in SECONDS!
-            timestep_in_ms = slSTCMetadatas.(chi).tstep * 1000;
+        timestep_in_ms = slSTCMetadatas.(chi).tstep * 1000;
 
         % Check if this lag is doable
         if mod(lag_in_ms, timestep_in_ms) ~= 0
@@ -137,14 +135,19 @@ function [glm_paths, lagSTCMetadatas] = searchlight_dynamicGLM_source(RDMPaths, 
     %% Check for overwrites
     
     promptOptions.functionCaller = 'searchlight_dynamicGLM_source';
-    promptOptions.defaultResponse = 'S';
     file_i = 1;
     for chi = 'LR'
-        for fileName = fieldnames(glm_paths)
+        fileNames = fieldnames(glm_paths);
+        for file_name_i = 1:numel(fileNames)
+            fileName = fileNames{file_name_i};
             promptOptions.checkFiles(file_i).address = [glm_paths.(fileName).(chi) '.mat'];
             file_i = file_i + 1;
         end
     end
+    % Some of the file names are templates, so we don't want these 'files'
+    % failing to be detected to result in rerunning in every case.
+    promptOptions.quantification = 'existential';
+    promptOptions.defaultResponse = 'R';
     
     overwriteFlag = overwritePrompt(userOptions, promptOptions);
     

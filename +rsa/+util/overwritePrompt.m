@@ -1,5 +1,3 @@
-function overwriteFlag = overwritePrompt(userOptions, promptOptions)
-%
 % overwritePrompt is a function which prompts the user, either at the command
 % line or (when it's implemented) via a GUI dialogue box.  The user will be
 % notified if they are liable to overwrite pre-existing data and will be given
@@ -22,11 +20,21 @@ function overwriteFlag = overwritePrompt(userOptions, promptOptions)
 %                        A boolean value. If true, the text-based prompt is
 %                        replaced by a graphical box. Defaults to false.
 %
-%        promptOptions --- Further options.
+%        promptOptions --- Further options, including:
+%                promptOptions.quantification
+%                        A string which describes how the presence or
+%                        absence of specified files should be checked.
+%                        Available options:
+%                        'existential' --- Prompt if any of the listed
+%                                          files already exist.
+%                        'universal'   --- Prompt if all of the listed
+%                                          files aready exist.
 %  
-% Cai Wingfield 11-2009, 6-2010 updated by Li Su 2-2012
+% Cai Wingfield 2009-11, 2010-06, 2015-05
+% Updated by Li Su 02-2012
 %__________________________________________________________________________
 % Copyright (C) 2010 Medical Research Council
+function overwriteFlag = overwritePrompt(userOptions, promptOptions)
 
 import rsa.*
 import rsa.util.*
@@ -36,24 +44,40 @@ if ~isfield(userOptions, 'analysisName'), error('overwritePrompt:NoAnalysisName'
 if ~isfield(userOptions, 'rootPath'), error('overwritePrompt:NoRootPath', 'rootPath must be set. See help'); end%if
 userOptions = setIfUnset(userOptions, 'dialogueBox', false);
 
-exsitFlag = true; % A flag testing whether or not the analysis has been run and its resulting files exist on the disk
-overwriteFlag = false; % A flag testing whether any data may be written
+promptOptions = setIfUnset(promptOptions, 'checkFiles', []);
+promptOptions = setIfUnset(promptOptions, 'quantification', 'existential');
 
-%% Check if prompt needs to be done
+% A flag desribing whether or not every listed file already exists.
+allFilesExist = true;
+% A flag descibing wheter or not any listed file already exists.
+anyFilesExist = false;
+% A flag describing whether any data may be (over)written.
+overwriteFlag = false;
 
-if isfield(promptOptions, 'checkFiles')
-	% If no files are specified, it will go ahead and return "true" (probably resulting an overwrite)
-	for fileCount = 1:numel(promptOptions.checkFiles)
-		if not(exist(promptOptions.checkFiles(fileCount).address, 'file'))
-			exsitFlag = false; % If one of the passed-in files doesn't exist, this will be set to false, updated by Li Su 2-2012
-            break;
-		end%if
-	end%for
-end%if
+%% Check which files exist
+
+for file_i = 1:numel(promptOptions.checkFiles)
+    if exist(promptOptions.checkFiles(file_i).address, 'file')
+        anyFilesExist = true;
+    else
+        allFilesExist = false;
+    end
+end%for
+
+%% Check if prompt is needed
+if strcmpi(promptOptions.quantification, 'universal') && allFilesExist
+    promptNeeded = true;
+elseif strcmpi(promptOptions.quantification, 'existential') && anyFilesExist
+    promptNeeded = true;
+else
+    promptNeeded = false;
+end
 
 %% Do prompt (if needed)
 
-if exsitFlag % If there are files which will eventually be saved but which already exist, prompt the user to ask what to do.
+% If there are files which will eventually be saved but which already 
+% exist, prompt the user to ask what to do.
+if promptNeeded
 
 	% Set some defaults
 	if ~isfield(promptOptions, 'defaultResponse'), promptOptions.defaultResponse = 'S'; end
@@ -193,4 +217,3 @@ else
 end%if
 
 end%function
-
