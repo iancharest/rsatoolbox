@@ -105,14 +105,23 @@ function [p_paths, p_median_paths] = searchlight_GLM_permutation_source(RDMPaths
         gotoDir(userOptions.rootPath, 'Stats');
         save(sprintf('unpooled-h0-%sh', lower(chi)), 'h0_betas', '-v7.3');
         
-        % We'll pool across timepoints.
+        % We'll pool the distrubution across timepoints and permutations.
         % This is based on the assumption that the distributions of
         % beta values should be independent of time.
         % We may (or may not) want to make the same assumption about
         % space, but we won't do that for now.
         
-        % Reshape h0-betas
-        h0_betas = reshape(h0_betas, nVertices, nTimepoints_overlap * nPermutations * nBetas);
+        % But first we need to slice out the betas for the all-1s
+        % predictor.
+        h0_betas = h0_betas(:, :, 2:end, :);
+        
+        % We want the distribution of maximum-over-models betas at each
+        % vertex.
+        % (nVertices, nTimepoints_overlap, nPermutations)
+        h0_betas = max(h0_betas, 3);
+        % (nVertices, nTimepoints_overlap * nPermutations)
+        h0_betas = reshape(h0_betas, ...
+            nVertices, nTimepoints_overlap * nPermutations);
         
         % Save null-distributions post pooling
         save(sprintf('pooled-h0-%sh', lower(chi)), 'h0_betas', '-v7.3');
