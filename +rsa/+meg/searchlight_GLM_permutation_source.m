@@ -137,7 +137,6 @@ function [p_paths, p_median_paths] = searchlight_GLM_permutation_source(RDMPaths
         prints('Loading actual %sh beta values...', lower(chi));
         
         glm_mesh_betas = directLoad([glm_paths.betas.(chi) '.mat'], 'glm_mesh_betas');
-        glm_mesh_betas_median = directLoad([glm_paths.betas_median.(chi) '.mat'], 'glm_mesh_betas_median');
         
         
         %% Calculate p values
@@ -146,28 +145,23 @@ function [p_paths, p_median_paths] = searchlight_GLM_permutation_source(RDMPaths
 
         % Preallocate
         p_mesh = ones(nVertices, nTimepoints_overlap, nModels);
-        p_mesh_median = ones(nVertices, nModels);
 
         parfor m = 1:nModels
             prints('Computing p-values for model %d of %d...', m, nModels);
             p_mesh_slice = ones(nVertices, nTimepoints_overlap);
-            p_mesh_median_slice = ones(nVertices, 1);
             for v = 1:nVertices
                 for t = 1:nTimepoints_overlap
                     % +1 because of that annoying forced all-1s model.
                     p_mesh_slice(v, t) = 1 - portion(h0_betas(m, :), glm_mesh_betas(v, t, m + 1));
                 end
-                p_mesh_median_slice(v) = 1 - portion(h0_betas(m, :), glm_mesh_betas_median(v, m + 1));
             end
             p_mesh(:, :, m) = p_mesh_slice; %#ok<PFOUS> it's saved
-            p_mesh_median(:, m) = p_mesh_median_slice; %#ok<PFOUS> it's saved
         end
         
         %% Save results
 
         prints('Saving p-meshes...');
         save(p_paths.(chi), 'p_mesh');
-        save(p_median_paths.(chi), 'p_mesh_median');
     
     end%for:chi
 

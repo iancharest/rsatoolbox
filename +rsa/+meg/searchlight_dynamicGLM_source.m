@@ -61,12 +61,12 @@ function [glm_paths, lagSTCMetadatas] = searchlight_dynamicGLM_source(RDMPaths, 
         
         %% Where to save results
         
-        % The same paths will be used for mat files and stc files, the only
-        % differences being the extension.
-        
         % Directory
         glmMeshDir = fullfile(userOptions.rootPath, 'Meshes');
         gotoDir(glmMeshDir);
+        
+        % The same paths will be used for mat files and stc files, the only
+        % differences being the extension.
         
         % Paths
         glm_paths.betas.(chi) = fullfile(glmMeshDir, ...
@@ -78,21 +78,9 @@ function [glm_paths, lagSTCMetadatas] = searchlight_dynamicGLM_source(RDMPaths, 
         glm_paths.max_beta_is.(chi) = fullfile(glmMeshDir, ...
             [file_name_prefix 'GLM_mesh_max_beta_is-', lower(chi), 'h']);
         
-        % Paths median
-        glm_paths.betas_median.(chi) = fullfile(glmMeshDir, ...
-            [file_name_prefix 'GLM_mesh_betas_median-', lower(chi), 'h']);
-        glm_paths.deviances_median.(chi) = fullfile(glmMeshDir, ...
-            [file_name_prefix 'GLM_mesh_deviances_median-', lower(chi), 'h']);
-        glm_paths.max_betas_median.(chi) = fullfile(glmMeshDir, ...
-            [file_name_prefix 'GLM_mesh_max_betas_median-', lower(chi), 'h']);
-        glm_paths.max_beta_is_median.(chi) = fullfile(glmMeshDir, ...
-            [file_name_prefix 'GLM_mesh_max_beta_is_median-', lower(chi), 'h']);
-        
         % Paths model template
         glm_paths.betas_model.(chi) = fullfile(glmMeshDir, ...
             [file_name_prefix 'GLM_mesh_betas_model_%d-', lower(chi), 'h']);
-        glm_paths.betas_model_median.(chi) = fullfile(glmMeshDir, ...
-            [file_name_prefix 'GLM_mesh_betas_model_%d_median-', lower(chi), 'h']);
         
         
         %% Prepare lag for the models
@@ -129,6 +117,7 @@ function [glm_paths, lagSTCMetadatas] = searchlight_dynamicGLM_source(RDMPaths, 
         lagSTCMetadatas.(chi).vertices = slSTCMetadatas.(chi).vertices;
         lagSTCMetadatas.(chi).tmax = slSTCMetadatas.(chi).tmax;
         lagSTCMetadatas.(chi).tmin = slSTCMetadatas.(chi).tmin + (lagSTCMetadatas.(chi).tstep * lag_in_timepoints);
+        
     end
     
     
@@ -151,11 +140,11 @@ function [glm_paths, lagSTCMetadatas] = searchlight_dynamicGLM_source(RDMPaths, 
     
     overwriteFlag = overwritePrompt(userOptions, promptOptions);
     
+    
+    %% Begin
+
     if overwriteFlag
     
-    
-        %% Begin
-
         [nTimepoints_models, nModels] = size(models);
 
         for chi = 'LR'
@@ -214,17 +203,6 @@ function [glm_paths, lagSTCMetadatas] = searchlight_dynamicGLM_source(RDMPaths, 
             [glm_mesh_max_betas, glm_mesh_max_beta_is] = max(glm_mesh_betas(:, :, 2:end), [], 3);
 
 
-            %% Median
-
-            % Calculate median betas over time window
-            % (vertices, models)
-            glm_mesh_betas_median = squeeze(median(glm_mesh_betas, 2));
-            glm_mesh_deviances_median = squeeze(median(glm_mesh_deviances, 2));
-
-            % Calculate the maximum betas.
-            [glm_mesh_max_betas_median, glm_mesh_max_beta_is_median] = max(glm_mesh_betas_median(:, 2:end), [], 2);
-
-
             %% Save results
             prints('Saving GLM results for %sh hemisphere to "%s"...', lower(chi), glmMeshDir);
 
@@ -255,34 +233,6 @@ function [glm_paths, lagSTCMetadatas] = searchlight_dynamicGLM_source(RDMPaths, 
                 lagSTCMetadatas.(chi), ...
                 glm_mesh_max_beta_is, ...
                 [glm_paths.max_beta_is.(chi) '.stc']);
-
-            %% Save full median results
-            save('-v7.3', [glm_paths.betas_median.(chi) '.mat'], 'glm_mesh_betas_median');
-
-            %% Save per-model median results
-            for model_i = 1:nModels
-                write_stc_snapshot( ...
-                    lagSTCMetadatas.(chi), ...
-                    squeeze(glm_mesh_betas_median(:, model_i + 1)), ...
-                    [sprintf(glm_paths.betas_model_median.(chi), model_i) '.stc']);
-            end
-
-            %% Save summary median results
-            save('-v7.3', [glm_paths.deviances_median.(chi) '.mat'],   'glm_mesh_deviances_median');
-            save('-v7.3', [glm_paths.max_betas_median.(chi) '.mat'],   'glm_mesh_max_betas_median');
-            save('-v7.3', [glm_paths.max_beta_is_median.(chi) '.mat'], 'glm_mesh_max_beta_is_median');
-            write_stc_snapshot( ...
-                lagSTCMetadatas.(chi), ...
-                glm_mesh_deviances_median, ...
-                [glm_paths.deviances_median.(chi) '.stc']);
-            write_stc_snapshot( ...
-                lagSTCMetadatas.(chi), ...
-                glm_mesh_max_betas_median, ...
-                [glm_paths.max_betas_median.(chi) '.stc']);
-            write_stc_snapshot( ...
-                lagSTCMetadatas.(chi), ...
-                glm_mesh_max_beta_is_median, ...
-                [glm_paths.max_beta_is_median.(chi) '.stc']);
 
         end%for:chi
     end%if
