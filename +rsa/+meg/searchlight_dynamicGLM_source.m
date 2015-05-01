@@ -55,114 +55,9 @@ function [glm_paths, lagSTCMetadatas] = searchlight_dynamicGLM_source(RDMPaths, 
     file_name_prefix = ip.Results.(nameFilePrefix);
     
     
-    %% Begin
-    
-    [nTimepoints_models, nModels] = size(models);
+    %% Set up values to be returned, whether or not any work is really done.
     
     for chi = 'LR'
-    
-    
-    %% Prepare lag for the models
-    
-    prints('Computing appropriate lag for dynamic model GLM...');
-    
-    % The models are assumed to have the same number of timepoints as the
-    % data, and the timepoints are assumed to be corresponding.
-    
-    % The timepoints in the model timelines and the timepoints in the data
-    % timelines are assumed to be corresponding at 0 lag, though the models
-    % will be  offset by the specified lag.
-    
-    % Remember that STCmetadata.tstep measures lag in SECONDS!
-        timestep_in_ms = slSTCMetadatas.(chi).tstep * 1000;
-    
-    % Check if this lag is doable
-    if mod(lag_in_ms, timestep_in_ms) ~= 0
-        warns('The requested lag of %dms cannot be achieved, as the timestep is %dms.', lag_in_ms, timestep_in_ms);
-        
-        % If it's not achievable, we adjust it until it is
-        desired_lag_in_steps = lag_in_ms / timestep_in_ms;
-        % TODO: this takes the floor, but should really take the nearest?
-        achievable_lag_in_steps = floor(desired_lag_in_steps);
-        achievable_lag_in_ms = achievable_lag_in_steps * timestep_in_ms;
-        warns('Using a lag of %dms instead.', achievable_lag_in_ms);
-        lag_in_ms = achievable_lag_in_ms;
-    end
-    
-    lag_in_timepoints = lag_in_ms / timestep_in_ms;
-    
-    
-    %% Prepare lag STC metadata
-    
-        lagSTCMetadatas.(chi).tstep = slSTCMetadatas.(chi).tstep;
-        lagSTCMetadatas.(chi).vertices = slSTCMetadatas.(chi).vertices;
-        lagSTCMetadatas.(chi).tmax = slSTCMetadatas.(chi).tmax;
-        lagSTCMetadatas.(chi).tmin = slSTCMetadatas.(chi).tmin + (lagSTCMetadatas.(chi).tstep * lag_in_timepoints);
-    
-        prints('Loading RDM mesh from "%s"...', RDMPaths.(chi));
-        
-        slRDMs = directLoad(RDMPaths.(chi));
-        
-        prints('Applying lag to dynamic model timelines...');
-    
-        [nVertices, nTimepoints_data] = size(slRDMs);
-        [modelStack, nTimepoints_overlap] = stack_and_offset_models(models, lag_in_timepoints, nTimepoints_data);
-    
-        prints('Working at a lag of %dms, which corresponds to %d timepoints at this resolution.', lag_in_ms, lag_in_timepoints);
-        
-        % Preallocate.
-        glm_mesh_betas = nan(nVertices, nTimepoints_overlap, nModels + 1);
-        glm_mesh_deviances = nan(nVertices, nTimepoints_overlap);
-        
-        % Tell the user what's going on.
-        prints('Performing dynamic GLM in %sh hemisphere...', lower(chi));
-        
-        parfor t = 1:nTimepoints_overlap
-            
-            % The timelines for the data and the models are offset.
-            t_relative_to_data = t + lag_in_timepoints;
-    
-            % Temporarily disable this warning
-            warning_id = 'stats:glmfit:IllConditioned';
-            warning('off', warning_id);
-
-            prints('Working on timepoint %d/%d...', t, nTimepoints_overlap);
-            
-            for v = 1:nVertices
-                % Fit the GLM at this point
-                % TODO: In case the models are all zeros, this will merrily
-                % TODO: produce meaningless betas along with a warning.
-                % TODO: We should probably check for this first.
-                [ ...
-                      glm_mesh_betas(v, t, :), ...
-                      glm_mesh_deviances(v, t) ...
-                    ] = glmfit( ...
-                        modelStack{t}', ...
-                        slRDMs(v, t_relative_to_data).RDM', ...
-                        ...% TODO: Why are we making this assumption?
-                        ...% TODO: What are the implications of this?
-                        'normal');
-            end%for:v
-            
-            % Re-enable warning
-            warning('on', warning_id);
-            
-        end%for:t
-        
-        % Calculate max betas and max beta indices.
-        [glm_mesh_max_betas, glm_mesh_max_beta_is] = max(glm_mesh_betas(:, :, 2:end), [], 3);
-        
-        
-        %% Median
-        
-        % Calculate median betas over time window
-        % (vertices, models)
-        glm_mesh_betas_median = squeeze(median(glm_mesh_betas, 2));
-        glm_mesh_deviances_median = squeeze(median(glm_mesh_deviances, 2));
-        
-        % Calculate the maximum betas.
-        [glm_mesh_max_betas_median, glm_mesh_max_beta_is_median] = max(glm_mesh_betas_median(:, 2:end), [], 2);
-
         
         %% Where to save results
         
@@ -200,65 +95,192 @@ function [glm_paths, lagSTCMetadatas] = searchlight_dynamicGLM_source(RDMPaths, 
             [file_name_prefix 'GLM_mesh_betas_model_%d_median-', lower(chi), 'h']);
         
         
-        %% Save results
-        prints('Saving GLM results for %sh hemisphere to "%s"...', lower(chi), glmMeshDir);
-        
-        %% Save full results
-        save('-v7.3', [glm_paths.betas.(chi) '.mat'], 'glm_mesh_betas');
-        
-        %% Save per-model results
-        for model_i = 1:nModels
+        %% Prepare lag for the models
+
+        prints('Computing appropriate lag for dynamic model GLM...');
+
+        % The models are assumed to have the same number of timepoints as the
+        % data, and the timepoints are assumed to be corresponding.
+
+        % The timepoints in the model timelines and the timepoints in the data
+        % timelines are assumed to be corresponding at 0 lag, though the models
+        % will be  offset by the specified lag.
+
+        % Remember that STCmetadata.tstep measures lag in SECONDS!
+            timestep_in_ms = slSTCMetadatas.(chi).tstep * 1000;
+
+        % Check if this lag is doable
+        if mod(lag_in_ms, timestep_in_ms) ~= 0
+            warns('The requested lag of %dms cannot be achieved, as the timestep is %dms.', lag_in_ms, timestep_in_ms);
+
+            % If it's not achievable, we adjust it until it is
+            desired_lag_in_steps = lag_in_ms / timestep_in_ms;
+            % TODO: this takes the floor, but should really take the nearest?
+            achievable_lag_in_steps = floor(desired_lag_in_steps);
+            achievable_lag_in_ms = achievable_lag_in_steps * timestep_in_ms;
+            warns('Using a lag of %dms instead.', achievable_lag_in_ms);
+            lag_in_ms = achievable_lag_in_ms;
+        end
+
+        lag_in_timepoints = lag_in_ms / timestep_in_ms;
+
+
+        %% Prepare lag STC metadata
+    
+        lagSTCMetadatas.(chi).tstep = slSTCMetadatas.(chi).tstep;
+        lagSTCMetadatas.(chi).vertices = slSTCMetadatas.(chi).vertices;
+        lagSTCMetadatas.(chi).tmax = slSTCMetadatas.(chi).tmax;
+        lagSTCMetadatas.(chi).tmin = slSTCMetadatas.(chi).tmin + (lagSTCMetadatas.(chi).tstep * lag_in_timepoints);
+    end
+    
+    
+    %% Check for overwrites
+    
+    promptOptions.functionCaller = 'searchlight_dynamicGLM_source';
+    promptOptions.defaultResponse = 'S';
+    file_i = 1;
+    for chi = 'LR'
+        for fileName = fieldnames(glm_paths)
+            promptOptions.checkFiles(file_i).address = [glm_paths.(fileName).(chi) '.mat'];
+            file_i = file_i + 1;
+        end
+    end
+    
+    overwriteFlag = overwritePrompt(userOptions, promptOptions);
+    
+    if overwriteFlag
+    
+    
+        %% Begin
+
+        [nTimepoints_models, nModels] = size(models);
+
+        for chi = 'LR'
+
+            prints('Loading RDM mesh from "%s"...', RDMPaths.(chi));
+
+            slRDMs = directLoad(RDMPaths.(chi));
+
+            prints('Applying lag to dynamic model timelines...');
+
+            [nVertices, nTimepoints_data] = size(slRDMs);
+            [modelStack, nTimepoints_overlap] = stack_and_offset_models(models, lag_in_timepoints, nTimepoints_data);
+
+            prints('Working at a lag of %dms, which corresponds to %d timepoints at this resolution.', lag_in_ms, lag_in_timepoints);
+
+            % Preallocate.
+            glm_mesh_betas = nan(nVertices, nTimepoints_overlap, nModels + 1);
+            glm_mesh_deviances = nan(nVertices, nTimepoints_overlap);
+
+            % Tell the user what's going on.
+            prints('Performing dynamic GLM in %sh hemisphere...', lower(chi));
+
+            parfor t = 1:nTimepoints_overlap
+
+                % The timelines for the data and the models are offset.
+                t_relative_to_data = t + lag_in_timepoints;
+
+                % Temporarily disable this warning
+                warning_id = 'stats:glmfit:IllConditioned';
+                warning('off', warning_id);
+
+                prints('Working on timepoint %d/%d...', t, nTimepoints_overlap);
+
+                for v = 1:nVertices
+                    % Fit the GLM at this point
+                    % TODO: In case the models are all zeros, this will merrily
+                    % TODO: produce meaningless betas along with a warning.
+                    % TODO: We should probably check for this first.
+                    [ ...
+                          glm_mesh_betas(v, t, :), ...
+                          glm_mesh_deviances(v, t) ...
+                        ] = glmfit( ...
+                            modelStack{t}', ...
+                            slRDMs(v, t_relative_to_data).RDM', ...
+                            ...% TODO: Why are we making this assumption?
+                            ...% TODO: What are the implications of this?
+                            'normal');
+                end%for:v
+
+                % Re-enable warning
+                warning('on', warning_id);
+
+            end%for:t
+
+            % Calculate max betas and max beta indices.
+            [glm_mesh_max_betas, glm_mesh_max_beta_is] = max(glm_mesh_betas(:, :, 2:end), [], 3);
+
+
+            %% Median
+
+            % Calculate median betas over time window
+            % (vertices, models)
+            glm_mesh_betas_median = squeeze(median(glm_mesh_betas, 2));
+            glm_mesh_deviances_median = squeeze(median(glm_mesh_deviances, 2));
+
+            % Calculate the maximum betas.
+            [glm_mesh_max_betas_median, glm_mesh_max_beta_is_median] = max(glm_mesh_betas_median(:, 2:end), [], 2);
+
+
+            %% Save results
+            prints('Saving GLM results for %sh hemisphere to "%s"...', lower(chi), glmMeshDir);
+
+            %% Save full results
+            save('-v7.3', [glm_paths.betas.(chi) '.mat'], 'glm_mesh_betas');
+
+            %% Save per-model results
+            for model_i = 1:nModels
+                write_stc_file( ...
+                    lagSTCMetadatas.(chi), ...
+                    squeeze(glm_mesh_betas(:, :, model_i + 1)), ...
+                    [sprintf(glm_paths.betas_model.(chi), model_i) '.stc']);
+            end
+
+            %% Save summary results
+            save('-v7.3', [glm_paths.deviances.(chi) '.mat'],   'glm_mesh_deviances');
+            save('-v7.3', [glm_paths.max_betas.(chi) '.mat'],   'glm_mesh_max_betas');
+            save('-v7.3', [glm_paths.max_beta_is.(chi) '.mat'], 'glm_mesh_max_beta_is');
             write_stc_file( ...
                 lagSTCMetadatas.(chi), ...
-                squeeze(glm_mesh_betas(:, :, model_i + 1)), ...
-                [sprintf(glm_paths.betas_model.(chi), model_i) '.stc']);
-        end
-        
-        %% Save summary results
-        save('-v7.3', [glm_paths.deviances.(chi) '.mat'],   'glm_mesh_deviances');
-        save('-v7.3', [glm_paths.max_betas.(chi) '.mat'],   'glm_mesh_max_betas');
-        save('-v7.3', [glm_paths.max_beta_is.(chi) '.mat'], 'glm_mesh_max_beta_is');
-        write_stc_file( ...
-            lagSTCMetadatas.(chi), ...
-            glm_mesh_deviances, ...
-            [glm_paths.deviances.(chi) '.stc']);
-        write_stc_file( ...
-            lagSTCMetadatas.(chi), ...
-            glm_mesh_max_betas, ...
-            [glm_paths.max_betas.(chi) '.stc']);
-        write_stc_file( ...
-            lagSTCMetadatas.(chi), ...
-            glm_mesh_max_beta_is, ...
-            [glm_paths.max_beta_is.(chi) '.stc']);
-        
-        %% Save full median results
-        save('-v7.3', [glm_paths.betas_median.(chi) '.mat'], 'glm_mesh_betas_median');
-        
-        %% Save per-model median results
-        for model_i = 1:nModels
+                glm_mesh_deviances, ...
+                [glm_paths.deviances.(chi) '.stc']);
+            write_stc_file( ...
+                lagSTCMetadatas.(chi), ...
+                glm_mesh_max_betas, ...
+                [glm_paths.max_betas.(chi) '.stc']);
+            write_stc_file( ...
+                lagSTCMetadatas.(chi), ...
+                glm_mesh_max_beta_is, ...
+                [glm_paths.max_beta_is.(chi) '.stc']);
+
+            %% Save full median results
+            save('-v7.3', [glm_paths.betas_median.(chi) '.mat'], 'glm_mesh_betas_median');
+
+            %% Save per-model median results
+            for model_i = 1:nModels
+                write_stc_snapshot( ...
+                    lagSTCMetadatas.(chi), ...
+                    squeeze(glm_mesh_betas_median(:, model_i + 1)), ...
+                    [sprintf(glm_paths.betas_model_median.(chi), model_i) '.stc']);
+            end
+
+            %% Save summary median results
+            save('-v7.3', [glm_paths.deviances_median.(chi) '.mat'],   'glm_mesh_deviances_median');
+            save('-v7.3', [glm_paths.max_betas_median.(chi) '.mat'],   'glm_mesh_max_betas_median');
+            save('-v7.3', [glm_paths.max_beta_is_median.(chi) '.mat'], 'glm_mesh_max_beta_is_median');
             write_stc_snapshot( ...
                 lagSTCMetadatas.(chi), ...
-                squeeze(glm_mesh_betas_median(:, model_i + 1)), ...
-                [sprintf(glm_paths.betas_model_median.(chi), model_i) '.stc']);
-        end
-       
-        %% Save summary median results
-        save('-v7.3', [glm_paths.deviances_median.(chi) '.mat'],   'glm_mesh_deviances_median');
-        save('-v7.3', [glm_paths.max_betas_median.(chi) '.mat'],   'glm_mesh_max_betas_median');
-        save('-v7.3', [glm_paths.max_beta_is_median.(chi) '.mat'], 'glm_mesh_max_beta_is_median');
-        write_stc_snapshot( ...
-            lagSTCMetadatas.(chi), ...
-            glm_mesh_deviances_median, ...
-            [glm_paths.deviances_median.(chi) '.stc']);
-        write_stc_snapshot( ...
-            lagSTCMetadatas.(chi), ...
-            glm_mesh_max_betas_median, ...
-            [glm_paths.max_betas_median.(chi) '.stc']);
-        write_stc_snapshot( ...
-            lagSTCMetadatas.(chi), ...
-            glm_mesh_max_beta_is_median, ...
-            [glm_paths.max_beta_is_median.(chi) '.stc']);
-        
-    end%for:chi
-    
+                glm_mesh_deviances_median, ...
+                [glm_paths.deviances_median.(chi) '.stc']);
+            write_stc_snapshot( ...
+                lagSTCMetadatas.(chi), ...
+                glm_mesh_max_betas_median, ...
+                [glm_paths.max_betas_median.(chi) '.stc']);
+            write_stc_snapshot( ...
+                lagSTCMetadatas.(chi), ...
+                glm_mesh_max_beta_is_median, ...
+                [glm_paths.max_beta_is_median.(chi) '.stc']);
+
+        end%for:chi
+    end%if
 end%function

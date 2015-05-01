@@ -21,7 +21,7 @@ function [p_paths, p_median_paths] = searchlight_GLM_permutation_source(RDMPaths
     % Preallocate
     lt_index_permutations = nan(numel(lt_indices), nPermutations);
     
-    prints('Precomputing index permutations');
+    prints('Precomputing RDM index permutations...');
     
     for p = 1:nPermutations
         lt_index_permutations(:, p) = squareform(randomizeSimMat(sf_indices));
