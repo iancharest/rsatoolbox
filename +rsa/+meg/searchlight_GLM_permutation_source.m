@@ -10,7 +10,24 @@ function [p_paths, p_median_paths] = searchlight_GLM_permutation_source(RDMPaths
     import rsa.util.*
     
     
+    %% Things to be returned whether or not work is done
+    
+    for chi = 'LR'
+        
+        glmMeshDir = fullfile(userOptions.rootPath, 'Meshes');
+        
+        p_file_name = sprintf('p_mesh-%sh', lower(chi));
+        p_paths.(chi) = fullfile(glmMeshDir, p_file_name);
+        
+        p_median_file_name = sprintf('p_mesh_median-%sh', lower(chi));
+        p_median_paths.(chi) = fullfile(glmMeshDir, p_median_file_name);
+        
+    end%for
+    
+    
     %% Precompute permutations for speed
+    
+    prints('Precomputing RDM index permutations...');
     
     % Indices for lower-triangular-form of RDM.
     lt_indices = 1:numel(vectorizeRDM(models(1).RDM));
@@ -21,8 +38,7 @@ function [p_paths, p_median_paths] = searchlight_GLM_permutation_source(RDMPaths
     % Preallocate
     lt_index_permutations = nan(numel(lt_indices), nPermutations);
     
-    prints('Precomputing RDM index permutations...');
-    
+    % Generate some permutations
     for p = 1:nPermutations
         lt_index_permutations(:, p) = squareform(randomizeSimMat(sf_indices));
     end
@@ -35,10 +51,10 @@ function [p_paths, p_median_paths] = searchlight_GLM_permutation_source(RDMPaths
         %% Load data RDMs
         
         prints('Loading %sh data RDMs from "%s"...', lower(chi), RDMPaths.(chi));
+        
         slRDMs = directLoad(RDMPaths.(chi));
         
         [nVertices, nTimepoints_data] = size(slRDMs);
-    
         lag_in_timepoints = (lagSTCMetadatas.(chi).tmin - slSTCMetadatas.(chi).tmin) / lagSTCMetadatas.(chi).tstep;
 
         [modelStack, nTimepoints_overlap] = stack_and_offset_models(models, lag_in_timepoints, nTimepoints_data);
@@ -49,13 +65,6 @@ function [p_paths, p_median_paths] = searchlight_GLM_permutation_source(RDMPaths
 
         
         %% Calculate pooled-over-time distributions of betas at each vertex
-
-        % We'll pool across timepoints. So we'll make h0_betas a
-        % nModels-x-(nPermutations*nTimepoints_overlap)-sized matrix.
-        % This is based on the assumption that the distributions of
-        % beta values should be independent of time.
-        % We may (or may not) want to make the same assumption about
-        % space, but we won't do that for now.
 
         % Preallocate
         h0_betas = zeros(nVertices, nTimepoints_overlap, nBetas, nPermutations);
@@ -78,7 +87,7 @@ function [p_paths, p_median_paths] = searchlight_GLM_permutation_source(RDMPaths
 
                 for p = 1:nPermutations
 		
-		    scrambled_data_rdm = unscrambled_data_rdm(lt_index_permutations(:, p));
+                    scrambled_data_rdm = unscrambled_data_rdm(lt_index_permutations(:, p));
 
                     h0_betas(v, t, :, p) = glmfit( ...
                         modelStack{t}', ...
@@ -92,23 +101,35 @@ function [p_paths, p_median_paths] = searchlight_GLM_permutation_source(RDMPaths
             warning(w);
         end%for
         
+        % Save null-distributions pre pooling
+        gotoDir(userOptions.rootPath, 'Stats');
+        save(sprintf('unpooled-h0-%sh', lower(chi)), 'h0_betas', '-v7.3');
+        
+        % We'll pool across timepoints.
+        % This is based on the assumption that the distributions of
+        % beta values should be independent of time.
+        % We may (or may not) want to make the same assumption about
+        % space, but we won't do that for now.
+        
         % Reshape h0-betas
         % This will now be nVertices x pooled-values sized
         h0_betas = reshape(h0_betas, nVertices, nTimepoints_overlap * nPermutations * nBetas);
-
-
-        %% Calculate p values
         
-        prints('Calculating p-values at each vertex...');
+        % Save null-distributions post pooling
+        save(sprintf('pooled-h0-%sh', lower(chi)), 'h0_betas', '-v7.3');
+
         
         %% Load existing data
-        
-        glmMeshDir = fullfile(userOptions.rootPath, 'Meshes');
         
         prints('Loading actual %sh beta values...', lower(chi));
         
         glm_mesh_betas = directLoad([glm_paths.betas.(chi) '.mat'], 'glm_mesh_betas');
         glm_mesh_betas_median = directLoad([glm_paths.betas_median.(chi) '.mat'], 'glm_mesh_betas_median');
+        
+        
+        %% Calculate p values
+        
+        prints('Calculating p-values at each vertex...');
 
         % Preallocate
         p_mesh = ones(nVertices, nTimepoints_overlap, nModels);
@@ -128,13 +149,8 @@ function [p_paths, p_median_paths] = searchlight_GLM_permutation_source(RDMPaths
             p_mesh(:, :, m) = p_mesh_slice; %#ok<PFOUS> it's saved
             p_mesh_median(:, m) = p_mesh_median_slice; %#ok<PFOUS> it's saved
         end
-
-        % Save results
-        p_file_name = sprintf('p_mesh-%sh', lower(chi));
-        p_paths.(chi) = fullfile(glmMeshDir, p_file_name);
         
-        p_median_file_name = sprintf('p_mesh_median-%sh', lower(chi));
-        p_median_paths.(chi) = fullfile(glmMeshDir, p_median_file_name);
+        %% Save results
 
         prints('Saving p-meshes...');
         save(p_paths.(chi), 'p_mesh');
