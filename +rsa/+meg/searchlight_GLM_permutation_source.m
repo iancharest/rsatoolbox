@@ -14,8 +14,8 @@ function [h0_paths, h0_pooled_paths] = searchlight_GLM_permutation_source(RDMPat
     for chi = 'LR'
         % Where to save results
         glmStatsDir = fullfile(userOptions.rootPath, 'Stats');
-        h0_paths.(chi)        = fullfile(glmStatsDir, sprintf('unpooled-h0-%sh', lower(chi)));
-        h0_pooled_paths.(chi) = fullfile(glmStatsDir, sprintf('pooled-h0-%sh',   lower(chi)));
+        h0_paths.(chi)        = fullfile(glmStatsDir, sprintf('unpooled-h0-%sh.mat', lower(chi)));
+        h0_pooled_paths.(chi) = fullfile(glmStatsDir, sprintf('pooled-h0-%sh.mat',   lower(chi)));
     end%for
     
     
@@ -139,7 +139,7 @@ function [h0_paths, h0_pooled_paths] = searchlight_GLM_permutation_source(RDMPat
             % We want the distribution of maximum-over-models betas at each
             % vertex.
             % (nVertices, nTimepoints_overlap, nPermutations)
-            h0_betas = max(h0_betas, 3);
+            h0_betas = squeeze(max(h0_betas, [], 3));
             % (nVertices, nTimepoints_overlap * nPermutations)
             h0_betas = reshape(h0_betas, ...
                 nVertices, nTimepoints_overlap * nPermutations); %#ok<NASGU> it's saved
