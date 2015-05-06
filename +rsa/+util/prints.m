@@ -28,8 +28,13 @@ function stamped_message = prints(varargin)
     % Get the current time asap.
     datestamp = datestr(now, 'yyyy-mm-dd HH:MM:SS.FFF');
     
-    % Apply the formatting as supplied in the argumets.
-    message = sprintf(varargin{:});
+    % Allow zero arguments to print just a stamp.
+    if nargin == 0
+        message = '';
+    % Otherwise apply the formatting as supplied in the arguments.
+    else
+        message = sprintf(varargin{:});
+    end
     
     % Build the stamped string.
     stamped_message = ['[', datestamp, '] ', message];
