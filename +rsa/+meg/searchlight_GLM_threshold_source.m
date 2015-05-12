@@ -9,7 +9,6 @@ function [thresholded_glm_paths] = searchlight_GLM_threshold_source(glm_paths, h
 
     for chi = 'LR'
     
-        thresholded_glm_paths.max_beta_is.(chi) = [glm_paths.max_beta_is.(chi) '_thresholded-' lower(chi) 'h'];
         thresholded_glm_paths.betas_model.(chi) = [glm_paths.betas_model.(chi) '_thresholded-' lower(chi) 'h'];
         
         %% Load null distributions
@@ -38,8 +37,6 @@ function [thresholded_glm_paths] = searchlight_GLM_threshold_source(glm_paths, h
 
         % (vertices, timepoints, models+1)
         glm_mesh_betas       = directLoad(glm_paths.betas.(chi),       'glm_mesh_betas');
-        % (vertices, timepoints)
-        glm_mesh_max_beta_is = directLoad(glm_paths.max_beta_is.(chi), 'glm_mesh_max_beta_is');
         
         [nVertices, nTimepoints_overlap, nBetas] = size(glm_mesh_betas);
         nModels = nBetas - 1;
@@ -51,16 +48,6 @@ function [thresholded_glm_paths] = searchlight_GLM_threshold_source(glm_paths, h
         
         for v = 1:nVertices
             values_this_vertex = glm_mesh_betas(v, :, :);
-            
-            % Threshold max beta is
-            for t = 1:nTimepoints_overlap
-                max_beta_i = glm_mesh_max_beta_is(v, t);
-                max_beta_value = values_this_vertex(1, t, max_beta_i + 1);
-                if max_beta_value <= beta_thresholds(v)
-                    max_beta_i = 0;
-                end
-                glm_mesh_max_beta_is(v, t) = max_beta_i;
-            end
             
             % Threshold beta values
             values_this_vertex(values_this_vertex <= beta_thresholds(v)) = 0;
@@ -79,11 +66,6 @@ function [thresholded_glm_paths] = searchlight_GLM_threshold_source(glm_paths, h
                 glm_mesh_betas(:, :, m + 1), ...
                 sprintf([glm_paths.betas_model.(chi) '_thresholded-' lower(chi) 'h.stc'], m));
         end
-        % Max betas
-        write_stc_file( ...
-            lagSTCMetadatas.(chi), ...
-            glm_mesh_max_beta_is, ...
-            [thresholded_glm_paths.max_beta_is.(chi) '.stc']);
         
     end%for:chi
 end%function
