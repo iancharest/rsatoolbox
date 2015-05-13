@@ -53,9 +53,11 @@ rsa.fig.handleCurrentFigure([userOptions.rootPath,filesep,'simulatedSubjAndAvera
 
 
 %% define categorical model RDMs
-[binRDM_animacy, nCatCrossingsRDM]=rsa.rdm.categoricalRDM(categoryVectors(:,1),3,true);
+[binRDM_animacy, nCatCrossingsRDM]=rsa.rdm.categoricalRDM(categoryVectors(:,1));
+rsa.fig.showRDMs(rsa.rdm.concatRDMs(binRDM_animacy, nCatCrossingsRDM), 3);
 ITemphasizedCategories=[1 2 5 6]; % animate, inanimate, face, body
-[binRDM_cats, nCatCrossingsRDM]=rsa.rdm.categoricalRDM(categoryVectors(:,ITemphasizedCategories),4,true);
+[binRDM_cats, nCatCrossingsRDM]=rsa.rdm.categoricalRDM(categoryVectors(:,ITemphasizedCategories));
+rsa.fig.showRDMs(rsa.rdm.concatRDMs(binRDM_cats, nCatCrossingsRDM), 4);
 faceAnimateInaniClustersRDM = rsa.util.directLoad([pwd,filesep,'92imageData',filesep,'faceAnimateInaniClustersRDM.mat'], 'faceAnimateInaniClustersRDM');
 
 

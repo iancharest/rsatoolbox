@@ -1,4 +1,4 @@
-function  [binRDM, nCatCrossingsRDM]=categoricalRDM(categoryVectors,figI,monitor)
+function  [binRDM, nCatCrossingsRDM]=categoricalRDM(categoryVectors)
 
 % Given a single vector of category indices, this function returns a binary
 % representational dissimilarity matrix (binRDM) containing a zero for each
@@ -22,36 +22,22 @@ function  [binRDM, nCatCrossingsRDM]=categoricalRDM(categoryVectors,figI,monitor
 % Copyright (C) 2012 Medical Research Council
 
 import rsa.*
-import rsa.fig.*
-import rsa.fmri.*
 import rsa.rdm.*
-import rsa.sim.*
-import rsa.spm.*
-import rsa.stat.*
 import rsa.util.*
 
 %% preparations
-if ~exist('monitor','var'), monitor=true; end
-if ~exist('figI','var'), figI=500; end
 if min(size(categoryVectors))==1, categoryVectors=categoryVectors(:); end
-[nCond nCats]=size(categoryVectors);
+[nCond, nCats] = size(categoryVectors);
 
 
 %% count category crossings for each pair of conditions
 nCatCrossingsRDM=zeros(nCond,nCond);
 
 for catI=1:nCats
-    cCatBinRDM=repmat(categoryVectors(:,catI),[1 nCond])~=repmat(categoryVectors(:,catI)',[nCond 1]);
-    nCatCrossingsRDM=nCatCrossingsRDM+cCatBinRDM;
+    cCatBinRDM = repmat(categoryVectors(:,catI),[1 nCond]) ~= repmat(categoryVectors(:,catI)',[nCond 1]);
+    nCatCrossingsRDM = nCatCrossingsRDM+cCatBinRDM;
 end
 
-binRDM=logical(nCatCrossingsRDM);
-
-
-%% visualise
-if monitor
-    showRDMs(concatRDMs(binRDM,nCatCrossingsRDM),figI);
-end
-
+binRDM = logical(nCatCrossingsRDM);
 
 end%function
