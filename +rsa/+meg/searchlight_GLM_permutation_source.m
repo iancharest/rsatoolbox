@@ -1,7 +1,7 @@
-% [h0_paths, h0_pooled_paths] = searchlight_GLM_permutation_source(RDMPaths, models, slSTCMetadatas, lagSTCMetadatas, nPermutations, userOptions)
+% [h0_paths] = searchlight_GLM_permutation_source(RDMPaths, models, slSTCMetadatas, lagSTCMetadatas, nPermutations, userOptions)
 %
 % Cai Wingfield 2015-04
-function [h0_paths, h0_pooled_paths] = searchlight_GLM_permutation_source(RDMPaths, models, slSTCMetadatas, lagSTCMetadatas, nPermutations, userOptions)
+function [h0_paths] = searchlight_GLM_permutation_source(RDMPaths, models, slSTCMetadatas, lagSTCMetadatas, nPermutations, userOptions)
 
     import rsa.*
     import rsa.meg.*
@@ -14,8 +14,7 @@ function [h0_paths, h0_pooled_paths] = searchlight_GLM_permutation_source(RDMPat
     for chi = 'LR'
         % Where to save results
         glmStatsDir = fullfile(userOptions.rootPath, 'Stats');
-        h0_paths.(chi)        = fullfile(glmStatsDir, sprintf('unpooled-h0-%sh.mat', lower(chi)));
-        h0_pooled_paths.(chi) = fullfile(glmStatsDir, sprintf('pooled-h0-%sh.mat',   lower(chi)));
+        h0_paths.(chi) = fullfile(glmStatsDir, sprintf('h0-%sh.mat', lower(chi)));
     end%for
     
     
@@ -25,8 +24,6 @@ function [h0_paths, h0_pooled_paths] = searchlight_GLM_permutation_source(RDMPat
     file_i = 1;
     for chi = 'LR'
         promptOptions.checkFiles(file_i).address = h0_paths.(chi);
-        file_i = file_i + 1;
-        promptOptions.checkFiles(file_i).address = h0_pooled_paths.(chi);
         file_i = file_i + 1;
     end
     promptOptions.defaultResponse = 'R';
@@ -80,7 +77,12 @@ function [h0_paths, h0_pooled_paths] = searchlight_GLM_permutation_source(RDMPat
             %% Calculate distributions of betas at each vertex
 
             % Preallocate
-            h0_betas = zeros(nVertices, nTimepoints_overlap, nBetas, nPermutations);
+            h0_betas = zeros( ...
+                nVertices, ...
+                nTimepoints_overlap, ...
+                ...% -1 for the all-1s beta which we will ignore
+                nBetas - 1, ...
+                nPermutations);
 
             prints('Computing beta null distributions at %d vertices...', nVertices);
 
@@ -101,11 +103,13 @@ function [h0_paths, h0_pooled_paths] = searchlight_GLM_permutation_source(RDMPat
                     for p = 1:nPermutations
 
                         scrambled_data_rdm = unscrambled_data_rdm(lt_index_permutations(:, p));
-
-                        h0_betas(v, t, :, p) = glmfit( ...
+                        
+                        betas = glmfit( ...
                             modelStack{t}', ...
                             scrambled_data_rdm', ...
                             'normal');
+
+                        h0_betas(v, t, :, p) = betas(2:end); %#ok<PFOUS> it's saved
                     end%for
 
                     % Occasional feedback
@@ -122,30 +126,9 @@ function [h0_paths, h0_pooled_paths] = searchlight_GLM_permutation_source(RDMPat
 
             %% Pool and save H0-distributions
 
-            % Save null-distributions pre pooling
+            % Ssave null-distributions pre pooling
             gotoDir(userOptions.rootPath, 'Stats');
             save(h0_paths.(chi), 'h0_betas', '-v7.3');
-
-            % We'll pool the distrubution across timepoints and permutations.
-            % This is based on the assumption that the distributions of
-            % beta values should be independent of time.
-            % We may (or may not) want to make the same assumption about
-            % space, but we won't do that for now.
-
-            % But first we need to slice out the betas for the all-1s
-            % predictor.
-            h0_betas = h0_betas(:, :, 2:end, :);
-
-            % We want the distribution of maximum-over-models betas at each
-            % vertex.
-            % (nVertices, nTimepoints_overlap, nPermutations)
-            h0_betas = squeeze(max(h0_betas, [], 3));
-            % (nVertices, nTimepoints_overlap * nPermutations)
-            h0_betas = reshape(h0_betas, ...
-                nVertices, nTimepoints_overlap * nPermutations); %#ok<NASGU> it's saved
-
-            % Save null-distributions post pooling
-            save(h0_pooled_paths.(chi), 'h0_betas', '-v7.3');
 
         end%for:chi
     end
