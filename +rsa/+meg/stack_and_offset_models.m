@@ -22,6 +22,10 @@ function [modelStack, nTimepoints_overlap] = stack_and_offset_models(models, lag
     %             only look
     %             in overlap
     nTimepoints_overlap = nTimepoints_data - lag_in_timepoints;
+    % There may be a case where we don't have models for the full epoch,
+    % even including the overlap, so in this case we ensure that we don't
+    % end up looking past the end of the model timeline.
+    nTimepoints_overlap = min(nTimepoints_overlap, nTimepoints_models);
     
     model_size = size(models(1,1).RDM);
     
