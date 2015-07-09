@@ -4,7 +4,7 @@
 % a time-indexed cell array of model stacks suitable for glmfit.
 %
 % Cai Wingfield 2015-04
-function [modelStack, nTimepoints_overlap] = stack_and_offset_models(models, lag_in_timepoints, nTimepoints_data)
+function [modelStack, nTimepoints_overlap] = stack_and_offset_models(models, lag_in_timepoints, first_model_frame, nTimepoints_data)
 
     import rsa.*
     import rsa.rdm.*
@@ -21,7 +21,7 @@ function [modelStack, nTimepoints_overlap] = stack_and_offset_models(models, lag
     %                 ^
     %             only look
     %             in overlap
-    nTimepoints_overlap = nTimepoints_data - lag_in_timepoints;
+    nTimepoints_overlap = nTimepoints_data - lag_in_timepoints - first_model_frame;
     
     model_size = size(models(1,1).RDM);
     

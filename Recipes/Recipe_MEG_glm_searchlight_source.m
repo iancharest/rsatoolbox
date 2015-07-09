@@ -1,11 +1,8 @@
 % TODO: Documentation
 %
-% Cai Wingfield 2010-05, 2010-08, 2015-03, 2015-04
+% Cai Wingfield 2010-05, 2010-08, 2015-03--2015-06
 % update by Li Su 3-2012, 11-2012
 % updated Fawad 12-2013, 02-2014, 10-2014
-
-toolboxRoot = '/imaging/cw04/code/rsagroup-rsatoolbox/';
-addpath(genpath(toolboxRoot));
 
 import rsa.*
 import rsa.util.*
@@ -90,17 +87,14 @@ averageRDMPaths = averageSearchlightRDMs(RDMsPaths, userOptions);
 prints('GLM-fitting models to searchlight RDMs...');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+first_model_frame = 5;
+
 [glm_paths, lagSTCMetadatas] = searchlight_dynamicGLM_source( ...
     averageRDMPaths, ...
-    models, ...
+    models, first_model_frame, ...
     slSTCMetadatas, ...
     userOptions, ...
-    'lag', 30);
-
-find_maximum_glm_weights( ...
-    glm_paths, ...
-    lagSTCMetadatas, ...
-    userOptions);
+    'lag', 100);
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 prints('Thresholding GLM values...');

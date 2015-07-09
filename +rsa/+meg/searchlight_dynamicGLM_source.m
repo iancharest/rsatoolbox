@@ -1,5 +1,5 @@
 % [glm_paths, lagSTCMetadata] = ...
-%     searchlightGLM(RDMPaths, models, dataSTCMetadata, userOptions ...
+%     searchlightGLM(RDMPaths, models, first_model_frame, dataSTCMetadata, userOptions ...
 %                   ['lag', <lag_in_ms>])
 %
 % models: Is a nTimepoints x nModels struct with field .RDM
@@ -13,8 +13,8 @@
 %
 % Based on scripts written by Li Su and Isma Zulfiqar.
 %
-% Cai Wingfield 2015-03 -- 2015-04
-function [glm_paths, lagSTCMetadatas] = searchlight_dynamicGLM_source(RDMPaths, models, slSTCMetadatas, userOptions, varargin)
+% Cai Wingfield 2015-03 -- 2015-06
+function [glm_paths, lagSTCMetadatas] = searchlight_dynamicGLM_source(RDMPaths, models, first_model_frame, slSTCMetadatas, userOptions, varargin)
 
     import rsa.*
     import rsa.meg.*
@@ -112,7 +112,14 @@ function [glm_paths, lagSTCMetadatas] = searchlight_dynamicGLM_source(RDMPaths, 
         lagSTCMetadatas.(chi).tstep = slSTCMetadatas.(chi).tstep;
         lagSTCMetadatas.(chi).vertices = slSTCMetadatas.(chi).vertices;
         lagSTCMetadatas.(chi).tmax = slSTCMetadatas.(chi).tmax;
-        lagSTCMetadatas.(chi).tmin = slSTCMetadatas.(chi).tmin + (lagSTCMetadatas.(chi).tstep * lag_in_timepoints);
+        % tmin is increased by...
+        lagSTCMetadatas.(chi).tmin = slSTCMetadatas.(chi).tmin + ...
+            ...% timesteps equal to...
+            (lagSTCMetadatas.(chi).tstep * ( ...
+                ...% the fixed lag we apply...
+                lag_in_timepoints + ...
+                ...% and the trimming from the front of the model timeline.
+                first_model_frame));
         
     end
     
@@ -152,7 +159,7 @@ function [glm_paths, lagSTCMetadatas] = searchlight_dynamicGLM_source(RDMPaths, 
             prints('Applying lag to dynamic model timelines...');
 
             [nVertices, nTimepoints_data] = size(slRDMs);
-            [modelStack, nTimepoints_overlap] = stack_and_offset_models(models, lag_in_timepoints, nTimepoints_data);
+            [modelStack, nTimepoints_overlap] = stack_and_offset_models(models, lag_in_timepoints, first_model_frame, nTimepoints_data);
 
             prints('Working at a lag of %dms, which corresponds to %d timepoints at this resolution.', lag_in_ms, lag_in_timepoints);
 
@@ -165,28 +172,24 @@ function [glm_paths, lagSTCMetadatas] = searchlight_dynamicGLM_source(RDMPaths, 
 
             parfor t = 1:nTimepoints_overlap
 
-                % The timelines for the data and the models are offset.
-                t_relative_to_data = t + lag_in_timepoints;
+                prints('Working on timepoint %d/%d...', t, nTimepoints_overlap);
 
                 % Temporarily disable this warning
                 warning_id = 'stats:glmfit:IllConditioned';
                 warning('off', warning_id);
 
-                prints('Working on timepoint %d/%d...', t, nTimepoints_overlap);
+                % The timelines for the data and the models are offset.
+                t_relative_to_data = t ...
+                    ...% apply fixed lag offset
+                    + lag_in_timepoints ...
+                    ...% apply initial model trimming offset
+                    + first_model_frame;
 
                 for v = 1:nVertices
-                    % Fit the GLM at this point
-                    % TODO: In case the models are all zeros, this will merrily
-                    % TODO: produce meaningless betas along with a warning.
-                    % TODO: We should probably check for this first.
-                    [ ...
-                          glm_mesh_betas(v, t, :), ...
-                          glm_mesh_deviances(v, t) ...
-                        ] = glmfit( ...
+                    [glm_mesh_betas(v, t, :), glm_mesh_deviances(v, t)] = ...
+                        glmfit( ...
                             modelStack{t}', ...
                             slRDMs(v, t_relative_to_data).RDM', ...
-                            ...% TODO: Why are we making this assumption?
-                            ...% TODO: What are the implications of this?
                             'normal');
                 end%for:v
 
@@ -211,7 +214,7 @@ function [glm_paths, lagSTCMetadatas] = searchlight_dynamicGLM_source(RDMPaths, 
             end
 
             %% Save summary results
-            save('-v7.3', glm_paths.deviances.(chi),   'glm_mesh_deviances');
+            save('-v7.3', glm_paths.deviances.(chi), 'glm_mesh_deviances');
             write_stc_file( ...
                 lagSTCMetadatas.(chi), ...
                 glm_mesh_deviances, ...
