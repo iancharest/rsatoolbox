@@ -170,7 +170,7 @@ function [glm_paths, lagSTCMetadatas] = searchlight_dynamicGLM_source(RDMPaths, 
             % Tell the user what's going on.
             prints('Performing dynamic GLM in %sh hemisphere...', lower(chi));
 
-            for t = 1:nTimepoints_overlap
+            parfor t = 1:nTimepoints_overlap
 
                 prints('Working on timepoint %d/%d...', t, nTimepoints_overlap);
 
