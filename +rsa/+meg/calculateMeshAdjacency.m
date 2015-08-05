@@ -124,36 +124,28 @@ end%function
 function ht = findAdjacentVerts(path)
 
     import rsa.*
-    import rsa.fig.*
     import rsa.meg.*
-    import rsa.rdm.*
-    import rsa.sim.*
-    import rsa.spm.*
-    import rsa.stat.*
     import rsa.util.*
 
-    % addpath /opt/mne/matlab/toolbox/ % CW: path doesn't exist.
-
-    [verts,faces] = mne_read_surface(path);
-    numberOfVerts = max(faces);
-    numberOfFaces = size(faces);
+    [n_verts, n_faces] = mne_read_surface(path);
 
     ht = java.util.Hashtable;
 
-    facesduplicate = zeros(length(faces)*3, 3);
+    facesduplicate = zeros(length(n_faces)*3, 3);
 
-    for i = 1:length(faces)
-        q = length(faces);
+    for i = 1:length(n_faces)
+        q = length(n_faces);
         % disp(num2str(i));
-        facesduplicate(i,1:3) = [faces(i,1) faces(i,2) faces(i,3)];
-        facesduplicate(i+q,1:3) = [faces(i,2) faces(i,1) faces(i,3)];
-        facesduplicate(i+(q*2),1:3) = [faces(i,3) faces(i,2) faces(i,1)];
+        facesduplicate(i,1:3)       = [n_faces(i,1), n_faces(i,2), n_faces(i,3)];
+        facesduplicate(i+q,1:3)     = [n_faces(i,2), n_faces(i,1), n_faces(i,3)];
+        facesduplicate(i+(q*2),1:3) = [n_faces(i,3), n_faces(i,2), n_faces(i,1)];
     end
 
     sortedfaces = sortrows(facesduplicate,1);
 
     thisface = 1;
     adjacent = [];
+    %TODO: preallocating `adjacent` will probably make this faster
     for i = 1:length(sortedfaces)
         % disp(num2str(i));
         face = sortedfaces(i,1);
@@ -180,15 +172,10 @@ end%function
 function [adjacents, passed] = getadjacent(str1, int, hashtab)
 
     import rsa.*
-    import rsa.fig.*
     import rsa.meg.*
-    import rsa.rdm.*
-    import rsa.sim.*
-    import rsa.spm.*
-    import rsa.stat.*
     import rsa.util.*
 
-    adjacentsbelow = [];
+    adjacents_below = [];
     adjacents = [];
     passed = [];
     
@@ -196,12 +183,12 @@ function [adjacents, passed] = getadjacent(str1, int, hashtab)
        adjacents = hashtab.get(str1);
        passed = [1];
     else
-       [adjacentsbelow, passed] = getadjacent(str1, int-1, hashtab);
-       for j = 1:length(adjacentsbelow)
-          adjacents = [adjacents; hashtab.get(num2str(adjacentsbelow(j)))];
+       [adjacents_below, passed] = getadjacent(str1, int-1, hashtab);
+       for j = 1:length(adjacents_below)
+          adjacents = [adjacents; hashtab.get(num2str(adjacents_below(j)))];
        end
        adjacents = unique(adjacents);
-       passed = [passed; adjacentsbelow];
+       passed = [passed; adjacents_below];
        for j = length(adjacents):-1:1
           if(any(find(passed == adjacents(j))))
               adjacents(j)=[];
@@ -213,4 +200,3 @@ function [adjacents, passed] = getadjacent(str1, int, hashtab)
     passed = unique(passed);
 
 end%function
-

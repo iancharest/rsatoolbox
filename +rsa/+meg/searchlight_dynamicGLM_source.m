@@ -170,7 +170,7 @@ function [glm_paths, lagSTCMetadatas] = searchlight_dynamicGLM_source(RDMPaths, 
             % Tell the user what's going on.
             prints('Performing dynamic GLM in %sh hemisphere...', lower(chi));
 
-            parfor t = 1:nTimepoints_overlap
+            for t = 1:nTimepoints_overlap
 
                 prints('Working on timepoint %d/%d...', t, nTimepoints_overlap);
 
@@ -183,7 +183,10 @@ function [glm_paths, lagSTCMetadatas] = searchlight_dynamicGLM_source(RDMPaths, 
                     ...% apply fixed lag offset
                     + lag_in_timepoints ...
                     ...% apply initial model trimming offset
-                    + first_model_frame;
+                    + first_model_frame ...
+                    ...% out-by-one correction. t = 1 should make t_rel
+                    ...% point to first_model_frame + lag.
+                    - 1;
 
                 for v = 1:nVertices
                     [glm_mesh_betas(v, t, :), glm_mesh_deviances(v, t)] = ...

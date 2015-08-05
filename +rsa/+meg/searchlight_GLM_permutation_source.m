@@ -96,7 +96,15 @@ function [h0_paths] = searchlight_GLM_permutation_source(RDMPaths, models, slSTC
 
                 prints('Timepoint %d of %d...', t, nTimepoints_overlap);
 
-                t_relative_to_data = t + lag_in_timepoints;
+                % The timelines for the data and the models are offset.
+                t_relative_to_data = t ...
+                    ...% apply fixed lag offset
+                    + lag_in_timepoints ...
+                    ...% apply initial model trimming offset
+                    + first_model_frame ...
+                    ...% out-by-one correction. t = 1 should make t_rel
+                    ...% point to first_model_frame + lag.
+                    - 1;
 
                 for v = 1:nVertices
 

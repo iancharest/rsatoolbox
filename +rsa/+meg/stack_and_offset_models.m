@@ -1,7 +1,8 @@
 % [modelStack, nTimepoints_overlap] = stack_and_offset_models(models, lag_in_timepoints, nTimepoints_data)
 %
 % Given some dynamic models, and a specified offset in timepoints, produces
-% a time-indexed cell array of model stacks suitable for glmfit.
+% a time-indexed cell array of model stacks suitable for glmfit, trims
+% everything before first_model_frame.
 %
 % Cai Wingfield 2015-04
 function [modelStack, nTimepoints_overlap] = stack_and_offset_models(models, lag_in_timepoints, first_model_frame, nTimepoints_data)
@@ -34,7 +35,9 @@ function [modelStack, nTimepoints_overlap] = stack_and_offset_models(models, lag
     % places where there is also data.
     for t = 1:nTimepoints_overlap
         for model_i = 1:nModels
-            modelStack{t}(model_i, :) = vectorizeRDM(models(t, model_i).RDM);
+            modelStack{t}(model_i, :) = vectorizeRDM(models( ...
+                first_model_frame + t - 1, ...
+                model_i).RDM);
         end%for:model
     end%for:t
 end%function
