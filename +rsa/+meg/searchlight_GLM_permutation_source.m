@@ -1,7 +1,7 @@
 % [h0_paths] = searchlight_GLM_permutation_source(RDMPaths, models, slSTCMetadatas, lagSTCMetadatas, nPermutations, userOptions)
 %
 % Cai Wingfield 2015-04
-function [h0_paths] = searchlight_GLM_permutation_source(RDMPaths, models, slSTCMetadatas, lagSTCMetadatas, first_model_frame, nPermutations, userOptions)
+function [h0_paths] = searchlight_GLM_permutation_source(RDMPaths, models, slSTCMetadatas, lagSTCMetadatas, nPermutations, userOptions)
 
     import rsa.*
     import rsa.meg.*
@@ -65,11 +65,10 @@ function [h0_paths] = searchlight_GLM_permutation_source(RDMPaths, models, slSTC
             slRDMs = directLoad(RDMPaths.(chi));
 
             [nVertices, nTimepoints_data] = size(slRDMs);
-            % TODO: There must be a better way to do this.
-            lag_in_timepoints = ((lagSTCMetadatas.(chi).tmin - slSTCMetadatas.(chi).tmin) / lagSTCMetadatas.(chi).tstep) - first_model_frame;
+            lag_in_timepoints = ((lagSTCMetadatas.(chi).tmin - slSTCMetadatas.(chi).tmin) / lagSTCMetadatas.(chi).tstep);
 
             [modelStack, nTimepoints_overlap] = stack_and_offset_models( ...
-                models, lag_in_timepoints, first_model_frame, nTimepoints_data);
+                models, lag_in_timepoints, nTimepoints_data);
 
             nModels = size(modelStack{1}, 1);
             % + 1 for that all-1s predictor
@@ -96,15 +95,10 @@ function [h0_paths] = searchlight_GLM_permutation_source(RDMPaths, models, slSTC
 
                 prints('Timepoint %d of %d...', t, nTimepoints_overlap);
 
-                % The timelines for the data and the models are offset.
+                % The timelines for the data and the models are offset
                 t_relative_to_data = t ...
-                    ...% apply fixed lag offset
-                    + lag_in_timepoints ...
-                    ...% apply initial model trimming offset
-                    + first_model_frame ...
-                    ...% out-by-one correction. t = 1 should make t_rel
-                    ...% point to first_model_frame + lag.
-                    - 1;
+                    ...% by a fixed lag
+                    + lag_in_timepoints;
 
                 for v = 1:nVertices
 

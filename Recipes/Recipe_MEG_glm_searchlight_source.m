@@ -96,6 +96,7 @@ first_model_frame = 5;
     userOptions, ...
     'lag', 100);
 
+
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 prints('Thresholding GLM values...');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

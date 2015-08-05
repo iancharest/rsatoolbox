@@ -1,5 +1,5 @@
 % [glm_paths, lagSTCMetadata] = ...
-%     searchlightGLM(RDMPaths, models, first_model_frame, dataSTCMetadata, userOptions ...
+%     searchlightGLM(RDMPaths, models, dataSTCMetadata, userOptions ...
 %                   ['lag', <lag_in_ms>])
 %
 % models: Is a nTimepoints x nModels struct with field .RDM
@@ -14,7 +14,7 @@
 % Based on scripts written by Li Su and Isma Zulfiqar.
 %
 % Cai Wingfield 2015-03 -- 2015-06
-function [glm_paths, lagSTCMetadatas] = searchlight_dynamicGLM_source(RDMPaths, models, first_model_frame, slSTCMetadatas, userOptions, varargin)
+function [glm_paths, lagSTCMetadatas] = searchlight_dynamicGLM_source(RDMPaths, models, slSTCMetadatas, userOptions, varargin)
 
     import rsa.*
     import rsa.meg.*
@@ -116,10 +116,8 @@ function [glm_paths, lagSTCMetadatas] = searchlight_dynamicGLM_source(RDMPaths, 
         lagSTCMetadatas.(chi).tmin = slSTCMetadatas.(chi).tmin + ...
             ...% timesteps equal to...
             (lagSTCMetadatas.(chi).tstep * ( ...
-                ...% the fixed lag we apply...
-                lag_in_timepoints + ...
-                ...% and the trimming from the front of the model timeline.
-                first_model_frame));
+                ...% the fixed lag we apply.
+                lag_in_timepoints));
         
     end
     
@@ -159,7 +157,7 @@ function [glm_paths, lagSTCMetadatas] = searchlight_dynamicGLM_source(RDMPaths, 
             prints('Applying lag to dynamic model timelines...');
 
             [nVertices, nTimepoints_data] = size(slRDMs);
-            [modelStack, nTimepoints_overlap] = stack_and_offset_models(models, lag_in_timepoints, first_model_frame, nTimepoints_data);
+            [modelStack, nTimepoints_overlap] = stack_and_offset_models(models, lag_in_timepoints, nTimepoints_data);
 
             prints('Working at a lag of %dms, which corresponds to %d timepoints at this resolution.', lag_in_ms, lag_in_timepoints);
 
@@ -178,15 +176,10 @@ function [glm_paths, lagSTCMetadatas] = searchlight_dynamicGLM_source(RDMPaths, 
                 warning_id = 'stats:glmfit:IllConditioned';
                 warning('off', warning_id);
 
-                % The timelines for the data and the models are offset.
+                % The timelines for the data and the models are offset
                 t_relative_to_data = t ...
-                    ...% apply fixed lag offset
-                    + lag_in_timepoints ...
-                    ...% apply initial model trimming offset
-                    + first_model_frame ...
-                    ...% out-by-one correction. t = 1 should make t_rel
-                    ...% point to first_model_frame + lag.
-                    - 1;
+                    ...% by a fixed lag
+                    + lag_in_timepoints;
 
                 for v = 1:nVertices
                     [glm_mesh_betas(v, t, :), glm_mesh_deviances(v, t)] = ...

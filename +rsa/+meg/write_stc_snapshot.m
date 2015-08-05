@@ -10,6 +10,8 @@
 %
 % CW 2015-04
 function write_stc_snapshot(metadata, mesh, file_path)
+    % TODO: Should wriate a read_stc_snapshot function at some point.
+    
     metadata.data = repmat(mesh, 1, 2);
     metadata.tmax = metadata.tmin + metadata.tstep;
     mne_write_stc_file1(file_path, metadata);

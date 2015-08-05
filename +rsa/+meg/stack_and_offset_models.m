@@ -5,7 +5,7 @@
 % everything before first_model_frame.
 %
 % Cai Wingfield 2015-04
-function [modelStack, nTimepoints_overlap] = stack_and_offset_models(models, lag_in_timepoints, first_model_frame, nTimepoints_data)
+function [modelStack, nTimepoints_overlap] = stack_and_offset_models(models, lag_in_timepoints, nTimepoints_data)
 
     import rsa.*
     import rsa.rdm.*
@@ -22,11 +22,13 @@ function [modelStack, nTimepoints_overlap] = stack_and_offset_models(models, lag
     %                 ^
     %             only look
     %             in overlap
-    nTimepoints_overlap = nTimepoints_data - lag_in_timepoints - first_model_frame;
+    
+    nTimepoints_overlap = nTimepoints_data - lag_in_timepoints;
     
     model_size = size(models(1,1).RDM);
     
     % Make sure we're using ltv form.
+    % (value used for debugging only rn)
     model_size = size(vectorizeRDM(zeros(model_size)));
     
     % Now at each timepoint we stack the models into a predictor matrix for
@@ -36,7 +38,7 @@ function [modelStack, nTimepoints_overlap] = stack_and_offset_models(models, lag
     for t = 1:nTimepoints_overlap
         for model_i = 1:nModels
             modelStack{t}(model_i, :) = vectorizeRDM(models( ...
-                first_model_frame + t - 1, ...
+                t, ...
                 model_i).RDM);
         end%for:model
     end%for:t
