@@ -66,6 +66,9 @@ function [h0_paths] = searchlight_GLM_permutation_source(RDMPaths, models, slSTC
 
             [nVertices, nTimepoints_data] = size(slRDMs);
             lag_in_timepoints = ((lagSTCMetadatas.(chi).tmin - slSTCMetadatas.(chi).tmin) / lagSTCMetadatas.(chi).tstep);
+            
+            % this needs to be an int, as it will be used as an index
+            lag_in_timepoints = round(lag_in_timepoints);
 
             [modelStack, nTimepoints_overlap] = stack_and_offset_models( ...
                 models, lag_in_timepoints, nTimepoints_data);
