@@ -1,11 +1,11 @@
-% [modelStack, nTimepoints_overlap] = stack_and_offset_models(models, lag_in_timepoints, nTimepoints_data)
+% [modelStack] = stack_and_trim_models(models, nTimepoints_overlap)
 %
 % Given some dynamic models, and a specified offset in timepoints, produces
 % a time-indexed cell array of model stacks suitable for glmfit, trims
-% everything before first_model_frame.
+% everything which won't overlap with the data timeline.
 %
-% Cai Wingfield 2015-04
-function [modelStack, nTimepoints_overlap] = stack_and_offset_models(models, lag_in_timepoints, nTimepoints_data)
+% Cai Wingfield 2015-04, 2015-08
+function [modelStack] = stack_and_trim_models(models, nTimepoints_overlap)
 
     import rsa.*
     import rsa.rdm.*
@@ -15,15 +15,13 @@ function [modelStack, nTimepoints_overlap] = stack_and_offset_models(models, lag
     % We only look at timepoints where the data's timeline overlaps with
     % the models' lag-offset timelines.
     %
-    %    (lag)>  |--------------------| lag-offset models
+    %    (lag)>  |----------(---trim---)| lag-offset models
     % |--------------------| data
     %            .         .
     %            |---------|
     %                 ^
     %             only look
     %             in overlap
-    
-    nTimepoints_overlap = nTimepoints_data - lag_in_timepoints;
     
     model_size = size(models(1,1).RDM);
     

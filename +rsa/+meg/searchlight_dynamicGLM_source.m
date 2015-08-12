@@ -88,23 +88,11 @@ function [glm_paths, lagSTCMetadatas] = searchlight_dynamicGLM_source(RDMPaths, 
         % timelines are assumed to be corresponding at 0 lag, though the models
         % will be  offset by the specified lag.
 
-        % Remember that STCmetadata.tstep measures lag in SECONDS!
+        % Remember that STCmetadata.tstep measures lag in SECONDS, so we
+        % must convert it to miliseconds.
         timestep_in_ms = slSTCMetadatas.(chi).tstep * 1000;
-
-        % Check if this lag is doable
-        if mod(lag_in_ms, timestep_in_ms) ~= 0
-            warns('The requested lag of %dms cannot be achieved, as the timestep is %dms.', lag_in_ms, timestep_in_ms);
-
-            % If it's not achievable, we adjust it until it is
-            desired_lag_in_steps = lag_in_ms / timestep_in_ms;
-            % TODO: this takes the floor, but should really take the nearest?
-            achievable_lag_in_steps = floor(desired_lag_in_steps);
-            achievable_lag_in_ms = achievable_lag_in_steps * timestep_in_ms;
-            warns('Using a lag of %dms instead.', achievable_lag_in_ms);
-            lag_in_ms = achievable_lag_in_ms;
-        end
-
-        lag_in_timepoints = lag_in_ms / timestep_in_ms;
+        % And then to timepoints.
+        lag_in_timepoints = round(lag_in_ms / timestep_in_ms);
 
 
         %% Prepare lag STC metadata
@@ -157,7 +145,10 @@ function [glm_paths, lagSTCMetadatas] = searchlight_dynamicGLM_source(RDMPaths, 
             prints('Applying lag to dynamic model timelines...');
 
             [nVertices, nTimepoints_data] = size(slRDMs);
-            [modelStack, nTimepoints_overlap] = stack_and_offset_models(models, lag_in_timepoints, nTimepoints_data);
+            
+            nTimepoints_overlap = nTimepoints_data - lag_in_timepoints;
+
+            [modelStack] = stack_and_trim_models(models, nTimepoints_overlap);
 
             prints('Working at a lag of %dms, which corresponds to %d timepoints at this resolution.', lag_in_ms, lag_in_timepoints);
 
