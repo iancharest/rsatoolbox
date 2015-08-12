@@ -46,11 +46,11 @@ function [h0_paths] = searchlight_GLM_permutation_source(RDMPaths, models, slSTC
         sf_indices = squareform(lt_indices);
 
         % Preallocate
-        lt_index_permutations = nan(numel(lt_indices), nPermutations);
+        ltv_index_permutations = nan(numel(lt_indices), nPermutations);
 
         % Generate some permutations
         for p = 1:nPermutations
-            lt_index_permutations(:, p) = squareform(randomizeSimMat(sf_indices));
+            ltv_index_permutations(:, p) = squareform(randomizeSimMat(sf_indices));
         end
 
 
@@ -72,8 +72,9 @@ function [h0_paths] = searchlight_GLM_permutation_source(RDMPaths, models, slSTC
             
             nTimepoints_overlap = nTimepoints_data - lag_in_timepoints;
 
-            [modelStack] = stack_and_trim_models(models, nTimepoints_overlap);
+            modelStack = stack_and_trim_models(models, nTimepoints_overlap);
 
+            % Cell array modelStack indexed by time.
             nModels = size(modelStack{1}, 1);
             % + 1 for that all-1s predictor
             nBetas = nModels + 1;
@@ -110,13 +111,14 @@ function [h0_paths] = searchlight_GLM_permutation_source(RDMPaths, models, slSTC
 
                     for p = 1:nPermutations
 
-                        scrambled_data_rdm = unscrambled_data_rdm(lt_index_permutations(:, p));
+                        scrambled_data_rdm = unscrambled_data_rdm(ltv_index_permutations(:, p));
                         
                         betas = glmfit( ...
                             modelStack{t}', ...
                             scrambled_data_rdm', ...
                             'normal');
 
+                        % 2:end to trim the all-1s predictor beta
                         h0_betas(v, t, :, p) = betas(2:end); %#ok<PFOUS> it's saved
                     end%for
                 end%for
